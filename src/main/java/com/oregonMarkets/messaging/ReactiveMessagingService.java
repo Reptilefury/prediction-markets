@@ -1,6 +1,5 @@
-package com.oregonmarkets.predictionmarkets.messaging;
+package com.oregonMarkets.messaging;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.component.reactive.streams.api.CamelReactiveStreamsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,11 +12,11 @@ public class ReactiveMessagingService {
     @Autowired
     private CamelReactiveStreamsService camel;
     
-    public Flux<String> consumeMarketEvents() {
-        return camel.fromStream("market-events", String.class);
+    public Flux<String> consumeWalletRequests() {
+        return Flux.from(camel.fromStream("wallet-requests", String.class));
     }
     
-    public Mono<Void> publishEvent(String event) {
-        return camel.toStream("outgoing-events", event, String.class).then();
+    public Mono<Void> publishWalletRequest(String request) {
+        return Mono.from(camel.toStream("wallet-creation-requests", request, String.class)).then();
     }
 }

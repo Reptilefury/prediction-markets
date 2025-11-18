@@ -1,4 +1,4 @@
-package com.oregonmarkets.predictionmarkets.messaging;
+package com.oregonMarkets.messaging;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
