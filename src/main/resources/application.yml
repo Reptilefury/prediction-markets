@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: prediction-markets
+  
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/prediction_markets
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/prediction_markets
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  
+  flyway:
+    url: jdbc:postgresql://localhost:5432/prediction_markets
+    user: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    locations: classpath:db/migration
+  
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: prediction-markets
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+
+app:
+  name: Oregon Markets
+  base-url: ${BASE_URL:http://localhost:8080}
+  
+  kafka:
+    topics:
+      user-registered: user.registered
+      user-updated: user.updated
+      market-created: market.created
+      bet-placed: bet.placed
+  
+  magic:
+    api-key: ${MAGIC_API_KEY:sk_live_76B76D222B59CD91}
+    api-url: ${MAGIC_API_URL:https://api.magic.link}
+  
+  enclave:
+    api-key: ${ENCLAVE_API_KEY:9c4ece89bf9836773e2c004b998686e71216a0990050f6051b07bfcd40a2f77e}
+    api-url: ${ENCLAVE_API_URL:https://api.enclave.com}
+  
+  blnk:
+    api-url: ${BLNK_API_URL:https://api.blnk.io}
+  
+  walletconnect:
+    project-id: ${WALLETCONNECT_PROJECT_ID:73947840ab535b51ab48db3138067b6a}
+  
+  dynamic:
+    environment-id: ${DYNAMIC_ENVIRONMENT_ID:a458bee8-c300-40b8-ac2d-11c4ba37072d}
+
+logging:
+  level:
+    com.oregonMarkets: DEBUG
+    org.springframework.web: DEBUG
+gcp:
+  project-id: heroic-equinox-474616-i5
+  pubsub:
+    topics:
+      universal-deposit-wallet: universal-deposit-wallet
+    subscriptions:
+      universal-deposit-wallet: universal-deposit-wallet-subscription
+
+camel:
+  component:
+    google-pubsub:
+      project-id: ${gcp.project-id}

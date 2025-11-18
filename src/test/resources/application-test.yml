@@ -1,0 +1,9 @@
+spring:
+  flyway:
+    enabled: false
+
+logging:
+  level:
+    com.oregonMarkets: DEBUG
+    reactor.netty: INFO
+    io.netty: INFO
