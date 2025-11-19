@@ -5,6 +5,10 @@ spring:
   application:
     name: prediction-markets
   
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 0
+  
   r2dbc:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
