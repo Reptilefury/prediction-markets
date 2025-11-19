@@ -9,6 +9,10 @@ spring:
     baseline-on-migrate: true
     baseline-version: "0"
     enabled: true
+    url: ${JDBC_DATABASE_URL}
+    user: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    locations: classpath:db/migration
   
   r2dbc:
     url: ${DATABASE_URL}
@@ -19,12 +23,6 @@ spring:
     url: ${JDBC_DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
-  
-  flyway:
-    url: ${JDBC_DATABASE_URL}
-    user: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-    locations: classpath:db/migration
   
   data:
     r2dbc:
