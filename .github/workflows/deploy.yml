@@ -39,7 +39,7 @@ jobs:
           --source . \
           --platform managed \
           --region $REGION \
-          --no-allow-unauthenticated \
+          --allow-unauthenticated \
           --ingress=internal-and-cloud-load-balancing \
           --timeout=600 \
           --port=8080 \
