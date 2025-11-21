@@ -39,23 +39,24 @@ public class MagicTokenFilter implements WebFilter {
 
     private Mono<Void> validateAndProceed(ServerWebExchange exchange, WebFilterChain chain) {
         String token = extractToken(exchange);
-        log.debug("Extracted token: {}", token != null ? "present" : "missing");
+        String path = exchange.getRequest().getPath().value();
+        log.info("MagicTokenFilter: Extracted token for path {}: {}", path, token != null ? "present" : "missing");
 
         if (token == null) {
-            log.warn("Missing or invalid Authorization header for path: {}", exchange.getRequest().getPath().value());
+            log.warn("MagicTokenFilter: Missing or invalid Authorization header for path: {}", path);
             return sendErrorResponse(exchange, "Missing or invalid Authorization header");
         }
 
-        log.debug("Validating Magic token");
+        log.info("MagicTokenFilter: Validating Magic token for path: {}", path);
         return validateMagicToken(token)
             .flatMap(userInfo -> {
-                log.info("Magic token validation successful for user: {}", userInfo.getEmail());
+                log.info("MagicTokenFilter: Magic token validation successful for user: {} on path: {}", userInfo.getEmail(), path);
                 exchange.getAttributes().put("magicUser", userInfo);
                 exchange.getAttributes().put("magicToken", token);
                 return chain.filter(exchange);
             })
             .onErrorResume(e -> {
-                log.error("Magic token validation failed: {}", e.getMessage(), e);
+                log.error("MagicTokenFilter: Magic token validation failed for path {}: {}", path, e.getMessage(), e);
                 return sendErrorResponse(exchange, getErrorMessage(e));
             });
     }
