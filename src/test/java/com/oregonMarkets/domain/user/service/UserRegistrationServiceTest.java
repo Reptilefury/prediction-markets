@@ -8,12 +8,12 @@ import com.oregonMarkets.integration.blnk.BlnkClient;
 import com.oregonMarkets.integration.enclave.EnclaveClient;
 import com.oregonMarkets.integration.magic.MagicClient;
 import com.oregonMarkets.service.CacheService;
-import com.oregonMarkets.service.EventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -23,20 +23,16 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
 
 @ExtendWith(MockitoExtension.class)
 class UserRegistrationServiceTest {
 
     @Mock
     private UserRepository userRepository;
-    
-    @Mock
-    private MagicClient magicClient;
-    
+
     @Mock
     private EnclaveClient enclaveClient;
-    
+
     @Mock
     private BlnkClient blnkClient;
 
@@ -44,14 +40,14 @@ class UserRegistrationServiceTest {
     private CacheService cacheService;
 
     @Mock
-    private EventPublisher eventPublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     private UserRegistrationService userRegistrationService;
 
     @BeforeEach
     void setUp() {
         userRegistrationService = new UserRegistrationService(
-            userRepository, magicClient, enclaveClient, blnkClient, cacheService, eventPublisher
+            userRepository, enclaveClient, blnkClient, cacheService, eventPublisher
         );
     }
 
@@ -60,22 +56,21 @@ class UserRegistrationServiceTest {
         // Given
         UserRegistrationRequest request = createValidRequest();
         MagicClient.MagicUserInfo magicUser = createMagicUserInfo();
+        String didToken = "test-did-token";
         EnclaveClient.EnclaveUDAResponse udaResponse = createUdaResponse();
         User savedUser = createSavedUser();
 
         // When
-        when(magicClient.validateDIDToken(anyString())).thenReturn(Mono.just(magicUser));
         when(userRepository.existsByEmail(anyString())).thenReturn(Mono.just(false));
         when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
         when(enclaveClient.createUDA(anyString(), anyString(), anyString())).thenReturn(Mono.just(udaResponse));
         when(blnkClient.createIdentity(anyString(), anyString(), any())).thenReturn(Mono.just("blnk-identity-id"));
         when(blnkClient.createAccount(anyString(), anyString(), anyString())).thenReturn(Mono.just("blnk-account-id"));
         when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
-        doNothing().when(eventPublisher).publishEvent(anyString(), anyString(), any());
         when(cacheService.set(anyString(), any(), any())).thenReturn(Mono.empty());
 
         // Then
-        StepVerifier.create(userRegistrationService.registerUser(request))
+        StepVerifier.create(userRegistrationService.registerUser(request, magicUser, didToken))
             .expectNextMatches(response ->
                 response.getEmail().equals("test@example.com") &&
                 response.getMagicWalletAddress().equals("0x123") &&
@@ -89,14 +84,14 @@ class UserRegistrationServiceTest {
         // Given
         UserRegistrationRequest request = createValidRequest();
         MagicClient.MagicUserInfo magicUser = createMagicUserInfo();
+        String didToken = "test-did-token";
 
         // When
-        when(magicClient.validateDIDToken(anyString())).thenReturn(Mono.just(magicUser));
         when(userRepository.existsByEmail(anyString())).thenReturn(Mono.just(true));
         when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
 
         // Then
-        StepVerifier.create(userRegistrationService.registerUser(request))
+        StepVerifier.create(userRegistrationService.registerUser(request, magicUser, didToken))
             .expectErrorMatches(throwable -> 
                 throwable instanceof UserAlreadyExistsException &&
                 throwable.getMessage().contains("test@example.com")
@@ -106,7 +101,6 @@ class UserRegistrationServiceTest {
 
     private UserRegistrationRequest createValidRequest() {
         UserRegistrationRequest request = new UserRegistrationRequest();
-        request.setDidToken("test-did-token");
         request.setEmail("test@example.com");
         request.setCountryCode("US");
         return request;

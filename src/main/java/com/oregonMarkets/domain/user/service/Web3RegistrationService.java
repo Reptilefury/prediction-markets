@@ -10,7 +10,6 @@ import com.oregonMarkets.event.UserRegisteredEvent;
 import com.oregonMarkets.integration.enclave.EnclaveClient;
 import com.oregonMarkets.integration.web3.Web3AuthService;
 import com.oregonMarkets.service.CacheService;
-import com.oregonMarkets.service.EventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,8 +27,7 @@ public class Web3RegistrationService {
     private final Web3AuthService web3AuthService;
     private final EnclaveClient enclaveClient;
     private final CacheService cacheService;
-    private final EventPublisher eventPublisher;
-    
+
     public Mono<UserRegistrationResponse> registerUser(Web3RegistrationRequest request) {
         log.info("Starting Web3 user registration for wallet: {}", request.getWalletAddress());
         
@@ -132,7 +130,7 @@ public class Web3RegistrationService {
                 user.getReferralCode(),
                 user.getReferredByUserId()
             );
-            eventPublisher.publishEvent("user.registered", user.getId().toString(), event);
+           // eventPublisher.publishEvent("user.registered", user.getId().toString(), event);
         });
     }
     

@@ -8,9 +8,6 @@ import lombok.Data;
 @Data
 public class UserRegistrationRequest {
     
-    @NotBlank(message = "DID token is required")
-    private String didToken;
-    
     @Email(message = "Invalid email format")
     @NotBlank(message = "Email is required")
     private String email;

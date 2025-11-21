@@ -1,15 +1,15 @@
 package com.oregonMarkets.domain.user.controller;
 
-import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
+import  com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
 import com.oregonMarkets.domain.user.service.UserRegistrationService;
 import com.oregonMarkets.domain.user.service.Web3RegistrationService;
+import com.oregonMarkets.integration.magic.MagicClient;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest(AuthRouterConfig.class)
@@ -55,7 +56,6 @@ class AuthRouterConfigTest {
     void register_Success() {
         // Given
         UserRegistrationRequest request = new UserRegistrationRequest();
-        request.setDidToken("test-did-token");
         request.setEmail("test@example.com");
         request.setCountryCode("US");
 
@@ -69,7 +69,7 @@ class AuthRouterConfigTest {
             .createdAt(Instant.now())
             .build();
 
-        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class)))
+        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class), any(MagicClient.MagicUserInfo.class), anyString()))
             .thenReturn(Mono.just(response));
 
         // When & Then
@@ -92,11 +92,10 @@ class AuthRouterConfigTest {
     void register_ServiceError() {
         // Given
         UserRegistrationRequest request = new UserRegistrationRequest();
-        request.setDidToken("test-did-token");
         request.setEmail("test@example.com");
         request.setCountryCode("US");
 
-        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class)))
+        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class), any(MagicClient.MagicUserInfo.class), anyString()))
             .thenReturn(Mono.error(new RuntimeException("Service error")));
 
         // When & Then

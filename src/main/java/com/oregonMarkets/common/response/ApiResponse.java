@@ -1,0 +1,194 @@
+package com.oregonMarkets.common.response;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Standardized API response wrapper for Oregon Markets
+ * Ensures consistent response structure across all endpoints
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ApiResponse<T> {
+
+    private int code;
+    private String message;
+    private boolean success;
+
+    @Builder.Default
+    private Instant timestamp = Instant.now();
+
+    private T data;
+
+    private Map<String, Object> metadata;
+
+    private ErrorDetails error;
+
+    /**
+     * Create a success response
+     */
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .message(ResponseCode.SUCCESS.getMessage())
+                .success(true)
+                .data(data)
+                .build();
+    }
+
+    /**
+     * Create a success response with custom response code
+     */
+    public static <T> ApiResponse<T> success(ResponseCode responseCode, T data) {
+        return ApiResponse.<T>builder()
+                .code(responseCode.getCode())
+                .message(responseCode.getMessage())
+                .success(true)
+                .data(data)
+                .build();
+    }
+
+    /**
+     * Create a success response with custom message
+     */
+    public static <T> ApiResponse<T> success(ResponseCode responseCode, String customMessage, T data) {
+        return ApiResponse.<T>builder()
+                .code(responseCode.getCode())
+                .message(customMessage)
+                .success(true)
+                .data(data)
+                .build();
+    }
+
+    /**
+     * Create an error response
+     */
+    public static <T> ApiResponse<T> error(ResponseCode responseCode) {
+        return ApiResponse.<T>builder()
+                .code(responseCode.getCode())
+                .message(responseCode.getMessage())
+                .success(false)
+                .error(ErrorDetails.builder()
+                        .code(responseCode.getCode())
+                        .message(responseCode.getMessage())
+                        .build())
+                .build();
+    }
+
+    /**
+     * Create an error response with custom message
+     */
+    public static <T> ApiResponse<T> error(ResponseCode responseCode, String customMessage) {
+        return ApiResponse.<T>builder()
+                .code(responseCode.getCode())
+                .message(customMessage)
+                .success(false)
+                .error(ErrorDetails.builder()
+                        .code(responseCode.getCode())
+                        .message(customMessage)
+                        .build())
+                .build();
+    }
+
+    /**
+     * Create an error response with details
+     */
+    public static <T> ApiResponse<T> error(ResponseCode responseCode, String customMessage, String details) {
+        return ApiResponse.<T>builder()
+                .code(responseCode.getCode())
+                .message(customMessage)
+                .success(false)
+                .error(ErrorDetails.builder()
+                        .code(responseCode.getCode())
+                        .message(customMessage)
+                        .details(details)
+                        .build())
+                .build();
+    }
+
+    /**
+     * Create an error response with validation errors
+     */
+    public static <T> ApiResponse<T> validationError(Map<String, String> validationErrors) {
+        return ApiResponse.<T>builder()
+                .code(ResponseCode.VALIDATION_ERROR.getCode())
+                .message(ResponseCode.VALIDATION_ERROR.getMessage())
+                .success(false)
+                .error(ErrorDetails.builder()
+                        .code(ResponseCode.VALIDATION_ERROR.getCode())
+                        .message(ResponseCode.VALIDATION_ERROR.getMessage())
+                        .validationErrors(validationErrors)
+                        .build())
+                .build();
+    }
+
+    /**
+     * Add metadata to the response
+     */
+    public ApiResponse<T> withMetadata(String key, Object value) {
+        if (this.metadata == null) {
+            this.metadata = new HashMap<>();
+        }
+        this.metadata.put(key, value);
+        return this;
+    }
+
+    /**
+     * Add multiple metadata entries
+     */
+    public ApiResponse<T> withMetadata(Map<String, Object> metadata) {
+        if (this.metadata == null) {
+            this.metadata = new HashMap<>();
+        }
+        this.metadata.putAll(metadata);
+        return this;
+    }
+
+    /**
+     * Convert to ResponseEntity with appropriate HTTP status
+     */
+    public ResponseEntity<ApiResponse<T>> toResponseEntity() {
+        ResponseCode responseCode = ResponseCode.fromCode(this.code);
+        return ResponseEntity
+                .status(responseCode.getHttpStatus())
+                .body(this);
+    }
+
+    /**
+     * Convert to ResponseEntity with custom HTTP status
+     */
+    public ResponseEntity<ApiResponse<T>> toResponseEntity(HttpStatus httpStatus) {
+        return ResponseEntity
+                .status(httpStatus)
+                .body(this);
+    }
+
+    /**
+     * Error details structure
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class ErrorDetails {
+        private int code;
+        private String message;
+        private String details;
+        private String field;
+        private Map<String, String> validationErrors;
+        private String traceId;
+    }
+}
