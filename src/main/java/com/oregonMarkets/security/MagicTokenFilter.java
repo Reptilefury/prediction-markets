@@ -25,14 +25,15 @@ public class MagicTokenFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
-        log.debug("Processing request for path: {}", path);
+        String method = exchange.getRequest().getMethod().name();
+        log.info("MagicTokenFilter: Processing {} request for path: {}", method, path);
 
         if (path.startsWith("/api/")) {
-            log.debug("API path detected, validating Magic token");
+            log.info("MagicTokenFilter: API path detected, validating Magic token for path: {}", path);
             return validateAndProceed(exchange, chain);
         }
 
-        log.debug("Non-API path, skipping Magic token validation");
+        log.info("MagicTokenFilter: Non-API path, skipping Magic token validation for path: {}", path);
         return chain.filter(exchange);
     }
 
