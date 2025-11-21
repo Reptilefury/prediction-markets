@@ -23,9 +23,9 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
-    private int code;
+    private ResponseStatus status;
     private String message;
-    private boolean success;
+    private int code;
 
     @Builder.Default
     private Instant timestamp = Instant.now();
@@ -41,11 +41,11 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
-                .code(ResponseCode.SUCCESS.getCode())
+                .status(ResponseStatus.SUCCESS)
                 .message(ResponseCode.SUCCESS.getMessage())
-                .success(true)
+                .code(ResponseCode.SUCCESS.getCode())
                 .data(data)
-                .build();
+                .   build();
     }
 
     /**
@@ -53,21 +53,24 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> success(ResponseCode responseCode, T data) {
         return ApiResponse.<T>builder()
-                .code(responseCode.getCode())
+                .status(ResponseStatus.SUCCESS)
                 .message(responseCode.getMessage())
-                .success(true)
+                .code(responseCode.getCode())
                 .data(data)
                 .build();
     }
 
     /**
-     * Create a success response with custom message
+     * Create a success response with cusRequired type:
+ResponseStatus
+Provided:
+Stringtom message
      */
     public static <T> ApiResponse<T> success(ResponseCode responseCode, String customMessage, T data) {
         return ApiResponse.<T>builder()
-                .code(responseCode.getCode())
+                .status(ResponseStatus.SUCCESS)
                 .message(customMessage)
-                .success(true)
+                .code(responseCode.getCode())
                 .data(data)
                 .build();
     }
@@ -77,9 +80,9 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> error(ResponseCode responseCode) {
         return ApiResponse.<T>builder()
-                .code(responseCode.getCode())
+                .status(ResponseStatus.FAILED)
                 .message(responseCode.getMessage())
-                .success(false)
+                .code(responseCode.getCode())
                 .error(ErrorDetails.builder()
                         .code(responseCode.getCode())
                         .message(responseCode.getMessage())
@@ -92,9 +95,9 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> error(ResponseCode responseCode, String customMessage) {
         return ApiResponse.<T>builder()
-                .code(responseCode.getCode())
+                .status(ResponseStatus.FAILED)
                 .message(customMessage)
-                .success(false)
+                .code(responseCode.getCode())
                 .error(ErrorDetails.builder()
                         .code(responseCode.getCode())
                         .message(customMessage)
@@ -102,14 +105,15 @@ public class ApiResponse<T> {
                 .build();
     }
 
+
     /**
      * Create an error response with details
      */
     public static <T> ApiResponse<T> error(ResponseCode responseCode, String customMessage, String details) {
         return ApiResponse.<T>builder()
-                .code(responseCode.getCode())
+                .status(ResponseStatus.FAILED)
                 .message(customMessage)
-                .success(false)
+                .code(responseCode.getCode())
                 .error(ErrorDetails.builder()
                         .code(responseCode.getCode())
                         .message(customMessage)
@@ -123,9 +127,9 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> validationError(Map<String, String> validationErrors) {
         return ApiResponse.<T>builder()
-                .code(ResponseCode.VALIDATION_ERROR.getCode())
+                .status(ResponseStatus.FAILED)
                 .message(ResponseCode.VALIDATION_ERROR.getMessage())
-                .success(false)
+                .code(ResponseCode.VALIDATION_ERROR.getCode())
                 .error(ErrorDetails.builder()
                         .code(ResponseCode.VALIDATION_ERROR.getCode())
                         .message(ResponseCode.VALIDATION_ERROR.getMessage())

@@ -28,7 +28,7 @@ public class MagicTokenFilter implements WebFilter {
         String method = exchange.getRequest().getMethod().name();
         log.info("MagicTokenFilter: Processing {} request for path: {}", method, path);
 
-        if (path.startsWith("/api/")) {
+        if (path.startsWith("/api/") || path.startsWith("/prediction-markets/api/")) {
             log.info("MagicTokenFilter: API path detected, validating Magic token for path: {}", path);
             return validateAndProceed(exchange, chain);
         }
