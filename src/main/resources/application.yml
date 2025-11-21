@@ -88,7 +88,7 @@ app:
 
 logging:
   level:
-    com.oregonMarkets: INFO
+    com.oregonMarkets: DEBUG
     com.oregonMarkets.integration.magic: DEBUG
 
 gcp:
