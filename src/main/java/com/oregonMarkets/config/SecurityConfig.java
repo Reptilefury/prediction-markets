@@ -21,11 +21,10 @@ public class SecurityConfig {
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeExchange(exchanges -> exchanges
-                .pathMatchers("/api/auth/**").permitAll()
-                .pathMatchers("/api/webhooks/**").permitAll()
-                .pathMatchers("/actuator/health").permitAll()
-                .anyExchange().authenticated()
+                .anyExchange().permitAll()
             )
+            .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+            .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
             .build();
     }
 
