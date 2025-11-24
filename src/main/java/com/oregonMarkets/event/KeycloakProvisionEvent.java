@@ -10,14 +10,14 @@ import java.util.UUID;
 @Builder
 public class KeycloakProvisionEvent {
     UUID userId;
-    String email;
+    String username; // Magic user ID (sub field from DID token) - used as Keycloak username
     String initialPassword; // DID token at registration time
     Instant timestamp;
 
-    public static KeycloakProvisionEvent of(UUID userId, String email, String initialPassword) {
+    public static KeycloakProvisionEvent of(UUID userId, String username, String initialPassword) {
         return KeycloakProvisionEvent.builder()
                 .userId(userId)
-                .email(email)
+                .username(username)
                 .initialPassword(initialPassword)
                 .timestamp(Instant.now())
                 .build();

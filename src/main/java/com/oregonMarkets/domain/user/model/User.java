@@ -69,6 +69,9 @@ public class User {
     @Builder.Default
     private EnclaveUdaStatus enclaveUdaStatus = EnclaveUdaStatus.PENDING;
 
+    @Column("enclave_deposit_addresses")
+    private String enclaveDepositAddresses;  // JSON serialized Map<String, Object> from Enclave API
+
     // Location
     @Column("country_code")
     private String countryCode;
@@ -111,6 +114,17 @@ public class User {
     @Column("blnk_created_at")
     private Instant blnkCreatedAt;
 
+    // Polymarket Proxy Wallet Integration
+    @Column("proxy_wallet_address")
+    private String proxyWalletAddress;
+
+    @Column("proxy_wallet_created_at")
+    private Instant proxyWalletCreatedAt;
+
+    @Column("proxy_wallet_status")
+    @Builder.Default
+    private ProxyWalletStatus proxyWalletStatus = ProxyWalletStatus.PENDING;
+
     // Referral
     @Column("referral_code")
     private String referralCode;
@@ -143,8 +157,12 @@ public class User {
     public enum KycStatus {
         NOT_STARTED, PENDING, APPROVED, REJECTED
     }
-    
+
     public enum AuthMethod {
         MAGIC, WEB3_WALLET
+    }
+
+    public enum ProxyWalletStatus {
+        PENDING, ACTIVE, FAILED, SUSPENDED
     }
 }

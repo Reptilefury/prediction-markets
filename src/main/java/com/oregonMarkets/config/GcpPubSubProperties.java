@@ -15,9 +15,9 @@ public class GcpPubSubProperties {
     private final String subscriptionUniversalDepositWallet;
 
     public GcpPubSubProperties(
-            @Value("${gcp.project-id}") String projectId,
-            @Value("${gcp.pubsub.topics.universal-deposit-wallet}") String topicUniversalDepositWallet,
-            @Value("${gcp.pubsub.subscriptions.universal-deposit-wallet}") String subscriptionUniversalDepositWallet) {
+            @Value("${gcp.project-id:}") String projectId,
+            @Value("${gcp.pubsub.topics.universal-deposit-wallet:universal-deposit-wallet}") String topicUniversalDepositWallet,
+            @Value("${gcp.pubsub.subscriptions.universal-deposit-wallet:universal-deposit-wallet-subscription}") String subscriptionUniversalDepositWallet) {
         this.projectId = projectId;
         this.topicUniversalDepositWallet = topicUniversalDepositWallet;
         this.subscriptionUniversalDepositWallet = subscriptionUniversalDepositWallet;

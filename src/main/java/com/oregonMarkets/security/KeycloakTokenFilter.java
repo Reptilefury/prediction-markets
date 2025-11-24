@@ -54,10 +54,9 @@ public class KeycloakTokenFilter implements WebFilter {
                         if (magicUserObj instanceof com.oregonMarkets.integration.magic.MagicClient.MagicUserInfo magicUser
                                 && magicTokenObj instanceof String magicToken
                                 && magicUser.getEmail() != null) {
-                            // Attempt to rotate Keycloak password to the latest DID token
-                            return keycloakAdminClient.setPassword(magicUser.getEmail(), magicToken)
-                                    .then(unauthorized(exchange, "KEYCLOAK_REAUTH_REQUIRED",
-                                            "Keycloak password updated from Magic token. Re-authenticate to obtain a new Keycloak token."));
+                            // Note: setPassword now requires accessToken, but we're in a filter context
+                            // The proper flow is in UserRegistrationService which handles this during registration
+                            log.debug("Keycloak validation failed for {}, but Magic context available", magicUser.getEmail());
                         }
                         String msg = e instanceof KeycloakAuthException ? e.getMessage() : "Keycloak token validation failed";
                         return unauthorized(exchange, "KEYCLOAK_AUTH_FAILED", msg);

@@ -107,7 +107,7 @@ camel:
 keycloak:
   admin:
     base-url: ${KEYCLOAK_BASE_URL:http://localhost:8081}
-    realm: ${KEYCLOAK_REALM:master}
-    # Optional client credentials if you want to exchange for admin token (not wired in this minimal client)
-    client-id: ${KEYCLOAK_CLIENT_ID:}
+    realm: ${KEYCLOAK_REALM:opm-client}
+    # Client credentials for admin API (not used in password grant, but kept for reference)
+    client-id: ${KEYCLOAK_CLIENT_ID:admin-cli}
     client-secret: ${KEYCLOAK_CLIENT_SECRET:}

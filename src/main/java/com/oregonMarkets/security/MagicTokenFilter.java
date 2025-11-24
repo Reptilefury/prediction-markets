@@ -2,7 +2,7 @@ package com.oregonMarkets.security;
 
 import com.oregonMarkets.common.exception.MagicAuthException;
 import com.oregonMarkets.dto.ErrorType;
-import com.oregonMarkets.integration.magic.MagicClient;
+import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class MagicTokenFilter implements WebFilter {
 
-    private final MagicClient magicClient;
+    private final MagicDIDValidator magicValidator;
     private final ErrorResponseBuilder errorResponseBuilder;
 
     @Override
@@ -48,29 +48,35 @@ public class MagicTokenFilter implements WebFilter {
         }
 
         log.info("MagicTokenFilter: Validating Magic token for path: {}", path);
-        return validateMagicToken(token)
+        return magicValidator.validateDIDToken(token)
             .flatMap(userInfo -> {
-                log.info("MagicTokenFilter: Magic token validation successful for user: {} on path: {}", userInfo.getEmail(), path);
+                log.info("MagicTokenFilter: Magic DID token validation successful for user: {} on path: {}", userInfo.getEmail(), path);
                 exchange.getAttributes().put("magicUser", userInfo);
                 exchange.getAttributes().put("magicToken", token);
                 return chain.filter(exchange);
             })
             .onErrorResume(e -> {
-                log.error("MagicTokenFilter: Magic token validation failed for path {}: {}", path, e.getMessage(), e);
+                log.error("MagicTokenFilter: Magic DID token validation failed for path {}: {}", path, e.getMessage(), e);
                 return sendErrorResponse(exchange, getErrorMessage(e));
             });
     }
 
     private String extractToken(ServerWebExchange exchange) {
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
+        log.debug("Authorization header present: {}", authHeader != null);
+        if (authHeader != null) {
+            log.debug("Authorization header length: {}, First 50 chars: {}",
+                authHeader.length(),
+                authHeader.substring(0, Math.min(50, authHeader.length())));
+        }
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
-        return authHeader.substring(7);
-    }
-
-    private Mono<MagicClient.MagicUserInfo> validateMagicToken(String token) {
-        return magicClient.validateDIDToken(token);
+        String token = authHeader.substring(7);
+        log.debug("Extracted token length: {}, First 50 chars: {}",
+            token.length(),
+            token.substring(0, Math.min(50, token.length())));
+        return token;
     }
 
     private String getErrorMessage(Throwable e) {

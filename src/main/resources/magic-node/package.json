@@ -1,0 +1,9 @@
+{
+  "name": "magic-validator",
+  "version": "1.0.0",
+  "description": "Magic SDK validator for GraalVM",
+  "main": "magic.js",
+  "dependencies": {
+    "@magic-sdk/admin": "^10.0.0"
+  }
+}

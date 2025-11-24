@@ -12,6 +12,7 @@ import com.oregonMarkets.integration.web3.Web3AuthService;
 import com.oregonMarkets.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -22,18 +23,21 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class Web3RegistrationService {
-    
+
     private final UserRepository userRepository;
     private final Web3AuthService web3AuthService;
     private final EnclaveClient enclaveClient;
     private final CacheService cacheService;
 
+    @Value("${app.enclave.destination-token-address:0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174}")
+    private String destinationTokenAddress;
+
     public Mono<UserRegistrationResponse> registerUser(Web3RegistrationRequest request) {
         log.info("Starting Web3 user registration for wallet: {}", request.getWalletAddress());
-        
+
         return web3AuthService.verifySignature(
-                request.getWalletAddress(), 
-                request.getMessage(), 
+                request.getWalletAddress(),
+                request.getMessage(),
                 request.getSignature()
             )
             .flatMap(isValid -> {
@@ -42,12 +46,16 @@ public class Web3RegistrationService {
                 }
                 return checkWalletExists(request.getWalletAddress())
                     .then(createWeb3User(request))
-                    .flatMap(user -> setupEnclaveUDA(user)
-                        .then(userRepository.save(user))
-                        .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
-                            .then(cacheUserData(savedUser))
-                            .thenReturn(buildResponse(savedUser))
-                        )
+                    .flatMap(user -> setupEnclaveUDAWithResponse(user)  // Returns Tuple2<User, EnclaveUDAResponse>
+                        .flatMap(pair -> {
+                            User updatedUser = pair.getT1();
+                            EnclaveClient.EnclaveUDAResponse udaResponse = pair.getT2();
+                            return userRepository.save(updatedUser)
+                                    .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
+                                            .then(cacheUserData(savedUser))
+                                            .thenReturn(buildResponse(savedUser, udaResponse))
+                                    );
+                        })
                     );
             })
             .doOnSuccess(response -> log.info("Successfully registered Web3 user: {}", response.getUserId()))
@@ -89,30 +97,43 @@ public class Web3RegistrationService {
         return Mono.just(user);
     }
     
-    private Mono<User> setupEnclaveUDA(User user) {
+    private Mono<reactor.util.function.Tuple2<User, EnclaveClient.EnclaveUDAResponse>> setupEnclaveUDAWithResponse(User user) {
         return enclaveClient.createUDA(
                 user.getId().toString(),
-                user.getWeb3WalletAddress(), // Use wallet as identifier
-                user.getWeb3WalletAddress()
+                user.getWeb3WalletAddress(), // Use wallet as email identifier
+                user.getWeb3WalletAddress(), // Use wallet as destinationAddress
+                destinationTokenAddress      // Use configured token address
             )
             .map(udaResponse -> {
                 user.setEnclaveUserId(udaResponse.getUserId());
                 user.setEnclaveUdaAddress(udaResponse.getUdaAddress());
                 user.setEnclaveUdaTag(udaResponse.getTag());
                 user.setEnclaveUdaStatus(User.EnclaveUdaStatus.ACTIVE);
-                user.setEnclaveUdaCreatedAt(udaResponse.getCreatedAt());
-                return user;
+                if (udaResponse.getCreatedAt() > 0) {
+                    user.setEnclaveUdaCreatedAt(java.time.Instant.ofEpochMilli(udaResponse.getCreatedAt()));
+                }
+                return reactor.util.function.Tuples.of(user, udaResponse);
             })
-            .onErrorReturn(user);
+            .onErrorResume(error -> {
+                log.warn("Failed to create UDA, continuing without it: {}", error.getMessage());
+                return Mono.just(reactor.util.function.Tuples.of(user, null));
+            });
     }
     
-    private UserRegistrationResponse buildResponse(User user) {
+    private UserRegistrationResponse buildResponse(User user, EnclaveClient.EnclaveUDAResponse udaResponse) {
+        UserRegistrationResponse.DepositAddresses cleanDepositAddresses = null;
+        if (udaResponse != null && udaResponse.getDepositAddresses() != null) {
+            cleanDepositAddresses = com.oregonMarkets.domain.user.dto.response.DepositAddressTransformer
+                    .transform(udaResponse.getDepositAddresses());
+        }
+
         return UserRegistrationResponse.builder()
             .userId(user.getId())
             .email(user.getEmail())
             .username(user.getUsername())
             .magicWalletAddress(user.getWeb3WalletAddress()) // Use Web3 wallet
             .enclaveUdaAddress(user.getEnclaveUdaAddress())
+            .depositAddresses(cleanDepositAddresses)
             .referralCode(user.getReferralCode())
             .accessToken("mock-access-token")
             .refreshToken("mock-refresh-token")

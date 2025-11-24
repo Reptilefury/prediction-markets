@@ -4,7 +4,7 @@ import  com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
 import com.oregonMarkets.domain.user.service.UserRegistrationService;
 import com.oregonMarkets.domain.user.service.Web3RegistrationService;
-import com.oregonMarkets.integration.magic.MagicClient;
+import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +69,7 @@ class AuthRouterConfigTest {
             .createdAt(Instant.now())
             .build();
 
-        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class), any(MagicClient.MagicUserInfo.class), anyString()))
+        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class), any(MagicDIDValidator.MagicUserInfo.class), anyString()))
             .thenReturn(Mono.just(response));
 
         // When & Then
@@ -95,7 +95,7 @@ class AuthRouterConfigTest {
         request.setEmail("test@example.com");
         request.setCountryCode("US");
 
-        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class), any(MagicClient.MagicUserInfo.class), anyString()))
+        when(userRegistrationService.registerUser(any(UserRegistrationRequest.class), any(MagicDIDValidator.MagicUserInfo.class), anyString()))
             .thenReturn(Mono.error(new RuntimeException("Service error")));
 
         // When & Then

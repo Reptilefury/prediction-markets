@@ -45,7 +45,7 @@ public class ApiResponse<T> {
                 .message(ResponseCode.SUCCESS.getMessage())
                 .code(ResponseCode.SUCCESS.getCode())
                 .data(data)
-                .   build();
+                .build();
     }
 
     /**
@@ -61,10 +61,7 @@ public class ApiResponse<T> {
     }
 
     /**
-     * Create a success response with cusRequired type:
-ResponseStatus
-Provided:
-Stringtom message
+     * Create a success response with custom message
      */
     public static <T> ApiResponse<T> success(ResponseCode responseCode, String customMessage, T data) {
         return ApiResponse.<T>builder()

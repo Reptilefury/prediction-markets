@@ -33,6 +33,7 @@
 		<flyway.version>10.21.0</flyway.version>
 		<web3j.version>4.10.3</web3j.version>
 		<okhttp.version>4.12.0</okhttp.version>
+		<graalvm.version>25.0.1</graalvm.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -97,7 +98,6 @@
 			<version>${camel.version}</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
@@ -107,6 +107,19 @@
 			<artifactId>core</artifactId>
 			<version>${web3j.version}</version>
 		</dependency>
+
+		<!-- JWT and JOSE for Magic DID Token Validation -->
+		<dependency>
+			<groupId>com.nimbusds</groupId>
+			<artifactId>nimbus-jose-jwt</artifactId>
+			<version>9.37.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

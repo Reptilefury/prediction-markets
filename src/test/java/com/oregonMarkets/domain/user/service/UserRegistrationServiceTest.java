@@ -6,8 +6,10 @@ import com.oregonMarkets.domain.user.model.User;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.integration.blnk.BlnkClient;
 import com.oregonMarkets.integration.enclave.EnclaveClient;
-import com.oregonMarkets.integration.magic.MagicClient;
+import com.oregonMarkets.integration.magic.MagicDIDValidator;
+import com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService;
 import com.oregonMarkets.service.CacheService;
+import reactor.core.publisher.Mono;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +39,9 @@ class UserRegistrationServiceTest {
     private BlnkClient blnkClient;
 
     @Mock
+    private ProxyWalletOnboardingService proxyWalletOnboardingService;
+
+    @Mock
     private CacheService cacheService;
 
     @Mock
@@ -47,7 +52,7 @@ class UserRegistrationServiceTest {
     @BeforeEach
     void setUp() {
         userRegistrationService = new UserRegistrationService(
-            userRepository, enclaveClient, blnkClient, cacheService, eventPublisher
+            userRepository, enclaveClient, blnkClient, proxyWalletOnboardingService, cacheService, eventPublisher
         );
     }
 
@@ -55,7 +60,7 @@ class UserRegistrationServiceTest {
     void registerUser_Success() {
         // Given
         UserRegistrationRequest request = createValidRequest();
-        MagicClient.MagicUserInfo magicUser = createMagicUserInfo();
+        MagicDIDValidator.MagicUserInfo magicUser = createMagicUserInfo();
         String didToken = "test-did-token";
         EnclaveClient.EnclaveUDAResponse udaResponse = createUdaResponse();
         User savedUser = createSavedUser();
@@ -63,7 +68,8 @@ class UserRegistrationServiceTest {
         // When
         when(userRepository.existsByEmail(anyString())).thenReturn(Mono.just(false));
         when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
-        when(enclaveClient.createUDA(anyString(), anyString(), anyString())).thenReturn(Mono.just(udaResponse));
+        when(proxyWalletOnboardingService.createUserProxyWallet(anyString())).thenReturn(Mono.just("0x456"));
+        when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString())).thenReturn(Mono.just(udaResponse));
         when(blnkClient.createIdentity(anyString(), anyString(), any())).thenReturn(Mono.just("blnk-identity-id"));
         when(blnkClient.createAccount(anyString(), anyString(), anyString())).thenReturn(Mono.just("blnk-account-id"));
         when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
@@ -83,7 +89,7 @@ class UserRegistrationServiceTest {
     void registerUser_UserAlreadyExists() {
         // Given
         UserRegistrationRequest request = createValidRequest();
-        MagicClient.MagicUserInfo magicUser = createMagicUserInfo();
+        MagicDIDValidator.MagicUserInfo magicUser = createMagicUserInfo();
         String didToken = "test-did-token";
 
         // When
@@ -106,11 +112,12 @@ class UserRegistrationServiceTest {
         return request;
     }
 
-    private MagicClient.MagicUserInfo createMagicUserInfo() {
-        MagicClient.MagicUserInfo magicUser = new MagicClient.MagicUserInfo();
+    private MagicDIDValidator.MagicUserInfo createMagicUserInfo() {
+        MagicDIDValidator.MagicUserInfo magicUser = new MagicDIDValidator.MagicUserInfo();
         magicUser.setEmail("test@example.com");
         magicUser.setIssuer("test-issuer");
         magicUser.setPublicAddress("0x123");
+        magicUser.setUserId("test-user-id");
         return magicUser;
     }
 
@@ -119,7 +126,7 @@ class UserRegistrationServiceTest {
         udaResponse.setUserId("enclave-user-id");
         udaResponse.setUdaAddress("0xuda123");
         udaResponse.setTag("tag123");
-        udaResponse.setCreatedAt(Instant.now());
+        udaResponse.setCreatedAt(System.currentTimeMillis());
         return udaResponse;
     }
 

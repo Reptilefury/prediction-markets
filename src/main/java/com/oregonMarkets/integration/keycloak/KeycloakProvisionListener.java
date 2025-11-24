@@ -16,11 +16,11 @@ public class KeycloakProvisionListener {
 
     @EventListener
     public void onProvisionRequested(KeycloakProvisionEvent event) {
-        log.info("Received KeycloakProvisionEvent for user {} ({})", event.getUserId(), event.getEmail());
+        log.info("Received KeycloakProvisionEvent for user {} (Magic user ID: {})", event.getUserId(), event.getUsername());
         // Fire-and-forget to avoid blocking registration request path
-        adminClient.createUserIfAbsent(event.getEmail(), event.getInitialPassword())
+        adminClient.createUserIfAbsent(event.getUsername(), event.getInitialPassword())
                 .onErrorResume(e -> {
-                    log.error("Failed to provision Keycloak user {}: {}", event.getEmail(), e.getMessage());
+                    log.error("Failed to provision Keycloak user {}: {}", event.getUsername(), e.getMessage());
                     return Mono.empty();
                 })
                 .subscribe();

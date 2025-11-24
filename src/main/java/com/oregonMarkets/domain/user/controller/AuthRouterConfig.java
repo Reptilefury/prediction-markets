@@ -1,11 +1,14 @@
 package com.oregonMarkets.domain.user.controller;
 
 import com.oregonMarkets.common.exception.MagicAuthException;
+import com.oregonMarkets.common.response.ApiResponse;
+import com.oregonMarkets.common.response.ResponseCode;
 import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.request.Web3RegistrationRequest;
+import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
 import com.oregonMarkets.domain.user.service.UserRegistrationService;
 import com.oregonMarkets.domain.user.service.Web3RegistrationService;
-import com.oregonMarkets.integration.magic.MagicClient;
+import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -36,24 +39,26 @@ public class AuthRouterConfig {
                 .doOnNext(req -> log.info("Registration request received for email: {}", req.getEmail()))
                 .flatMap(req -> {
                     var exchange = request.exchange();
-                    MagicClient.MagicUserInfo magicUser = exchange.getAttribute("magicUser");
+                    MagicDIDValidator.MagicUserInfo magicUser = exchange.getAttribute("magicUser");
                     String didToken = exchange.getAttribute("magicToken");
                     if (magicUser == null || didToken == null) {
-                        return Mono.error(new MagicAuthException("Missing Magic authentication context"));
+                        return Mono.error(new MagicAuthException("Missing Magic DID token validation - registration requires Magic authentication"));
                     }
                     return userRegistrationService.registerUser(req, magicUser, didToken);
                 })
-                .flatMap(response -> ServerResponse.ok()
+                .map(response -> ApiResponse.success(ResponseCode.USER_REGISTERED, response))
+                .flatMap(apiResponse -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
+                        .bodyValue(apiResponse));
     }
 
     private Mono<ServerResponse> registerWeb3(ServerRequest request) {
         return request.bodyToMono(Web3RegistrationRequest.class)
                 .doOnNext(req -> log.info("Web3 registration request received for wallet: {}", req.getWalletAddress()))
                 .flatMap(web3RegistrationService::registerUser)
-                .flatMap(response -> ServerResponse.ok()
+                .map(response -> ApiResponse.success(ResponseCode.USER_REGISTERED, response))
+                .flatMap(apiResponse -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
+                        .bodyValue(apiResponse));
     }
 }

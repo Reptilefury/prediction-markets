@@ -114,6 +114,17 @@ public class GlobalExceptionHandler {
         return response.toResponseEntity();
     }
 
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<ApiResponse<Void>> handleExternalServiceException(ExternalServiceException ex) {
+        String traceId = generateTraceId();
+        log.error("External service error [{}]: {} - Service: {}", traceId, ex.getMessage(), ex.getServiceName());
+
+        ApiResponse<Void> response = ApiResponse.error(ex.getResponseCode(), ex.getMessage());
+        response.getError().setTraceId(traceId);
+
+        return response.toResponseEntity();
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
         String traceId = generateTraceId();
