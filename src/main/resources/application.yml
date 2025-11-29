@@ -8,6 +8,7 @@ spring:
   security:
     user:
       password: # Disable default password generation
+
   
   flyway:
     enabled: true
