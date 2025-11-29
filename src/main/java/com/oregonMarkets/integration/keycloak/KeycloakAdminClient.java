@@ -59,13 +59,17 @@ public class KeycloakAdminClient {
     }
 
     public Mono<Void> createUserIfAbsent(String username, String password) {
+        return createUserIfAbsent(username, password, null);
+    }
+
+    public Mono<Void> createUserIfAbsent(String username, String password, String email) {
         // Get access token first, then try to create user; if 409, ignore; then set password
         // username is the Magic user ID (sub field from DID token)
         // Sanitize the username by removing base64 padding characters (=) which are invalid in Keycloak usernames
         String sanitizedUsername = username.replace("=", "");
 
         return getAccessToken()
-                .flatMap(token -> createUser(sanitizedUsername, token))
+                .flatMap(token -> createUser(sanitizedUsername, email, token))
                 .onErrorResume(ex -> {
                     // If already exists, proceed
                     log.debug("createUser error (possibly exists): {}", ex.getMessage());
@@ -76,16 +80,21 @@ public class KeycloakAdminClient {
                 .doOnSuccess(v -> log.info("Keycloak user ensured for {}", sanitizedUsername));
     }
 
-    private Mono<Void> createUser(String username, String accessToken) {
+    private Mono<Void> createUser(String username, String email, String accessToken) {
         // username is the Magic user ID (sub field from DID token)
         // Remove base64 padding characters (=) which are invalid in Keycloak usernames
         String sanitizedUsername = username.replace("=", "");
 
-        // We don't set email during creation as the primary identifier is the username
-        Map<String, Object> payload = Map.of(
-                "username", sanitizedUsername,
-                "enabled", true
-        );
+        // Create user payload with email if provided
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("username", sanitizedUsername);
+        payload.put("enabled", true);
+        
+        if (email != null && !email.isEmpty()) {
+            payload.put("email", email);
+            payload.put("emailVerified", true);
+        }
+
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/admin/realms/{realm}/users").build(realm))
                 .contentType(MediaType.APPLICATION_JSON)

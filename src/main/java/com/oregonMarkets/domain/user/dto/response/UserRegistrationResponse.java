@@ -30,6 +30,12 @@ public class UserRegistrationResponse {
     private String accessToken;
     private String refreshToken;
     private Instant createdAt;
+    private String avatarUrl;
+    private String proxyWalletQrCodeUrl;
+    private String enclaveUdaQrCodeUrl;
+    private String evmDepositQrCodes;
+    private String solanaDepositQrCodeUrl;
+    private String bitcoinDepositQrCodes;
 
     @Data
     @Builder

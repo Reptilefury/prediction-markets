@@ -108,8 +108,8 @@ public class User {
     @Column("blnk_identity_id")
     private String blnkIdentityId;
 
-    @Column("blnk_account_id")
-    private String blnkAccountId;
+    @Column("blnk_balance_id")
+    private String blnkBalanceId;
 
     @Column("blnk_created_at")
     private Instant blnkCreatedAt;
@@ -140,6 +140,25 @@ public class User {
 
     @Column("utm_campaign")
     private String utmCampaign;
+
+    // Avatar and QR Codes
+    @Column("avatar_url")
+    private String avatarUrl;
+
+    @Column("proxy_wallet_qr_code_url")
+    private String proxyWalletQrCodeUrl;
+
+    @Column("enclave_uda_qr_code_url")
+    private String enclaveUdaQrCodeUrl;
+
+    @Column("evm_deposit_qr_codes")
+    private String evmDepositQrCodes;
+
+    @Column("solana_deposit_qr_code_url")
+    private String solanaDepositQrCodeUrl;
+
+    @Column("bitcoin_deposit_qr_codes")
+    private String bitcoinDepositQrCodes;
 
     // Timestamps
     @CreatedDate

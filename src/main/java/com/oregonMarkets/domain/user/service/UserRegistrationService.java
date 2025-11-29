@@ -5,21 +5,18 @@ import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
 import com.oregonMarkets.domain.user.model.User;
 import com.oregonMarkets.domain.user.repository.UserRepository;
+import com.oregonMarkets.event.ProxyWalletCreatedEvent;
 import com.oregonMarkets.event.UserRegisteredEvent;
-import com.oregonMarkets.integration.blnk.BlnkClient;
-import com.oregonMarkets.integration.enclave.EnclaveClient;
 import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService;
 import com.oregonMarkets.service.CacheService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -28,14 +25,9 @@ import java.util.UUID;
 public class UserRegistrationService {
 
     private final UserRepository userRepository;
-    private final EnclaveClient enclaveClient;
-    private final BlnkClient blnkClient;
     private final ProxyWalletOnboardingService proxyWalletService;
     private final CacheService cacheService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
-
-    @Value("${app.enclave.destination-token-address:0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174}")
-    private String destinationTokenAddress;
 
     /**
      * Deprecated path: registration should no longer receive DID token in body.
@@ -53,26 +45,24 @@ public class UserRegistrationService {
         return checkUserExists(magicUser)
                 .then(createUser(magicUser, request))
                 .flatMap(userRepository::save)  // Save first to generate UUID
-                .flatMap(user -> setupExternalIntegrationsWithUDA(user)  // Get both user and UDA response
-                        .flatMap(pair -> {
-                            User updatedUser = pair.getT1();
-                            EnclaveClient.EnclaveUDAResponse udaResponse = pair.getT2();
-                            return userRepository.save(updatedUser)
-                                    .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
-                                            .then(publishKeycloakProvisionEvent(savedUser, magicUser.getUserId(), didToken))
-                                            .then(cacheUserData(savedUser))
-                                            .thenReturn(buildResponse(savedUser, udaResponse))
-                                    );
-                        })
+                .flatMap(user -> setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)  // Setup proxy wallet and publish event for async chain
+                        .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
+                                .then(cacheUserData(savedUser))
+                                .thenReturn(buildResponse(savedUser))  // Return immediately, rest happens async
+                        )
                 )
                 .doOnSuccess(response -> log.info("Successfully registered user: {}", response.getUserId()))
                 .doOnError(error -> log.error("Failed to register user: {}", error.getMessage()));
     }
 
     private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+        // Generate username from email prefix
+        String username = request.getEmail().split("@")[0];
+        
         User user = User.builder()
                 .email(request.getEmail())
-                .magicUserId(magicUser.getIssuer())
+                .username(username)  // Set username from email
+                .magicUserId(magicUser.getUserId())  // Use getUserId() for the actual Magic User ID
                 .magicWalletAddress(magicUser.getPublicAddress())
                 .magicIssuer(magicUser.getIssuer())
                 .emailVerified(true)
@@ -112,16 +102,12 @@ public class UserRegistrationService {
                                 Mono.empty()));
     }
 
-    private Mono<reactor.util.context.ContextView> setupExternalIntegrations(User user) {
-        // Placeholder to maintain compatibility - will be replaced
-        return setupExternalIntegrationsWithUDA(user).then(Mono.empty());
-    }
-
-    private Mono<reactor.util.function.Tuple2<User, EnclaveClient.EnclaveUDAResponse>> setupExternalIntegrationsWithUDA(User user) {
-        // Use email as identifier since UUID may not be generated yet
-        String userId = user.getId() != null ? user.getId().toString() : user.getEmail();
-
-        // First create proxy wallet, then use it as destinationTokenAddress for UDA
+    /**
+     * New async-first approach: Create proxy wallet and publish event for async processing chain
+     * ProxyWalletCreatedEvent → EnclaveUdaCreationListener → EnclaveUdaCreatedEvent → BlnkBalanceCreationListener → BlnkBalanceCreatedEvent → KeycloakProvisionListener
+     */
+    private Mono<User> setupExternalIntegrationsAsyncViawEvents(User user, String magicUserId, String didToken) {
+        // Create proxy wallet synchronously (needed for event data)
         return proxyWalletService.createUserProxyWallet(user.getMagicWalletAddress())
                 .map(proxyWalletAddress -> {
                     user.setProxyWalletAddress(proxyWalletAddress);
@@ -133,80 +119,25 @@ public class UserRegistrationService {
                     log.warn("Failed to create proxy wallet, continuing without it: {}", error.getMessage());
                     return Mono.just(user);
                 })
-                .flatMap(u -> {
-                    // Use proxy wallet address as destinationAddress (not the magic wallet which is in wrong format)
-                    // Use configured token address for destinationTokenAddress
-                    String proxyWalletOrMagic = u.getProxyWalletAddress() != null ?
-                        u.getProxyWalletAddress() : u.getMagicWalletAddress();
-                    return enclaveClient.createUDA(
-                            userId,
-                            u.getEmail(),
-                            proxyWalletOrMagic,
-                            destinationTokenAddress
-                    )
-                    .map(udaResponse -> {
-                        u.setEnclaveUserId(udaResponse.getUserId());
-                        u.setEnclaveUdaAddress(udaResponse.getUdaAddress());
-                        u.setEnclaveUdaTag(udaResponse.getTag());
-                        u.setEnclaveUdaStatus(User.EnclaveUdaStatus.ACTIVE);
-                        if (udaResponse.getCreatedAt() > 0) {
-                            u.setEnclaveUdaCreatedAt(java.time.Instant.ofEpochMilli(udaResponse.getCreatedAt()));
-                        }
-                        // Serialize and store deposit addresses from Enclave API response
-                        if (udaResponse.getDepositAddresses() != null) {
-                            try {
-                                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                                String depositAddressesJson = mapper.writeValueAsString(udaResponse.getDepositAddresses());
-                                u.setEnclaveDepositAddresses(depositAddressesJson);
-                            } catch (Exception e) {
-                                log.warn("Failed to serialize Enclave deposit addresses: {}", e.getMessage());
-                            }
-                        }
-                        return reactor.util.function.Tuples.of(u, udaResponse);
-                    })
-                    .onErrorResume(error -> {
-                        log.warn("Failed to create UDA, continuing without it: {}", error.getMessage());
-                        return Mono.just(reactor.util.function.Tuples.of(u, (EnclaveClient.EnclaveUDAResponse) null))
-                            .switchIfEmpty(Mono.just(reactor.util.function.Tuples.of(u, (EnclaveClient.EnclaveUDAResponse) null)));
-                    });
+                .flatMap(u -> userRepository.save(u))  // Save updated user with proxy wallet
+                .doOnSuccess(u -> {
+                    // Publish ProxyWalletCreatedEvent to kickoff the async event chain
+                    ProxyWalletCreatedEvent event = ProxyWalletCreatedEvent.builder()
+                            .userId(u.getId())
+                            .magicWalletAddress(u.getMagicWalletAddress())
+                            .proxyWalletAddress(u.getProxyWalletAddress())
+                            .email(u.getEmail())
+                            .magicUserId(magicUserId)
+                            .didToken(didToken)
+                            .timestamp(Instant.now())
+                            .build();
+                    eventPublisher.publishEvent(event);
+                    log.info("Published ProxyWalletCreatedEvent for user: {}, starting async chain", u.getId());
                 })
-                .flatMap(pair -> {
-                    User u = pair.getT1();
-                    String blnkUserId = u.getId() != null ? u.getId().toString() : u.getEmail();
-                    String username = u.getUsername() != null ? u.getUsername() : "user_" + (u.getId() != null ? u.getId() : u.getEmail());
-                    return blnkClient.createIdentity(
-                                        blnkUserId,
-                                        u.getEmail(),
-                                        Map.of(
-                                                "username", username,
-                                                "magic_wallet", u.getMagicWalletAddress()
-                                        )
-                                ).flatMap(identityId -> blnkClient.createAccount(
-                                                        identityId,
-                                                        "USDC",
-                                                        "Oregon Markets Balance - " + u.getEmail()
-                                                )
-                                                .map(accountId -> {
-                                                    u.setBlnkIdentityId(identityId);
-                                                    u.setBlnkAccountId(accountId);
-                                                    u.setBlnkCreatedAt(Instant.now());
-                                                    return reactor.util.function.Tuples.of(u, pair.getT2());
-                                                })
-                                        )
-                                .onErrorResume(error -> {
-                                    log.warn("Failed to create Blnk identity/account: {}", error.getMessage());
-                                    return Mono.just(reactor.util.function.Tuples.of(u, pair.getT2()));
-                                });
-                });
+                .doOnError(error -> log.error("Error setting up external integrations async: {}", error.getMessage()));
     }
 
-    private UserRegistrationResponse buildResponse(User user, EnclaveClient.EnclaveUDAResponse udaResponse) {
-        UserRegistrationResponse.DepositAddresses cleanDepositAddresses = null;
-        if (udaResponse != null && udaResponse.getDepositAddresses() != null) {
-            cleanDepositAddresses = com.oregonMarkets.domain.user.dto.response.DepositAddressTransformer
-                    .transform(udaResponse.getDepositAddresses());
-        }
-
+    private UserRegistrationResponse buildResponse(User user) {
         return UserRegistrationResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
@@ -214,8 +145,13 @@ public class UserRegistrationService {
                 .magicWalletAddress(user.getMagicWalletAddress())
                 .enclaveUdaAddress(user.getEnclaveUdaAddress())
                 .proxyWalletAddress(user.getProxyWalletAddress())
-                .depositAddresses(cleanDepositAddresses)
                 .referralCode(user.getReferralCode())
+                .avatarUrl(user.getAvatarUrl())
+                .proxyWalletQrCodeUrl(user.getProxyWalletQrCodeUrl())
+                .enclaveUdaQrCodeUrl(user.getEnclaveUdaQrCodeUrl())
+                .evmDepositQrCodes(user.getEvmDepositQrCodes())
+                .solanaDepositQrCodeUrl(user.getSolanaDepositQrCodeUrl())
+                .bitcoinDepositQrCodes(user.getBitcoinDepositQrCodes())
                 .accessToken("mock-access-token")
                 .refreshToken("mock-refresh-token")
                 .createdAt(user.getCreatedAt())
