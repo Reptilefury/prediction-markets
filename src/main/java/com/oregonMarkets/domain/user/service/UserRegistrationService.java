@@ -142,7 +142,7 @@ public class UserRegistrationService {
         log.info("ENTERING checkUserExists for email: {}, magicUserId: {}", magicUser.getEmail(), magicUser.getUserId());
 
         return Mono.zip(
-                userRepository.existsUserByEmail(magicUser.getEmail())
+                userRepository.existsByEmail(magicUser.getEmail())
                         .doOnNext(exists -> log.info("Email check result for {}: {}", magicUser.getEmail(), exists)),
                 userRepository.existsByMagicUserId(magicUser.getUserId())
                         .doOnNext(exists -> log.info("MagicId check result for {}: {}", magicUser.getUserId(), exists))
