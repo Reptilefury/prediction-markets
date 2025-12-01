@@ -1,38 +1,87 @@
 package com.oregonMarkets.config;
 
+import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
+import reactor.util.retry.Retry;
+
+import javax.net.ssl.SSLException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebClientConfig {
-    
+
+    private static final int CONNECTION_TIMEOUT = 5000; // 5 seconds
+    private static final int READ_TIMEOUT = 10000; // 10 seconds
+    private static final int WRITE_TIMEOUT = 10000; // 10 seconds
+    private static final int MAX_CONNECTIONS = 100;
+    private static final int MAX_PENDING_REQUESTS = 1000;
+
     @Bean("magicWebClient")
     public WebClient magicWebClient(@Value("${app.magic.api-url}") String baseUrl) {
         return WebClient.builder()
             .baseUrl(baseUrl)
             .build();
     }
-    
+
     @Bean("enclaveWebClient")
     public WebClient enclaveWebClient(@Value("${app.enclave.api-url}") String baseUrl) {
         return WebClient.builder()
             .baseUrl(baseUrl)
             .build();
     }
-    
+
     @Bean("blnkWebClient")
-    public WebClient blnkWebClient(@Value("${app.blnk.api-url}") String baseUrl) {
+    public WebClient blnkWebClient(@Value("${app.blnk.api-url}") String baseUrl) throws SSLException {
         return WebClient.builder()
             .baseUrl(baseUrl)
+            .clientConnector(new org.springframework.http.client.reactive.ReactorNettyClientRequestFactory(createHttpClient()))
             .build();
     }
 
     @Bean("keycloakAdminWebClient")
-    public WebClient keycloakAdminWebClient(@Value("${keycloak.admin.base-url}") String baseUrl) {
+    public WebClient keycloakAdminWebClient(@Value("${keycloak.admin.base-url}") String baseUrl) throws SSLException {
         return WebClient.builder()
                 .baseUrl(baseUrl)
+                .clientConnector(new org.springframework.http.client.reactive.ReactorNettyClientRequestFactory(createHttpClient()))
                 .build();
+    }
+
+    private HttpClient createHttpClient() throws SSLException {
+        ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
+                .maxConnections(MAX_CONNECTIONS)
+                .maxIdleTime(Duration.ofSeconds(20))
+                .maxLifeTime(Duration.ofSeconds(60))
+                .pendingAcquireMaxCount(MAX_PENDING_REQUESTS)
+                .pendingAcquireTimeout(Duration.ofSeconds(45))
+                .build();
+
+        return HttpClient.create(connectionProvider)
+                .secure(sslSpec -> {
+                    try {
+                        sslSpec.sslContext(SslContextBuilder.forClient()
+                                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                .build());
+                    } catch (SSLException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .responseTimeout(Duration.ofSeconds(10))
+                .doOnConnected(conn -> conn
+                        .addHandlerLast(new ReadTimeoutHandler(READ_TIMEOUT, TimeUnit.MILLISECONDS))
+                        .addHandlerLast(new WriteTimeoutHandler(WRITE_TIMEOUT, TimeUnit.MILLISECONDS)))
+                .compress(true);
     }
 }

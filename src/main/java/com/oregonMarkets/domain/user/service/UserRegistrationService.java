@@ -96,9 +96,9 @@ public class UserRegistrationService {
                 .flatMap(exists -> exists ?
                         Mono.error(new UserAlreadyExistsException(magicUser.getEmail())) :
                         Mono.empty())
-                .then(userRepository.existsByMagicUserId(magicUser.getIssuer())
+                .then(userRepository.existsByMagicUserId(magicUser.getUserId())
                         .flatMap(exists -> exists ?
-                                Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getIssuer())) :
+                                Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getUserId())) :
                                 Mono.empty()));
     }
 

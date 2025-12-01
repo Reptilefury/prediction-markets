@@ -8,6 +8,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import java.time.Duration;
 import java.util.Map;
 
 @Component
@@ -66,6 +68,10 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
+            .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                    .maxBackoff(Duration.ofSeconds(2))
+                    .doBeforeRetry(signal -> log.warn("Retrying createIdentity attempt {} for user {} - Error: {}",
+                        signal.totalRetries() + 1, userId, signal.failure().getMessage())))
             .doOnSuccess(identityId -> log.info("Successfully created Blnk identity for user {}: {}", userId, identityId))
             .onErrorMap(error -> error instanceof BlnkApiException ? error :
                 new BlnkApiException("Failed to create identity", error));
@@ -106,6 +112,10 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
+            .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                    .maxBackoff(Duration.ofSeconds(2))
+                    .doBeforeRetry(signal -> log.warn("Retrying createBalance attempt {} for currency {} - Error: {}",
+                        signal.totalRetries() + 1, currency, signal.failure().getMessage())))
             .doOnSuccess(balanceId -> log.info("Successfully created Blnk balance for currency {}: {}", currency, balanceId))
             .onErrorMap(error -> error instanceof BlnkApiException ? error :
                 new BlnkApiException("Failed to create balance", error));
