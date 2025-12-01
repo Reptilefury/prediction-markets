@@ -41,21 +41,65 @@ public class UserRegistrationService {
     public Mono<UserRegistrationResponse> registerUser(@Valid UserRegistrationRequest request,
                                                        MagicDIDValidator.MagicUserInfo magicUser,
                                                        String didToken) {
-        log.info("Starting user registration for email: {}", request.getEmail());
-        log.info("About to check if user exists");
+        log.info("=== REGISTER USER START === email: {}, magicUserId: {}", request.getEmail(), magicUser.getUserId());
+
+        // Step 1: Check for duplicates FIRST before creating the user object
+        log.info("STEP 1: About to call checkUserExists");
         return checkUserExists(magicUser)
-                .doOnNext(v -> log.info("User existence check completed"))
-                .doOnError(e -> log.error("User existence check failed: {}", e.getMessage()))
-                .then(createUser(magicUser, request))
-                .flatMap(userRepository::save)  // Save first to generate UUID
-                .flatMap(user -> setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)  // Setup proxy wallet and publish event for async chain
-                        .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
-                                .then(cacheUserData(savedUser))
-                                .thenReturn(buildResponse(savedUser))  // Return immediately, rest happens async
-                        )
-                )
-                .doOnSuccess(response -> log.info("Successfully registered user: {}", response.getUserId()))
-                .doOnError(error -> log.error("Failed to register user: {}", error.getMessage()));
+                .doOnSuccess(v -> log.info("STEP 1 COMPLETE: checkUserExists returned successfully"))
+                .doOnError(e -> log.error("STEP 1 ERROR: checkUserExists failed with: {}", e.getMessage(), e))
+                // Step 2: Create user object if no duplicates found
+                .then(Mono.defer(() -> {
+                    log.info("STEP 2: Creating user object");
+                    return createUser(magicUser, request);
+                }))
+                .doOnNext(user -> log.info("STEP 2 COMPLETE: User object created with email: {}", user.getEmail()))
+                .doOnError(e -> log.error("STEP 2 ERROR: createUser failed with: {}", e.getMessage(), e))
+                // Step 3: Save user to database
+                .flatMap(user -> {
+                    log.info("STEP 3: About to save user with email: {}", user.getEmail());
+                    return userRepository.save(user)
+                            .doOnSuccess(savedUser -> log.info("STEP 3 COMPLETE: User saved with ID: {}", savedUser.getId()))
+                            .doOnError(e -> {
+                                log.error("STEP 3 ERROR: Failed to save user: {}", e.getMessage());
+                                if (e instanceof org.springframework.dao.DuplicateKeyException) {
+                                    log.error("DETECTED DUPLICATE KEY EXCEPTION from database");
+                                }
+                            });
+                })
+                .onErrorMap(throwable -> {
+                    log.error("CONVERTING ERROR: Caught {} - {}", throwable.getClass().getSimpleName(), throwable.getMessage());
+                    // Catch database duplicate key exceptions and convert to proper error
+                    if (throwable instanceof org.springframework.dao.DuplicateKeyException) {
+                        String message = throwable.getMessage();
+                        log.error("CONVERTING DUPLICATE KEY: message contains={}", message);
+                        if (message != null && message.contains("users_magic_user_id_key")) {
+                            log.error("RETURNING: UserAlreadyExistsException for Magic ID");
+                            return new UserAlreadyExistsException("Magic ID", magicUser.getUserId());
+                        }
+                        log.error("RETURNING: UserAlreadyExistsException for email");
+                        return new UserAlreadyExistsException(request.getEmail());
+                    }
+                    return throwable;
+                })
+                // Step 4: Setup external integrations
+                .flatMap(user -> {
+                    log.info("STEP 4: Setting up external integrations for user: {}", user.getId());
+                    return setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)
+                            .doOnSuccess(u -> log.info("STEP 4 COMPLETE: External integrations setup"))
+                            .doOnError(e -> log.error("STEP 4 ERROR: {}", e.getMessage(), e));
+                })
+                // Step 5: Publish events and cache
+                .flatMap(savedUser -> {
+                    log.info("STEP 5: Publishing user registered event");
+                    return publishUserRegisteredEvent(savedUser)
+                            .then(cacheUserData(savedUser))
+                            .thenReturn(buildResponse(savedUser))
+                            .doOnSuccess(response -> log.info("STEP 5 COMPLETE: Events published and cached"))
+                            .doOnError(e -> log.error("STEP 5 ERROR: {}", e.getMessage(), e));
+                })
+                .doOnSuccess(response -> log.info("=== REGISTER USER COMPLETE === userId: {}", response.getUserId()))
+                .doOnError(error -> log.error("=== REGISTER USER FAILED === Error: {}", error.getMessage(), error));
     }
 
     private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
