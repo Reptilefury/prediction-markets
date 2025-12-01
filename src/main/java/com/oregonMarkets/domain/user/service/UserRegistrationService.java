@@ -166,7 +166,7 @@ public class UserRegistrationService {
             log.info("No duplicate found, proceeding with registration");
             return Mono.empty();
         })
-        .doOnError(error -> log.error("checkUserExists error: {}", error.getMessage()));
+        .then();
     }
 
     /**
