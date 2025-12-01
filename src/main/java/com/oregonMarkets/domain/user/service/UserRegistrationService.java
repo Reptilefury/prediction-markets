@@ -42,7 +42,10 @@ public class UserRegistrationService {
                                                        MagicDIDValidator.MagicUserInfo magicUser,
                                                        String didToken) {
         log.info("Starting user registration for email: {}", request.getEmail());
+        log.info("About to check if user exists");
         return checkUserExists(magicUser)
+                .doOnNext(v -> log.info("User existence check completed"))
+                .doOnError(e -> log.error("User existence check failed: {}", e.getMessage()))
                 .then(createUser(magicUser, request))
                 .flatMap(userRepository::save)  // Save first to generate UUID
                 .flatMap(user -> setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)  // Setup proxy wallet and publish event for async chain
@@ -92,27 +95,34 @@ public class UserRegistrationService {
     }
 
     private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser) {
+        log.info("ENTERING checkUserExists for email: {}, magicUserId: {}", magicUser.getEmail(), magicUser.getUserId());
+
         return Mono.zip(
-                userRepository.existsByEmail(magicUser.getEmail()),
+                userRepository.existsByEmail(magicUser.getEmail())
+                        .doOnNext(exists -> log.info("Email check result for {}: {}", magicUser.getEmail(), exists)),
                 userRepository.existsByMagicUserId(magicUser.getUserId())
+                        .doOnNext(exists -> log.info("MagicId check result for {}: {}", magicUser.getUserId(), exists))
         )
+        .doOnNext(tuple -> log.info("Zip completed with emailExists: {}, magicIdExists: {}", tuple.getT1(), tuple.getT2()))
         .flatMap(tuple -> {
             Boolean emailExists = tuple.getT1();
             Boolean magicIdExists = tuple.getT2();
 
-            log.info("Checking user existence - Email: {}, EmailExists: {}, MagicId: {}, MagicIdExists: {}",
+            log.info("CHECKING user existence - Email: {}, EmailExists: {}, MagicId: {}, MagicIdExists: {}",
                     magicUser.getEmail(), emailExists, magicUser.getUserId(), magicIdExists);
 
             if (emailExists) {
-                log.warn("User with email {} already exists", magicUser.getEmail());
+                log.warn("*** DUPLICATE FOUND: User with email {} already exists ***", magicUser.getEmail());
                 return Mono.error(new UserAlreadyExistsException(magicUser.getEmail()));
             }
             if (magicIdExists) {
-                log.warn("User with Magic ID {} already exists", magicUser.getUserId());
+                log.warn("*** DUPLICATE FOUND: User with Magic ID {} already exists ***", magicUser.getUserId());
                 return Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getUserId()));
             }
+            log.info("No duplicate found, proceeding with registration");
             return Mono.empty();
-        });
+        })
+        .doOnError(error -> log.error("checkUserExists error: {}", error.getMessage()));
     }
 
     /**
