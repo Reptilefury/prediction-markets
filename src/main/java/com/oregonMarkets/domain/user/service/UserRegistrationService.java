@@ -100,10 +100,15 @@ public class UserRegistrationService {
             Boolean emailExists = tuple.getT1();
             Boolean magicIdExists = tuple.getT2();
 
+            log.info("Checking user existence - Email: {}, EmailExists: {}, MagicId: {}, MagicIdExists: {}",
+                    magicUser.getEmail(), emailExists, magicUser.getUserId(), magicIdExists);
+
             if (emailExists) {
+                log.warn("User with email {} already exists", magicUser.getEmail());
                 return Mono.error(new UserAlreadyExistsException(magicUser.getEmail()));
             }
             if (magicIdExists) {
+                log.warn("User with Magic ID {} already exists", magicUser.getUserId());
                 return Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getUserId()));
             }
             return Mono.empty();
