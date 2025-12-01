@@ -92,14 +92,22 @@ public class UserRegistrationService {
     }
 
     private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser) {
-        return userRepository.existsByEmail(magicUser.getEmail())
-                .flatMap(exists -> exists ?
-                        Mono.error(new UserAlreadyExistsException(magicUser.getEmail())) :
-                        Mono.empty())
-                .then(userRepository.existsByMagicUserId(magicUser.getUserId())
-                        .flatMap(exists -> exists ?
-                                Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getUserId())) :
-                                Mono.empty()));
+        return Mono.zip(
+                userRepository.existsByEmail(magicUser.getEmail()),
+                userRepository.existsByMagicUserId(magicUser.getUserId())
+        )
+        .flatMap(tuple -> {
+            Boolean emailExists = tuple.getT1();
+            Boolean magicIdExists = tuple.getT2();
+
+            if (emailExists) {
+                return Mono.error(new UserAlreadyExistsException(magicUser.getEmail()));
+            }
+            if (magicIdExists) {
+                return Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getUserId()));
+            }
+            return Mono.empty();
+        });
     }
 
     /**

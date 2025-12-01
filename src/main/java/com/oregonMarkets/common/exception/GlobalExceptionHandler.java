@@ -4,6 +4,7 @@ import com.oregonMarkets.common.response.ApiResponse;
 import com.oregonMarkets.common.response.ResponseCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -181,6 +182,25 @@ public class GlobalExceptionHandler {
         log.warn("Access denied [{}]: {}", traceId, ex.getMessage());
 
         ApiResponse<Void> response = ApiResponse.error(ResponseCode.FORBIDDEN, ex.getMessage());
+        response.getError().setTraceId(traceId);
+
+        return response.toResponseEntity();
+    }
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateKeyException(DuplicateKeyException ex) {
+        String traceId = generateTraceId();
+        log.warn("Duplicate key violation [{}]: {}", traceId, ex.getMessage());
+
+        String errorMessage = "User with this email already exists";
+        if (ex.getMessage() != null && ex.getMessage().contains("users_magic_user_id_key")) {
+            errorMessage = "User with this Magic ID already exists";
+        }
+
+        ApiResponse<Void> response = ApiResponse.error(
+                ResponseCode.DUPLICATE_USER,
+                errorMessage
+        );
         response.getError().setTraceId(traceId);
 
         return response.toResponseEntity();

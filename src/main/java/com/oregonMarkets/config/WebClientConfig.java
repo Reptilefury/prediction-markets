@@ -1,20 +1,17 @@
 package com.oregonMarkets.config;
 
 import io.netty.channel.ChannelOption;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorResourceFactory;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
-import reactor.util.retry.Retry;
 
-import javax.net.ssl.SSLException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -42,22 +39,30 @@ public class WebClientConfig {
     }
 
     @Bean("blnkWebClient")
-    public WebClient blnkWebClient(@Value("${app.blnk.api-url}") String baseUrl) throws SSLException {
+    public WebClient blnkWebClient(@Value("${app.blnk.api-url}") String baseUrl) {
+        HttpClient httpClient = createHttpClient();
         return WebClient.builder()
             .baseUrl(baseUrl)
-            .clientConnector(new org.springframework.http.client.reactive.ReactorNettyClientRequestFactory(createHttpClient()))
+            .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(httpClient))
+            .exchangeStrategies(ExchangeStrategies.builder()
+                    .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024))
+                    .build())
             .build();
     }
 
     @Bean("keycloakAdminWebClient")
-    public WebClient keycloakAdminWebClient(@Value("${keycloak.admin.base-url}") String baseUrl) throws SSLException {
+    public WebClient keycloakAdminWebClient(@Value("${keycloak.admin.base-url}") String baseUrl) {
+        HttpClient httpClient = createHttpClient();
         return WebClient.builder()
                 .baseUrl(baseUrl)
-                .clientConnector(new org.springframework.http.client.reactive.ReactorNettyClientRequestFactory(createHttpClient()))
+                .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(httpClient))
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024))
+                        .build())
                 .build();
     }
 
-    private HttpClient createHttpClient() throws SSLException {
+    private HttpClient createHttpClient() {
         ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
                 .maxConnections(MAX_CONNECTIONS)
                 .maxIdleTime(Duration.ofSeconds(20))
@@ -67,15 +72,6 @@ public class WebClientConfig {
                 .build();
 
         return HttpClient.create(connectionProvider)
-                .secure(sslSpec -> {
-                    try {
-                        sslSpec.sslContext(SslContextBuilder.forClient()
-                                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                                .build());
-                    } catch (SSLException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .responseTimeout(Duration.ofSeconds(10))
