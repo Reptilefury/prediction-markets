@@ -20,6 +20,7 @@ public interface UserRepository extends ReactiveCrudRepository<User, UUID> {
     
     Mono<User> findByReferralCode(String referralCode);
     
+    @Query("SELECT COUNT(*) > 0 FROM users WHERE email = :email")
     Mono<Boolean> existsByEmail(String email);
     
     Mono<Boolean> existsByMagicUserId(String magicUserId);

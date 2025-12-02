@@ -42,7 +42,7 @@ public class UserRegistrationService {
                                                        MagicDIDValidator.MagicUserInfo magicUser,
                                                        String didToken) {
         log.info("Starting user registration for email: {}", request.getEmail());
-        return checkUserExists(magicUser)
+        return checkUserExists(magicUser, request)
                 .then(createUser(magicUser, request))
                 .flatMap(userRepository::save)  // Save first to generate UUID
                 .flatMap(user -> setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)  // Setup proxy wallet and publish event for async chain
@@ -56,9 +56,10 @@ public class UserRegistrationService {
     }
 
     private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+        log.info("Creating user ");
         // Generate username from email prefix
         String username = request.getEmail().split("@")[0];
-        
+
         User user = User.builder()
                 .email(request.getEmail())
                 .username(username)  // Set username from email
@@ -91,16 +92,21 @@ public class UserRegistrationService {
         return userMono;
     }
 
-    private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser) {
-        return userRepository.existsByEmail(magicUser.getEmail())
-                .flatMap(exists -> exists ?
-                        Mono.error(new UserAlreadyExistsException(magicUser.getEmail())) :
-                        Mono.empty())
-                .then(userRepository.existsByMagicUserId(magicUser.getIssuer())
-                        .flatMap(exists -> exists ?
-                                Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getIssuer())) :
-                                Mono.empty()));
-    }
+        private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+            String emailToCheck = request.getEmail(); // Use email from request, not magicUser
+            log.info("Checking user exists : {}", emailToCheck);
+            return userRepository.existsByEmail(emailToCheck)
+                    .flatMap(exists -> {
+                        log.info("Exists : {}", exists);
+                        return Boolean.TRUE.equals(exists) ?
+                                Mono.error(new UserAlreadyExistsException(emailToCheck)) :
+                                Mono.empty();
+                    })
+                    .then(userRepository.existsByMagicUserId(magicUser.getIssuer())
+                            .flatMap(exists -> Boolean.TRUE.equals(exists) ?
+                                    Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getIssuer())) :
+                                    Mono.empty()));
+        }
 
     /**
      * New async-first approach: Create proxy wallet and publish event for async processing chain
