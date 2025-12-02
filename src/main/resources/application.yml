@@ -81,7 +81,7 @@ app:
   
   blnk:
     api-url: ${BLNK_API_URL}
-    ledger-id: ${BLNK_LEDGER_ID:ldg_0e6aaba7-8e01-457c-80ae-a652661daba7}
+    ledger-id: ${BLNK_LEDGER_ID}
   
   walletconnect:
     project-id: ${WALLETCONNECT_PROJECT_ID}
