@@ -8,6 +8,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import java.time.Duration;
 import java.util.Map;
 
 @Component
@@ -20,6 +22,7 @@ public class BlnkClient {
     public BlnkClient(@Qualifier("blnkWebClient") WebClient webClient, BlnkProperties blnkProperties) {
         this.webClient = webClient;
         this.blnkProperties = blnkProperties;
+        log.info("BlnkClient initialized with properties: {}", blnkProperties);
     }
     
     public Mono<String> createIdentity(String userId, String email, Map<String, Object> metadata) {
@@ -66,6 +69,10 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
+            .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                    .maxBackoff(Duration.ofSeconds(2))
+                    .doBeforeRetry(signal -> log.warn("Retrying createIdentity attempt {} for user {} - Error: {}",
+                        signal.totalRetries() + 1, userId, signal.failure().getMessage())))
             .doOnSuccess(identityId -> log.info("Successfully created Blnk identity for user {}: {}", userId, identityId))
             .onErrorMap(error -> error instanceof BlnkApiException ? error :
                 new BlnkApiException("Failed to create identity", error));
@@ -76,11 +83,16 @@ public class BlnkClient {
             return Mono.error(new BlnkApiException("Currency is required for balance creation"));
         }
 
+        String ledgerId = blnkProperties.getLedgerId();
+        log.info("Creating Blnk balance - Currency: {}, Ledger ID: {}", currency, ledgerId);
+        
         Map<String, Object> requestBody = Map.of(
-            "ledger_id", blnkProperties.getLedgerId(),
+            "ledger_id", ledgerId,
             "currency", currency,
             "meta_data", Map.of("type", "user_balance")
         );
+        
+        log.info("Blnk createBalance request body: {}", requestBody);
 
         return webClient.post()
             .uri("/balances")
@@ -106,6 +118,10 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
+            .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                    .maxBackoff(Duration.ofSeconds(2))
+                    .doBeforeRetry(signal -> log.warn("Retrying createBalance attempt {} for currency {} - Error: {}",
+                        signal.totalRetries() + 1, currency, signal.failure().getMessage())))
             .doOnSuccess(balanceId -> log.info("Successfully created Blnk balance for currency {}: {}", currency, balanceId))
             .onErrorMap(error -> error instanceof BlnkApiException ? error :
                 new BlnkApiException("Failed to create balance", error));
