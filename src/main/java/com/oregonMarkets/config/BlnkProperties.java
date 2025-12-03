@@ -14,4 +14,9 @@ import org.springframework.stereotype.Component;
 public class BlnkProperties {
     private String apiUrl;
     private String ledgerId;
+    
+    @Override
+    public String toString() {
+        return "BlnkProperties{apiUrl='" + apiUrl + "', ledgerId='" + ledgerId + "'}";
+    }
 }
