@@ -65,7 +65,7 @@ class UserRegistrationServiceTest {
         User savedUser = createSavedUser();
 
         // When
-        when(userRepository.existsUserByEmail(anyString())).thenReturn(Mono.just(false));
+        when(userRepository.existsByEmail(anyString())).thenReturn(Mono.just(false));
         when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
         when(proxyWalletOnboardingService.createUserProxyWallet(anyString())).thenReturn(Mono.just("0x456"));
         when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString())).thenReturn(Mono.just(udaResponse));
@@ -92,7 +92,7 @@ class UserRegistrationServiceTest {
         String didToken = "test-did-token";
 
         // When
-        when(userRepository.existsUserByEmail(anyString())).thenReturn(Mono.just(true));
+        when(userRepository.existsByEmail(anyString())).thenReturn(Mono.just(true));
         when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
 
         // Then
