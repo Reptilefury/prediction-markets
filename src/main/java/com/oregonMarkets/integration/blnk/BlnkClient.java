@@ -69,8 +69,11 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
-            .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
-                    .maxBackoff(Duration.ofSeconds(2))
+            .retryWhen(Retry.backoff(5, Duration.ofMillis(500))
+                    .maxBackoff(Duration.ofSeconds(5))
+                    .filter(throwable -> throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
+                             throwable.getMessage().contains("Connection prematurely closed") ||
+                             throwable.getMessage().contains("PrematureCloseException"))
                     .doBeforeRetry(signal -> log.warn("Retrying createIdentity attempt {} for user {} - Error: {}",
                         signal.totalRetries() + 1, userId, signal.failure().getMessage())))
             .doOnSuccess(identityId -> log.info("Successfully created Blnk identity for user {}: {}", userId, identityId))
@@ -118,8 +121,11 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
-            .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
-                    .maxBackoff(Duration.ofSeconds(2))
+            .retryWhen(Retry.backoff(5, Duration.ofMillis(500))
+                    .maxBackoff(Duration.ofSeconds(5))
+                    .filter(throwable -> throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
+                             throwable.getMessage().contains("Connection prematurely closed") ||
+                             throwable.getMessage().contains("PrematureCloseException"))
                     .doBeforeRetry(signal -> log.warn("Retrying createBalance attempt {} for currency {} - Error: {}",
                         signal.totalRetries() + 1, currency, signal.failure().getMessage())))
             .doOnSuccess(balanceId -> log.info("Successfully created Blnk balance for currency {}: {}", currency, balanceId))

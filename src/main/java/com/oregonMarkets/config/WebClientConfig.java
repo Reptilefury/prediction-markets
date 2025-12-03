@@ -18,11 +18,11 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class WebClientConfig {
 
-    private static final int CONNECTION_TIMEOUT = 5000; // 5 seconds
-    private static final int READ_TIMEOUT = 10000; // 10 seconds
-    private static final int WRITE_TIMEOUT = 10000; // 10 seconds
-    private static final int MAX_CONNECTIONS = 100;
-    private static final int MAX_PENDING_REQUESTS = 1000;
+    private static final int CONNECTION_TIMEOUT = 10000; // 10 seconds
+    private static final int READ_TIMEOUT = 30000; // 30 seconds
+    private static final int WRITE_TIMEOUT = 30000; // 30 seconds
+    private static final int MAX_CONNECTIONS = 50; // Reduced for stability
+    private static final int MAX_PENDING_REQUESTS = 500;
 
     @Bean("magicWebClient")
     public WebClient magicWebClient(@Value("${app.magic.api-url}") String baseUrl) {
@@ -65,19 +65,22 @@ public class WebClientConfig {
     private HttpClient createHttpClient() {
         ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
                 .maxConnections(MAX_CONNECTIONS)
-                .maxIdleTime(Duration.ofSeconds(20))
-                .maxLifeTime(Duration.ofSeconds(60))
+                .maxIdleTime(Duration.ofSeconds(30))
+                .maxLifeTime(Duration.ofSeconds(120))
                 .pendingAcquireMaxCount(MAX_PENDING_REQUESTS)
-                .pendingAcquireTimeout(Duration.ofSeconds(45))
+                .pendingAcquireTimeout(Duration.ofSeconds(60))
+                .evictInBackground(Duration.ofSeconds(30))
                 .build();
 
         return HttpClient.create(connectionProvider)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT)
                 .option(ChannelOption.SO_KEEPALIVE, true)
-                .responseTimeout(Duration.ofSeconds(10))
+                .responseTimeout(Duration.ofSeconds(30))
+                .option(ChannelOption.TCP_NODELAY, true)
                 .doOnConnected(conn -> conn
                         .addHandlerLast(new ReadTimeoutHandler(READ_TIMEOUT, TimeUnit.MILLISECONDS))
                         .addHandlerLast(new WriteTimeoutHandler(WRITE_TIMEOUT, TimeUnit.MILLISECONDS)))
-                .compress(true);
+                .compress(true)
+                .keepAlive(true);
     }
 }
