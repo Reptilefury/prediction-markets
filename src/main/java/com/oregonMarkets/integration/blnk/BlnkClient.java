@@ -22,6 +22,7 @@ public class BlnkClient {
     public BlnkClient(@Qualifier("blnkWebClient") WebClient webClient, BlnkProperties blnkProperties) {
         this.webClient = webClient;
         this.blnkProperties = blnkProperties;
+        log.info("BlnkClient initialized with properties: {}", blnkProperties);
     }
     
     public Mono<String> createIdentity(String userId, String email, Map<String, Object> metadata) {
@@ -82,11 +83,16 @@ public class BlnkClient {
             return Mono.error(new BlnkApiException("Currency is required for balance creation"));
         }
 
+        String ledgerId = blnkProperties.getLedgerId();
+        log.info("Creating Blnk balance - Currency: {}, Ledger ID: {}", currency, ledgerId);
+        
         Map<String, Object> requestBody = Map.of(
-            "ledger_id", blnkProperties.getLedgerId(),
+            "ledger_id", ledgerId,
             "currency", currency,
             "meta_data", Map.of("type", "user_balance")
         );
+        
+        log.info("Blnk createBalance request body: {}", requestBody);
 
         return webClient.post()
             .uri("/balances")

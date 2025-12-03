@@ -19,11 +19,10 @@ public interface UserRepository extends ReactiveCrudRepository<User, UUID> {
     Mono<User> findByMagicWalletAddress(String magicWalletAddress);
     
     Mono<User> findByReferralCode(String referralCode);
-
-    @Query("SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM users WHERE email = :email")
+    
+    @Query("SELECT COUNT(*) > 0 FROM users WHERE email = :email")
     Mono<Boolean> existsByEmail(String email);
-
-    @Query("SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM users WHERE magic_user_id = :magicUserId")
+    
     Mono<Boolean> existsByMagicUserId(String magicUserId);
     
     Mono<Boolean> existsByMagicWalletAddress(String magicWalletAddress);

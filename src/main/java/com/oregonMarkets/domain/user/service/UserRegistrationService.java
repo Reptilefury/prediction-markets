@@ -41,71 +41,25 @@ public class UserRegistrationService {
     public Mono<UserRegistrationResponse> registerUser(@Valid UserRegistrationRequest request,
                                                        MagicDIDValidator.MagicUserInfo magicUser,
                                                        String didToken) {
-        log.info("=== REGISTER USER START === email: {}, magicUserId: {}", request.getEmail(), magicUser.getUserId());
-
-        // Step 1: Check for duplicates FIRST before creating the user object
-        log.info("STEP 1: About to call checkUserExists");
-        return checkUserExists(magicUser)
-                .doOnSuccess(v -> log.info("STEP 1 COMPLETE: checkUserExists returned successfully"))
-                .doOnError(e -> log.error("STEP 1 ERROR: checkUserExists failed with: {}", e.getMessage(), e))
-                // Step 2: Create user object if no duplicates found
-                .then(Mono.defer(() -> {
-                    log.info("STEP 2: Creating user object");
-                    return createUser(magicUser, request);
-                }))
-                .doOnNext(user -> log.info("STEP 2 COMPLETE: User object created with email: {}", user.getEmail()))
-                .doOnError(e -> log.error("STEP 2 ERROR: createUser failed with: {}", e.getMessage(), e))
-                // Step 3: Save user to database
-                .flatMap(user -> {
-                    log.info("STEP 3: About to save user with email: {}", user.getEmail());
-                    return userRepository.save(user)
-                            .doOnSuccess(savedUser -> log.info("STEP 3 COMPLETE: User saved with ID: {}", savedUser.getId()))
-                            .doOnError(e -> {
-                                log.error("STEP 3 ERROR: Failed to save user: {}", e.getMessage());
-                                if (e instanceof org.springframework.dao.DuplicateKeyException) {
-                                    log.error("DETECTED DUPLICATE KEY EXCEPTION from database");
-                                }
-                            });
-                })
-                .onErrorMap(throwable -> {
-                    log.error("CONVERTING ERROR: Caught {} - {}", throwable.getClass().getSimpleName(), throwable.getMessage());
-                    // Catch database duplicate key exceptions and convert to proper error
-                    if (throwable instanceof org.springframework.dao.DuplicateKeyException) {
-                        String message = throwable.getMessage();
-                        log.error("CONVERTING DUPLICATE KEY: message contains={}", message);
-                        if (message != null && message.contains("users_magic_user_id_key")) {
-                            log.error("RETURNING: UserAlreadyExistsException for Magic ID");
-                            return new UserAlreadyExistsException("Magic ID", magicUser.getUserId());
-                        }
-                        log.error("RETURNING: UserAlreadyExistsException for email");
-                        return new UserAlreadyExistsException(request.getEmail());
-                    }
-                    return throwable;
-                })
-                // Step 4: Setup external integrations
-                .flatMap(user -> {
-                    log.info("STEP 4: Setting up external integrations for user: {}", user.getId());
-                    return setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)
-                            .doOnSuccess(u -> log.info("STEP 4 COMPLETE: External integrations setup"))
-                            .doOnError(e -> log.error("STEP 4 ERROR: {}", e.getMessage(), e));
-                })
-                // Step 5: Publish events and cache
-                .flatMap(savedUser -> {
-                    log.info("STEP 5: Publishing user registered event");
-                    return publishUserRegisteredEvent(savedUser)
-                            .then(cacheUserData(savedUser))
-                            .thenReturn(buildResponse(savedUser))
-                            .doOnSuccess(response -> log.info("STEP 5 COMPLETE: Events published and cached"))
-                            .doOnError(e -> log.error("STEP 5 ERROR: {}", e.getMessage(), e));
-                })
-                .doOnSuccess(response -> log.info("=== REGISTER USER COMPLETE === userId: {}", response.getUserId()))
-                .doOnError(error -> log.error("=== REGISTER USER FAILED === Error: {}", error.getMessage(), error));
+        log.info("Starting user registration for email: {}", request.getEmail());
+        return checkUserExists(magicUser, request)
+                .then(createUser(magicUser, request))
+                .flatMap(userRepository::save)  // Save first to generate UUID
+                .flatMap(user -> setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)  // Setup proxy wallet and publish event for async chain
+                        .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
+                                .then(cacheUserData(savedUser))
+                                .thenReturn(buildResponse(savedUser))  // Return immediately, rest happens async
+                        )
+                )
+                .doOnSuccess(response -> log.info("Successfully registered user: {}", response.getUserId()))
+                .doOnError(error -> log.error("Failed to register user: {}", error.getMessage()));
     }
 
     private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+        log.info("Creating user ");
         // Generate username from email prefix
         String username = request.getEmail().split("@")[0];
-        
+
         User user = User.builder()
                 .email(request.getEmail())
                 .username(username)  // Set username from email
@@ -138,38 +92,21 @@ public class UserRegistrationService {
         return userMono;
     }
 
-    private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser) {
-        log.info("ENTERING checkUserExists for email: {}, magicUserId: {}", magicUser.getEmail(), magicUser.getUserId());
-
-        return Mono.zip(
-                userRepository.findByEmail(magicUser.getEmail())
-                        .hasElement()
-                        .doOnNext(exists -> log.info("Email check result for {}: {}", magicUser.getEmail(), exists)),
-                userRepository.findByMagicUserId(magicUser.getUserId())
-                        .hasElement()
-                        .doOnNext(exists -> log.info("MagicId check result for {}: {}", magicUser.getUserId(), exists))
-        )
-        .doOnNext(tuple -> log.info("Zip completed with emailExists: {}, magicIdExists: {}", tuple.getT1(), tuple.getT2()))
-        .flatMap(tuple -> {
-            Boolean emailExists = tuple.getT1();
-            Boolean magicIdExists = tuple.getT2();
-
-            log.info("CHECKING user existence - Email: {}, EmailExists: {}, MagicId: {}, MagicIdExists: {}",
-                    magicUser.getEmail(), emailExists, magicUser.getUserId(), magicIdExists);
-
-            if (emailExists) {
-                log.warn("*** DUPLICATE FOUND: User with email {} already exists ***", magicUser.getEmail());
-                return Mono.error(new UserAlreadyExistsException(magicUser.getEmail()));
-            }
-            if (magicIdExists) {
-                log.warn("*** DUPLICATE FOUND: User with Magic ID {} already exists ***", magicUser.getUserId());
-                return Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getUserId()));
-            }
-            log.info("No duplicate found, proceeding with registration");
-            return Mono.empty();
-        })
-        .then();
-    }
+        private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+            String emailToCheck = request.getEmail(); // Use email from request, not magicUser
+            log.info("Checking user exists : {}", emailToCheck);
+            return userRepository.existsByEmail(emailToCheck)
+                    .flatMap(exists -> {
+                        log.info("Exists : {}", exists);
+                        return Boolean.TRUE.equals(exists) ?
+                                Mono.error(new UserAlreadyExistsException(emailToCheck)) :
+                                Mono.empty();
+                    })
+                    .then(userRepository.existsByMagicUserId(magicUser.getIssuer())
+                            .flatMap(exists -> Boolean.TRUE.equals(exists) ?
+                                    Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getIssuer())) :
+                                    Mono.empty()));
+        }
 
     /**
      * New async-first approach: Create proxy wallet and publish event for async processing chain
