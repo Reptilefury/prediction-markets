@@ -65,11 +65,12 @@ public class WebClientConfig {
     private HttpClient createHttpClient() {
         ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
                 .maxConnections(MAX_CONNECTIONS)
-                .maxIdleTime(Duration.ofSeconds(30))
-                .maxLifeTime(Duration.ofSeconds(120))
+                .maxIdleTime(Duration.ofSeconds(20))
+                .maxLifeTime(Duration.ofSeconds(60))
                 .pendingAcquireMaxCount(MAX_PENDING_REQUESTS)
-                .pendingAcquireTimeout(Duration.ofSeconds(60))
-                .evictInBackground(Duration.ofSeconds(30))
+                .pendingAcquireTimeout(Duration.ofSeconds(30))
+                .evictInBackground(Duration.ofSeconds(15))
+                .lifo() // Use LIFO for better connection reuse
                 .build();
 
         return HttpClient.create(connectionProvider)
@@ -77,10 +78,12 @@ public class WebClientConfig {
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .responseTimeout(Duration.ofSeconds(30))
                 .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_REUSEADDR, true)
                 .doOnConnected(conn -> conn
                         .addHandlerLast(new ReadTimeoutHandler(READ_TIMEOUT, TimeUnit.MILLISECONDS))
                         .addHandlerLast(new WriteTimeoutHandler(WRITE_TIMEOUT, TimeUnit.MILLISECONDS)))
                 .compress(true)
-                .keepAlive(true);
+                .keepAlive(true)
+                .wiretap(false);
     }
 }

@@ -31,14 +31,12 @@ public class KeycloakProvisionListener {
 
         adminClient.createUserIfAbsent(username, password, email)
                 .subscribeOn(Schedulers.boundedElastic())
-                .onErrorResume(e -> {
-                    log.error("Failed to provision Keycloak user {} for userId {}: {}",
-                            username, event.getUserId(), e.getMessage());
-                    return Mono.empty();
-                })
-                .doOnSuccess(v -> log.info("Successfully provisioned Keycloak user {} for userId {}",
-                        username, event.getUserId()))
-                .subscribe();
+                .subscribe(
+                    v -> log.info("Successfully provisioned Keycloak user {} for userId {}",
+                            username, event.getUserId()),
+                    e -> log.error("Failed to provision Keycloak user {} for userId {}: {}",
+                            username, event.getUserId(), e.getMessage())
+                );
     }
 
     /**
@@ -50,10 +48,9 @@ public class KeycloakProvisionListener {
         log.info("Received KeycloakProvisionEvent for user {} (Magic user ID: {})", event.getUserId(), event.getUsername());
         // Fire-and-forget to avoid blocking registration request path
         adminClient.createUserIfAbsent(event.getUsername(), event.getInitialPassword())
-                .onErrorResume(e -> {
-                    log.error("Failed to provision Keycloak user {}: {}", event.getUsername(), e.getMessage());
-                    return Mono.empty();
-                })
-                .subscribe();
+                .subscribe(
+                    v -> log.info("Successfully provisioned Keycloak user {}", event.getUsername()),
+                    e -> log.error("Failed to provision Keycloak user {}: {}", event.getUsername(), e.getMessage())
+                );
     }
 }
