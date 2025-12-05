@@ -239,10 +239,18 @@ public class QRCodeGenerationService {
                 }
 
                 if (originalLogo == null) {
+                connection.setReadTimeout(10000);
+
+                BufferedImage originalLogo;
+                try (java.io.InputStream is = connection.getInputStream()) {
+                    originalLogo = ImageIO.read(is);
+                }
+
+                if (originalLogo == null) {
                     log.warn("ImageIO.read returned null for logo: {}", tokenType);
                     return null;
                 }
-                
+            
                 // Resize to fit QR code
                 BufferedImage resizedLogo = new BufferedImage(LOGO_SIZE, LOGO_SIZE, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g2d = resizedLogo.createGraphics();
