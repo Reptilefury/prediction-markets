@@ -90,8 +90,8 @@ app:
     environment-id: ${DYNAMIC_ENVIRONMENT_ID}
   
   logodev:
-    api-key: ${LOGODEV_API_KEY:pk_KQezRA7QRoKT8QFc2jcR-A}
-    secret-key: ${LOGODEV_SECRET_KEY:sk_EhLtXNeXRxKgXnvJcEs_yg}
+    api-key: ${LOGODEV_API_KEY}
+    secret-key: ${LOGODEV_SECRET_KEY}
 
 logging:
   level:
