@@ -24,6 +24,23 @@ public class BlnkClient {
         this.blnkProperties = blnkProperties;
         log.info("BlnkClient initialized with properties: {}", blnkProperties);
     }
+
+    private Retry createRetrySpec(String operation, String context) {
+        return Retry.backoff(5, Duration.ofSeconds(3))
+                .maxBackoff(Duration.ofSeconds(30))
+                .jitter(0.75)
+                .filter(throwable -> 
+                    throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
+                    throwable.getCause() instanceof reactor.netty.http.client.PrematureCloseException ||
+                    throwable.getMessage().contains("Connection prematurely closed") ||
+                    throwable.getMessage().contains("PrematureCloseException") ||
+                    throwable.getMessage().contains("Connection reset by peer") ||
+                    throwable.getMessage().contains("ClosedChannelException") ||
+                    throwable.getMessage().contains("SSL/TLS handshake")
+                )
+                .doBeforeRetry(signal -> log.warn("Retrying {} attempt {} for {} - Error: {}",
+                    operation, signal.totalRetries() + 1, context, signal.failure().getMessage()));
+    }
     
     public Mono<String> createIdentity(String userId, String email, Map<String, Object> metadata) {
         if (userId == null || userId.isEmpty()) {
@@ -69,20 +86,7 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
-            .retryWhen(Retry.backoff(5, Duration.ofSeconds(3))
-                    .maxBackoff(Duration.ofSeconds(30))
-                    .jitter(0.75)
-                    .filter(throwable -> 
-                        throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
-                        throwable.getCause() instanceof reactor.netty.http.client.PrematureCloseException ||
-                        throwable.getMessage().contains("Connection prematurely closed") ||
-                        throwable.getMessage().contains("PrematureCloseException") ||
-                        throwable.getMessage().contains("Connection reset by peer") ||
-                        throwable.getMessage().contains("ClosedChannelException") ||
-                        throwable.getMessage().contains("SSL/TLS handshake")
-                    )
-                    .doBeforeRetry(signal -> log.warn("Retrying createIdentity attempt {} for user {} - Error: {}",
-                        signal.totalRetries() + 1, userId, signal.failure().getMessage())))
+            .retryWhen(createRetrySpec("createIdentity", "user " + userId))
             .doOnSuccess(identityId -> log.info("Successfully created Blnk identity for user {}: {}", userId, identityId))
             .onErrorMap(error -> error instanceof BlnkApiException ? error :
                 new BlnkApiException("Failed to create identity", error));
@@ -128,20 +132,7 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
-            .retryWhen(Retry.backoff(5, Duration.ofSeconds(3))
-                    .maxBackoff(Duration.ofSeconds(30))
-                    .jitter(0.75)
-                    .filter(throwable -> 
-                        throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
-                        throwable.getCause() instanceof reactor.netty.http.client.PrematureCloseException ||
-                        throwable.getMessage().contains("Connection prematurely closed") ||
-                        throwable.getMessage().contains("PrematureCloseException") ||
-                        throwable.getMessage().contains("Connection reset by peer") ||
-                        throwable.getMessage().contains("ClosedChannelException") ||
-                        throwable.getMessage().contains("SSL/TLS handshake")
-                    )
-                    .doBeforeRetry(signal -> log.warn("Retrying createBalance attempt {} for currency {} - Error: {}",
-                        signal.totalRetries() + 1, currency, signal.failure().getMessage())))
+            .retryWhen(createRetrySpec("createBalance", "currency " + currency))
             .doOnSuccess(balanceId -> log.info("Successfully created Blnk balance for currency {}: {}", currency, balanceId))
             .onErrorMap(error -> error instanceof BlnkApiException ? error :
                 new BlnkApiException("Failed to create balance", error));
