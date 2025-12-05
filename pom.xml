@@ -91,6 +91,12 @@
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-google-pubsub-starter</artifactId>
 			<version>${camel.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
