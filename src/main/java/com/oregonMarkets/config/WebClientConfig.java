@@ -53,7 +53,7 @@ public class WebClientConfig {
 
     @Bean("keycloakAdminWebClient")
     public WebClient keycloakAdminWebClient(@Value("${keycloak.admin.base-url}") String baseUrl) {
-        HttpClient httpClient = createHttpClient();
+        HttpClient httpClient = createCloudRunHttpClient();
         return WebClient.builder()
                 .baseUrl(baseUrl)
                 .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(httpClient))
@@ -90,6 +90,11 @@ public class WebClientConfig {
 
     private HttpClient createBlnkHttpClient() {
         // Optimized for Cloud Run: HTTP/1.1 + no pooling to prevent premature close
+        return createCloudRunHttpClient();
+    }
+
+    private HttpClient createCloudRunHttpClient() {
+        // Optimized for Cloud Run services: HTTP/1.1 + no pooling to prevent premature close
         return HttpClient.create()
                 .protocol(HttpProtocol.HTTP11)  // Force HTTP/1.1 for Cloud Run compatibility
                 .keepAlive(false)  // Disable connection pooling

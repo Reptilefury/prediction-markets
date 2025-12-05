@@ -55,7 +55,15 @@ public class KeycloakAdminClient {
                                 }))
                 .bodyToMono(Map.class)
                 .map(response -> (String) response.get("access_token"))
-                .retry(2);
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                        .maxBackoff(Duration.ofSeconds(10))
+                        .jitter(0.5)
+                        .filter(throwable -> 
+                            throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
+                            throwable.getCause() instanceof reactor.netty.http.client.PrematureCloseException ||
+                            throwable.getMessage().contains("Connection prematurely closed") ||
+                            throwable.getMessage().contains("PrematureCloseException")
+                        ));
     }
 
     public Mono<Void> createUserIfAbsent(String username, String password) {
@@ -77,6 +85,15 @@ public class KeycloakAdminClient {
                 })
                 .then(getAccessToken()
                         .flatMap(token -> setPassword(sanitizedUsername, password, token)))
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                        .maxBackoff(Duration.ofSeconds(10))
+                        .jitter(0.5)
+                        .filter(throwable -> 
+                            throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
+                            throwable.getCause() instanceof reactor.netty.http.client.PrematureCloseException ||
+                            throwable.getMessage().contains("Connection prematurely closed") ||
+                            throwable.getMessage().contains("PrematureCloseException")
+                        ))
                 .doOnSuccess(v -> log.info("Keycloak user ensured for {}", sanitizedUsername));
     }
 
