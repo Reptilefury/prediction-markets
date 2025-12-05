@@ -1,6 +1,5 @@
 package com.oregonMarkets.integration.keycloak;
 
-import com.oregonMarkets.event.AssetsGenerationEvent;
 import com.oregonMarkets.event.BlnkBalanceCreatedEvent;
 import com.oregonMarkets.event.KeycloakProvisionEvent;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,6 @@ import reactor.core.scheduler.Schedulers;
 public class KeycloakProvisionListener {
 
     private final KeycloakAdminClient adminClient;
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     /**
      * Listen for BlnkBalanceCreatedEvent (new async flow)
@@ -34,22 +32,8 @@ public class KeycloakProvisionListener {
         adminClient.createUserIfAbsent(username, password, email)
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe(
-                    v -> {
-                        log.info("Successfully provisioned Keycloak user {} for userId {}",
-                                username, event.getUserId());
-                        
-                        // Trigger assets generation as final step
-                        AssetsGenerationEvent assetsEvent = AssetsGenerationEvent.builder()
-                                .userId(event.getUserId())
-                                .email(event.getEmail())
-                                .proxyWalletAddress(event.getProxyWalletAddress())
-                                .enclaveUdaAddress(event.getEnclaveUdaAddress())
-                                .magicWalletAddress(event.getMagicWalletAddress())
-                                .timestamp(java.time.Instant.now())
-                                .build();
-                        eventPublisher.publishEvent(assetsEvent);
-                        log.info("Triggered assets generation for user: {}", event.getUserId());
-                    },
+                    v -> log.info("Successfully provisioned Keycloak user {} for userId {}",
+                            username, event.getUserId()),
                     e -> log.error("Failed to provision Keycloak user {} for userId {}: {}",
                             username, event.getUserId(), e.getMessage())
                 );
