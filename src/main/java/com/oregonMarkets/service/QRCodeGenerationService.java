@@ -46,6 +46,13 @@ public class QRCodeGenerationService {
     private static final int LOGO_SIZE = 80;
     private static final Color QR_COLOR = new Color(0x1a1a1a);
     private static final Color BACKGROUND_COLOR = Color.WHITE;
+    
+    // String constants to avoid duplication
+    private static final String WALLET_TYPE = "wallet";
+    private static final String SOLANA_TYPE = "solana";
+    private static final String BITCOIN_TYPE = "bitcoin";
+    private static final String ETHEREUM_TYPE = "ethereum";
+    private static final String POLYGON_TYPE = "polygon";
 
     /**
      * Generate QR codes for all deposit addresses and proxy wallet
@@ -66,7 +73,7 @@ public class QRCodeGenerationService {
                 // Generate QR code for proxy wallet
                 if (proxyWalletAddress != null && !proxyWalletAddress.isBlank()) {
                     qrCodeUrls.put("proxyWalletQrCode",
-                            generateAndUploadBrandedQRCode(userId, "proxy_wallet", proxyWalletAddress, "wallet"));
+                            generateAndUploadBrandedQRCode(userId, "proxy_wallet", proxyWalletAddress, WALLET_TYPE));
                 }
 
                 // Generate QR code for Enclave UDA
@@ -88,14 +95,14 @@ public class QRCodeGenerationService {
                 // Generate QR code for Solana deposit address
                 if (solanaDepositAddress != null && !solanaDepositAddress.isBlank()) {
                     qrCodeUrls.put("solanaDepositQrCode",
-                            generateAndUploadBrandedQRCode(userId, "solana_deposit", solanaDepositAddress, "solana"));
+                            generateAndUploadBrandedQRCode(userId, "solana_deposit", solanaDepositAddress, SOLANA_TYPE));
                 }
 
                 // Generate QR codes for Bitcoin addresses
                 if (bitcoinDepositAddresses != null && !bitcoinDepositAddresses.isEmpty()) {
                     Map<String, String> btcQrCodes = new HashMap<>();
                     for (Map.Entry<String, String> entry : bitcoinDepositAddresses.entrySet()) {
-                        String qrUrl = generateAndUploadBrandedQRCode(userId, "btc_" + entry.getKey(), entry.getValue(), "bitcoin");
+                        String qrUrl = generateAndUploadBrandedQRCode(userId, "btc_" + entry.getKey(), entry.getValue(), BITCOIN_TYPE);
                         btcQrCodes.put(entry.getKey(), qrUrl);
                     }
                     qrCodeUrls.put("bitcoinDepositQrCodes", btcQrCodes.toString());
@@ -116,27 +123,24 @@ public class QRCodeGenerationService {
             byte[] qrCodeBytes = generateBrandedQRCodeImage(addressValue, tokenType);
 
             // Upload to GCP Cloud Storage
-            String uploadUrl = uploadQRCodeToGCP(userId, addressType, qrCodeBytes);
-
             log.info("Branded QR code generated for user {} address type {} token {}", userId, addressType, tokenType);
-            return uploadUrl;
+            return uploadQRCodeToGCP(userId, addressType, qrCodeBytes);
         } catch (Exception e) {
             log.error("Failed to generate/upload branded QR code for {} {} {}: {}", userId, addressType, tokenType, e.getMessage(), e);
             // Fallback to simple QR code
             try {
                 byte[] fallbackBytes = generateSimpleQRCodeImage(addressValue);
-                String uploadUrl = uploadQRCodeToGCP(userId, addressType, fallbackBytes);
-                return uploadUrl;
+                return uploadQRCodeToGCP(userId, addressType, fallbackBytes);
             } catch (Exception fallbackError) {
                 return "https://storage.googleapis.com/" + bucketName + "/qrcodes/" + userId + "/" + addressType + ".png";
             }
         }
     }
 
-    private byte[] generateBrandedQRCodeImage(String text, String tokenType) throws Exception {
+    private byte[] generateBrandedQRCodeImage(String text, String tokenType) throws RuntimeException {
         try {
             // Configure QR code with higher error correction for logo overlay
-            Map<EncodeHintType, Object> hints = new HashMap<>();
+            Map<EncodeHintType, Object> hints = new java.util.EnumMap<>(EncodeHintType.class);
             hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
             hints.put(EncodeHintType.MARGIN, 2);
 
@@ -176,7 +180,7 @@ public class QRCodeGenerationService {
         }
     }
 
-    private byte[] generateSimpleQRCodeImage(String text) throws Exception {
+    private byte[] generateSimpleQRCodeImage(String text) throws RuntimeException {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, QR_CODE_SIZE, QR_CODE_SIZE);
@@ -264,11 +268,11 @@ public class QRCodeGenerationService {
 
     private String getLogoDevUrl(String tokenType) {
         String logoName = switch (tokenType.toLowerCase()) {
-            case "ethereum" -> "ethereum";
-            case "polygon" -> "polygon";
+            case ETHEREUM_TYPE -> ETHEREUM_TYPE;
+            case POLYGON_TYPE -> POLYGON_TYPE;
             case "base" -> "base";
-            case "solana" -> "solana";
-            case "bitcoin" -> "bitcoin";
+            case "solana" -> SOLANA_TYPE;
+            case "bitcoin" -> BITCOIN_TYPE;
             case "uda" -> null; // Custom token, use fallback
             case "wallet" -> null; // Generic wallet, use fallback
             default -> null;
@@ -282,8 +286,8 @@ public class QRCodeGenerationService {
 
     private Color getTokenColor(String tokenType) {
         return switch (tokenType.toLowerCase()) {
-            case "ethereum" -> new Color(0x627EEA);
-            case "polygon" -> new Color(0x8247E5);
+            case ETHEREUM_TYPE -> new Color(0x627EEA);
+            case POLYGON_TYPE -> new Color(0x8247E5);
             case "base" -> new Color(0x0052FF);
             case "solana" -> new Color(0x9945FF);
             case "bitcoin" -> new Color(0xF7931A);
@@ -295,8 +299,8 @@ public class QRCodeGenerationService {
 
     private String getTokenSymbol(String tokenType) {
         return switch (tokenType.toLowerCase()) {
-            case "ethereum" -> "ETH";
-            case "polygon" -> "MATIC";
+            case ETHEREUM_TYPE -> "ETH";
+            case POLYGON_TYPE -> "MATIC";
             case "base" -> "BASE";
             case "solana" -> "SOL";
             case "bitcoin" -> "BTC";

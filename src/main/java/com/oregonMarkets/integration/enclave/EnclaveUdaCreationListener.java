@@ -25,6 +25,8 @@ import java.time.Instant;
 @Slf4j
 public class EnclaveUdaCreationListener {
 
+    private static final String ADDRESS_KEY = "address";
+
     private final EnclaveClient enclaveClient;
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepository userRepository;
@@ -145,14 +147,14 @@ public class EnclaveUdaCreationListener {
 
     @SuppressWarnings("unchecked")
     private java.util.Map<String, String> extractEvmAddresses(java.util.Map<String, Object> depositAddresses) {
-        if (depositAddresses == null) return null;
+        if (depositAddresses == null) return java.util.Collections.emptyMap();
         java.util.Map<String, String> evmAddresses = new java.util.HashMap<>();
         
         // Extract addresses by chain ID
         for (String chainId : java.util.Arrays.asList("1", "137", "8453")) {
             Object chainData = depositAddresses.get(chainId);
             if (chainData instanceof java.util.Map) {
-                Object address = ((java.util.Map<String, Object>) chainData).get("address");
+                Object address = ((java.util.Map<String, Object>) chainData).get(ADDRESS_KEY);
                 if (address != null) {
                     String chainName = chainId.equals("1") ? "ethereum" : 
                                      chainId.equals("137") ? "polygon" : "base";
@@ -168,7 +170,7 @@ public class EnclaveUdaCreationListener {
         if (depositAddresses == null) return null;
         Object solanaData = depositAddresses.get("solana");
         if (solanaData instanceof java.util.Map) {
-            Object address = ((java.util.Map<String, Object>) solanaData).get("address");
+            Object address = ((java.util.Map<String, Object>) solanaData).get(ADDRESS_KEY);
             return address != null ? address.toString() : null;
         }
         return null;
@@ -176,11 +178,11 @@ public class EnclaveUdaCreationListener {
     
     @SuppressWarnings("unchecked")
     private java.util.Map<String, String> extractBitcoinAddresses(java.util.Map<String, Object> depositAddresses) {
-        if (depositAddresses == null) return null;
+        if (depositAddresses == null) return java.util.Collections.emptyMap();
         java.util.Map<String, String> btcAddresses = new java.util.HashMap<>();
         Object btcData = depositAddresses.get("bitcoin");
         if (btcData instanceof java.util.Map) {
-            Object address = ((java.util.Map<String, Object>) btcData).get("address");
+            Object address = ((java.util.Map<String, Object>) btcData).get(ADDRESS_KEY);
             if (address != null) {
                 btcAddresses.put("bitcoin", address.toString());
             }

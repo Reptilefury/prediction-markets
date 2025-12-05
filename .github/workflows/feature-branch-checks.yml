@@ -1,0 +1,195 @@
+name: Feature Branch Checks
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches-ignore: [ master ]
+
+env:
+  JAVA_VERSION: '21'
+  REGISTRY: gcr.io
+  PROJECT_ID: heroic-equinox-474616-i5
+  SERVICE_NAME: prediction-markets
+
+jobs:
+  code-quality-checks:
+    runs-on: ubuntu-latest
+    name: Code Quality & Security Checks
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    
+    - name: Run Maven Validate & Compile
+      run: ./mvnw validate compile
+      
+    - name: Run Maven Tests with Coverage
+      run: ./mvnw clean test jacoco:report
+      
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./target/site/jacoco/jacoco.xml
+        
+    - name: Run Maven Build
+      run: ./mvnw clean package -DskipTests
+      
+    - name: Run Snyk Security Scan (Dependencies)
+      uses: snyk/actions/maven@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=medium --fail-on=upgradable
+        
+    - name: Upload Snyk results to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: snyk.sarif
+        
+    - name: Auth to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Setup Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+        
+    - name: Build Docker Image
+      run: |
+        docker build -t $REGISTRY/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }} .
+        
+    - name: Run Trivy Container Security Scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+        
+    - name: Run Snyk Container Security Scan
+      uses: snyk/actions/docker@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        args: --severity-threshold=high
+        
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'prediction-markets'
+        path: '.'
+        format: 'ALL'
+        
+    - name: Upload OWASP Dependency Check results
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-check-report
+        path: reports/
+        
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        
+    - name: Quality Gate Check
+      uses: sonarqube-quality-gate-action@master
+      timeout-minutes: 5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  qodo-code-review:
+    runs-on: ubuntu-latest
+    name: AI Code Review
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Qodo Merge Review
+      uses: Codium-ai/pr-agent@main
+      env:
+        OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        command: /review
+        
+    - name: Qodo Merge Describe
+      uses: Codium-ai/pr-agent@main
+      env:
+        OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        command: /describe
+        
+    - name: Qodo Merge Compliance Check
+      uses: Codium-ai/pr-agent@main
+      env:
+        OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        command: /compliance
+        
+    - name: Qodo Merge Improve Suggestions
+      uses: Codium-ai/pr-agent@main
+      env:
+        OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        command: /improve
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    name: Performance & Load Tests
+    needs: code-quality-checks
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Run Performance Tests
+      run: ./mvnw test -Dtest=**/*PerformanceTest
+      
+    - name: JMeter Load Tests
+      uses: rbhadti94/apache-jmeter-action@v0.5.0
+      with:
+        testFilePath: src/test/jmeter/load-test.jmx
+        outputReportsFolder: reports/
+        
+    - name: Upload Performance Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-reports
+        path: reports/

@@ -16,6 +16,8 @@ import java.util.Map;
 @Slf4j
 public class AssetsGenerationListener {
 
+    private static final String ADDRESS_KEY = "address";
+
     private final AvatarGenerationService avatarService;
     private final QRCodeGenerationService qrCodeService;
     private final UserRepository userRepository;
@@ -85,14 +87,14 @@ public class AssetsGenerationListener {
 
     @SuppressWarnings("unchecked")
     private Map<String, String> extractEvmAddresses(Map<String, Object> depositAddresses) {
-        if (depositAddresses == null) return null;
+        if (depositAddresses == null) return java.util.Collections.emptyMap();
         
         Map<String, String> evmAddresses = new java.util.HashMap<>();
         
         // Extract Ethereum addresses (chainId 1)
         Object ethData = depositAddresses.get("1");
         if (ethData instanceof Map) {
-            Object ethAddress = ((Map<String, Object>) ethData).get("address");
+            Object ethAddress = ((Map<String, Object>) ethData).get(ADDRESS_KEY);
             if (ethAddress != null) {
                 evmAddresses.put("ethereum", ethAddress.toString());
             }
@@ -101,7 +103,7 @@ public class AssetsGenerationListener {
         // Extract Polygon addresses (chainId 137)
         Object polygonData = depositAddresses.get("137");
         if (polygonData instanceof Map) {
-            Object polygonAddress = ((Map<String, Object>) polygonData).get("address");
+            Object polygonAddress = ((Map<String, Object>) polygonData).get(ADDRESS_KEY);
             if (polygonAddress != null) {
                 evmAddresses.put("polygon", polygonAddress.toString());
             }
@@ -110,7 +112,7 @@ public class AssetsGenerationListener {
         // Extract Base addresses (chainId 8453)
         Object baseData = depositAddresses.get("8453");
         if (baseData instanceof Map) {
-            Object baseAddress = ((Map<String, Object>) baseData).get("address");
+            Object baseAddress = ((Map<String, Object>) baseData).get(ADDRESS_KEY);
             if (baseAddress != null) {
                 evmAddresses.put("base", baseAddress.toString());
             }
@@ -126,7 +128,7 @@ public class AssetsGenerationListener {
         // Solana typically uses a different key format
         Object solanaData = depositAddresses.get("solana");
         if (solanaData instanceof Map) {
-            Object address = ((Map<String, Object>) solanaData).get("address");
+            Object address = ((Map<String, Object>) solanaData).get(ADDRESS_KEY);
             return address != null ? address.toString() : null;
         }
         return null;
@@ -134,14 +136,14 @@ public class AssetsGenerationListener {
     
     @SuppressWarnings("unchecked")
     private Map<String, String> extractBitcoinAddresses(Map<String, Object> depositAddresses) {
-        if (depositAddresses == null) return null;
+        if (depositAddresses == null) return java.util.Collections.emptyMap();
         
         Map<String, String> btcAddresses = new java.util.HashMap<>();
         
         // Bitcoin mainnet
         Object btcData = depositAddresses.get("bitcoin");
         if (btcData instanceof Map) {
-            Object btcAddress = ((Map<String, Object>) btcData).get("address");
+            Object btcAddress = ((Map<String, Object>) btcData).get(ADDRESS_KEY);
             if (btcAddress != null) {
                 btcAddresses.put("bitcoin", btcAddress.toString());
             }
