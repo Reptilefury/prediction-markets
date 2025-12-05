@@ -67,8 +67,7 @@ class UserRegistrationServiceTest {
         // When
         when(userRepository.existsByEmail(anyString())).thenReturn(Mono.just(false));
         when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
-        when(proxyWalletService.createUserProxyWallet(anyString())).thenReturn(Mono.just("0x456"));
-        when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString())).thenReturn(Mono.just(udaResponse));
+        when(proxyWalletOnboardingService.createUserProxyWallet(anyString())).thenReturn(Mono.just("0x456"));
         when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
         when(cacheService.set(anyString(), any(), any())).thenReturn(Mono.empty());
 
