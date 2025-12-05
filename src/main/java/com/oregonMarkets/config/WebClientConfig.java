@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
+import reactor.netty.http.HttpProtocol;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +41,7 @@ public class WebClientConfig {
 
     @Bean("blnkWebClient")
     public WebClient blnkWebClient(@Value("${app.blnk.api-url}") String baseUrl) {
-        HttpClient httpClient = createHttpClient();
+        HttpClient httpClient = createBlnkHttpClient();
         return WebClient.builder()
             .baseUrl(baseUrl)
             .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(httpClient))
@@ -85,5 +86,20 @@ public class WebClientConfig {
                 .compress(true)
                 .keepAlive(true)
                 .wiretap(false);
+    }
+
+    private HttpClient createBlnkHttpClient() {
+        // Optimized for Cloud Run: HTTP/1.1 + no pooling to prevent premature close
+        return HttpClient.create()
+                .protocol(HttpProtocol.HTTP11)  // Force HTTP/1.1 for Cloud Run compatibility
+                .keepAlive(false)  // Disable connection pooling
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+                .option(ChannelOption.SO_KEEPALIVE, false)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .responseTimeout(Duration.ofSeconds(45))  // Longer timeout for Cloud Run
+                .doOnConnected(conn -> conn
+                        .addHandlerLast(new ReadTimeoutHandler(45000, TimeUnit.MILLISECONDS))
+                        .addHandlerLast(new WriteTimeoutHandler(30000, TimeUnit.MILLISECONDS)))
+                .compress(true);
     }
 }

@@ -69,9 +69,9 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
-            .retryWhen(Retry.backoff(7, Duration.ofSeconds(1))
-                    .maxBackoff(Duration.ofSeconds(10))
-                    .jitter(0.5)
+            .retryWhen(Retry.backoff(5, Duration.ofSeconds(3))
+                    .maxBackoff(Duration.ofSeconds(30))
+                    .jitter(0.75)
                     .filter(throwable -> 
                         throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
                         throwable.getCause() instanceof reactor.netty.http.client.PrematureCloseException ||
@@ -128,9 +128,9 @@ public class BlnkClient {
                 }
                 return (String) idObj;
             })
-            .retryWhen(Retry.backoff(7, Duration.ofSeconds(1))
-                    .maxBackoff(Duration.ofSeconds(10))
-                    .jitter(0.5)
+            .retryWhen(Retry.backoff(5, Duration.ofSeconds(3))
+                    .maxBackoff(Duration.ofSeconds(30))
+                    .jitter(0.75)
                     .filter(throwable -> 
                         throwable instanceof org.springframework.web.reactive.function.client.WebClientRequestException ||
                         throwable.getCause() instanceof reactor.netty.http.client.PrematureCloseException ||
