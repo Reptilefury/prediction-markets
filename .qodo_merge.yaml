@@ -1,0 +1,72 @@
+# Qodo Merge Configuration for Codebase Context
+version: "1.0"
+
+# Enable codebase context enrichment
+codebase_context:
+  enabled: true
+  # Scan depth for context analysis
+  max_files: 1000
+  # File patterns to include in context
+  include_patterns:
+    - "**/*.java"
+    - "**/*.yml" 
+    - "**/*.yaml"
+    - "**/*.xml"
+    - "**/*.md"
+    - "**/*.sql"
+    - "**/*.lua"
+  # File patterns to exclude from context
+  exclude_patterns:
+    - "**/target/**"
+    - "**/.git/**"
+    - "**/node_modules/**"
+    - "**/*.class"
+    - "**/*.jar"
+
+# Duplication detection settings
+duplication_check:
+  enabled: true
+  # Minimum similarity threshold (0.0 to 1.0)
+  similarity_threshold: 0.7
+  # Minimum lines to consider for duplication
+  min_lines: 5
+  # Check across different file types
+  cross_file_analysis: true
+
+# Code analysis settings
+analysis:
+  # Enable semantic analysis
+  semantic_analysis: true
+  # Enable architectural pattern detection
+  pattern_detection: true
+  # Enable dependency analysis
+  dependency_analysis: true
+
+# Review configuration
+review:
+  # Focus on code quality issues
+  focus_areas:
+    - "duplication"
+    - "complexity" 
+    - "security"
+    - "performance"
+    - "maintainability"
+  
+  # Compliance checks
+  compliance:
+    # Enable generic compliance rules
+    generic_rules: true
+    # Custom compliance rules
+    custom_rules:
+      - "no_hardcoded_secrets"
+      - "proper_error_handling"
+      - "secure_logging"
+
+# Output configuration  
+output:
+  # Include context in suggestions
+  include_context: true
+  # Provide code examples
+  include_examples: true
+  # Show similarity scores
+  show_similarity_scores: true
