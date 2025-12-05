@@ -91,7 +91,6 @@ app:
   
   logodev:
     api-key: ${LOGODEV_API_KEY}
-    secret-key: ${LOGODEV_SECRET_KEY}
 
 logging:
   level:

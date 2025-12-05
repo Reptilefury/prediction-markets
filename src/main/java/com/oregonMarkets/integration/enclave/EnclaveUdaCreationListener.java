@@ -162,7 +162,7 @@ public class EnclaveUdaCreationListener {
                 }
             }
         }
-        return evmAddresses.isEmpty() ? null : evmAddresses;
+        return java.util.Collections.unmodifiableMap(evmAddresses);
     }
     
     @SuppressWarnings("unchecked")

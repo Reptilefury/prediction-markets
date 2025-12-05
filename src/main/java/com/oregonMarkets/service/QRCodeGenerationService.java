@@ -36,11 +36,9 @@ public class QRCodeGenerationService {
     @Value("${spring.cloud.gcp.storage.bucket-name:prediction-markets-storage}")
     private String bucketName;
 
-    @Value("${app.logodev.api-key}")
+    @Value("${app.logodev.api-key:}")
     private String logoDevApiKey;
-
-    @Value("${app.logodev.secret-key}")
-    private String logoDevSecretKey;
+    // Removed unused secret key to avoid accidental exposure
 
     private static final int QR_CODE_SIZE = 512;
     private static final int LOGO_SIZE = 80;
@@ -228,7 +226,10 @@ public class QRCodeGenerationService {
             String logoUrl = getLogoDevUrl(tokenType);
             if (logoUrl != null) {
                 java.net.HttpURLConnection connection = (java.net.HttpURLConnection) new URL(logoUrl).openConnection();
+            // Only set Authorization if explicitly required and available
+            if (logoDevApiKey != null && !logoDevApiKey.isBlank()) {
                 connection.setRequestProperty("Authorization", "Bearer " + logoDevApiKey);
+            }
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(5000);
                 connection.setReadTimeout(10000);
@@ -336,11 +337,13 @@ public class QRCodeGenerationService {
 
     private String uploadQRCodeToGCP(UUID userId, String addressType, byte[] qrCodeBytes) {
         try {
-            Storage storage = StorageOptions.getDefaultInstance().getService();
+            Storage storage = (gcpProjectId != null && !gcpProjectId.isBlank())
+                ? StorageOptions.newBuilder().setProjectId(gcpProjectId).build().getService()
+                : StorageOptions.getDefaultInstance().getService();
             Bucket bucket = storage.get(bucketName);
 
             if (bucket == null) {
-                log.warn("GCP bucket '{}' not found, returning mock URL", bucketName);
+                log.warn("GCP bucket '{}' not found in project '{}', returning mock URL", bucketName, gcpProjectId);
                 return String.format(
                     "https://storage.googleapis.com/%s/qrcodes/%s/%s.png",
                     bucketName,
