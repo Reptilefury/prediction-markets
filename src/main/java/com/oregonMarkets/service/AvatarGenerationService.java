@@ -22,10 +22,10 @@ import javax.imageio.ImageIO;
 @Slf4j
 public class AvatarGenerationService {
 
-    @Value("${gcp.project-id:}")
+    @Value("${spring.cloud.gcp.storage.project-id:${gcp.project-id}}")
     private String gcpProjectId;
 
-    @Value("${gcp.storage.bucket:oregon-markets-avatars}")
+    @Value("${spring.cloud.gcp.storage.bucket-name:prediction-markets-storage}")
     private String bucketName;
 
     /**
