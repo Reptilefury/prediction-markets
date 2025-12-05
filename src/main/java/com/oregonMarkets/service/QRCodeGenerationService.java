@@ -36,10 +36,10 @@ public class QRCodeGenerationService {
     @Value("${spring.cloud.gcp.storage.bucket-name:prediction-markets-storage}")
     private String bucketName;
 
-    @Value("${app.logodev.api-key:pk_KQezRA7QRoKT8QFc2jcR-A}")
+    @Value("${app.logodev.api-key}")
     private String logoDevApiKey;
 
-    @Value("${app.logodev.secret-key:sk_EhLtXNeXRxKgXnvJcEs_yg}")
+    @Value("${app.logodev.secret-key}")
     private String logoDevSecretKey;
 
     private static final int QR_CODE_SIZE = 512;
@@ -108,25 +108,33 @@ public class QRCodeGenerationService {
                     qrCodeUrls.put("bitcoinDepositQrCodes", btcQrCodes.toString());
                 }
 
-                log.info("QR codes generated and uploaded for user: {}, total count: {}", userId, qrCodeUrls.size());
+                log.info("QR codes generated and uploaded successfully, total count: {}", qrCodeUrls.size());
                 return qrCodeUrls;
             } catch (Exception e) {
-                log.error("Failed to generate/upload QR codes for user {}: {}", userId, e.getMessage(), e);
+                log.error("Failed to generate/upload QR codes: {}", e.getMessage(), e);
                 throw e;
             }
         });
     }
 
     private String generateAndUploadBrandedQRCode(UUID userId, String addressType, String addressValue, String tokenType) {
+        // Input validation
+        if (userId == null || addressType == null || addressValue == null || tokenType == null) {
+            throw new IllegalArgumentException("All parameters must be non-null");
+        }
+        if (addressValue.trim().isEmpty() || addressType.trim().isEmpty() || tokenType.trim().isEmpty()) {
+            throw new IllegalArgumentException("String parameters must not be empty");
+        }
+        
         try {
             // Generate branded QR code image with logo
             byte[] qrCodeBytes = generateBrandedQRCodeImage(addressValue, tokenType);
 
             // Upload to GCP Cloud Storage
-            log.info("Branded QR code generated for user {} address type {} token {}", userId, addressType, tokenType);
+            log.info("Branded QR code generated successfully for address type {} token {}", addressType, tokenType);
             return uploadQRCodeToGCP(userId, addressType, qrCodeBytes);
         } catch (Exception e) {
-            log.error("Failed to generate/upload branded QR code for {} {} {}: {}", userId, addressType, tokenType, e.getMessage(), e);
+            log.error("Failed to generate/upload branded QR code for {} {}: {}", addressType, tokenType, e.getMessage(), e);
             // Fallback to simple QR code
             try {
                 byte[] fallbackBytes = generateSimpleQRCodeImage(addressValue);
@@ -224,8 +232,16 @@ public class QRCodeGenerationService {
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(5000);
                 connection.setReadTimeout(10000);
-                
-                BufferedImage originalLogo = ImageIO.read(connection.getInputStream());
+
+                BufferedImage originalLogo;
+                try (java.io.InputStream is = connection.getInputStream()) {
+                    originalLogo = ImageIO.read(is);
+                }
+
+                if (originalLogo == null) {
+                    log.warn("ImageIO.read returned null for logo: {}", tokenType);
+                    return null;
+                }
                 
                 // Resize to fit QR code
                 BufferedImage resizedLogo = new BufferedImage(LOGO_SIZE, LOGO_SIZE, BufferedImage.TYPE_INT_ARGB);

@@ -50,7 +50,6 @@ jobs:
     - name: Build Production Image
       run: |
         docker build -t $REGISTRY/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }} .
-        docker tag $REGISTRY/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }} $REGISTRY/$PROJECT_ID/$SERVICE_NAME:latest
         
     - name: Final Trivy Security Scan
       uses: aquasecurity/trivy-action@master
@@ -63,7 +62,6 @@ jobs:
     - name: Push Image to GCR
       run: |
         docker push $REGISTRY/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }}
-        docker push $REGISTRY/$PROJECT_ID/$SERVICE_NAME:latest
 
   deploy:
     runs-on: ubuntu-latest
