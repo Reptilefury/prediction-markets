@@ -280,20 +280,16 @@ public class QRCodeGenerationService {
                 log.warn("ImageIO.read returned null for logo: {}", tokenType);
                 return null;
             }
-                    log.warn("ImageIO.read returned null for logo: {}", tokenType);
-                    return null;
-                }
             
-                // Resize to fit QR code
-                BufferedImage resizedLogo = new BufferedImage(LOGO_SIZE, LOGO_SIZE, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g2d = resizedLogo.createGraphics();
-                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.drawImage(originalLogo, 0, 0, LOGO_SIZE, LOGO_SIZE, null);
-                g2d.dispose();
-                
-                return resizedLogo;
-            }
+            // Resize to fit QR code
+            BufferedImage resizedLogo = new BufferedImage(LOGO_SIZE, LOGO_SIZE, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = resizedLogo.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawImage(originalLogo, 0, 0, LOGO_SIZE, LOGO_SIZE, null);
+            g2d.dispose();
+            
+            return resizedLogo;
         } catch (Exception e) {
             log.warn("Failed to download logo for {}: {}", tokenType, e.getMessage());
         }
