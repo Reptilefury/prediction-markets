@@ -224,30 +224,62 @@ public class QRCodeGenerationService {
     private BufferedImage downloadTokenLogo(String tokenType) {
         try {
             String logoUrl = getLogoDevUrl(tokenType);
-            if (logoUrl != null) {
-                java.net.HttpURLConnection connection = (java.net.HttpURLConnection) new URL(logoUrl).openConnection();
+            if (logoUrl == null) {
+                return null;
+            }
+            
+            // Validate URL is from trusted domain
+            if (!logoUrl.startsWith("https://logo.dev/")) {
+                log.warn("Untrusted logo URL rejected: {}", logoUrl);
+                return null;
+            }
+            
+            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) new URL(logoUrl).openConnection();
+            
+            // Security headers and timeouts
+            connection.setRequestProperty("User-Agent", "PredictionMarkets/1.0");
+            connection.setRequestProperty("Accept", "image/png,image/jpeg,image/webp");
+            
             // Only set Authorization if explicitly required and available
             if (logoDevApiKey != null && !logoDevApiKey.isBlank()) {
                 connection.setRequestProperty("Authorization", "Bearer " + logoDevApiKey);
             }
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(5000);
-                connection.setReadTimeout(10000);
+            
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(10000);
+            connection.setInstanceFollowRedirects(false); // Prevent redirect attacks
 
-                BufferedImage originalLogo;
-                try (java.io.InputStream is = connection.getInputStream()) {
-                    originalLogo = ImageIO.read(is);
-                }
+            // Check response
+            int responseCode = connection.getResponseCode();
+            if (responseCode != 200) {
+                log.warn("Logo download failed with status {}: {}", responseCode, logoUrl);
+                return null;
+            }
+            
+            // Validate content type
+            String contentType = connection.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                log.warn("Invalid content type for logo: {}", contentType);
+                return null;
+            }
+            
+            // Check content length (max 5MB)
+            int contentLength = connection.getContentLength();
+            if (contentLength > 5 * 1024 * 1024) {
+                log.warn("Logo file too large: {} bytes", contentLength);
+                return null;
+            }
 
-                if (originalLogo == null) {
-                connection.setReadTimeout(10000);
+            BufferedImage originalLogo;
+            try (java.io.InputStream is = connection.getInputStream()) {
+                originalLogo = ImageIO.read(is);
+            }
 
-                BufferedImage originalLogo;
-                try (java.io.InputStream is = connection.getInputStream()) {
-                    originalLogo = ImageIO.read(is);
-                }
-
-                if (originalLogo == null) {
+            if (originalLogo == null) {
+                log.warn("ImageIO.read returned null for logo: {}", tokenType);
+                return null;
+            }
                     log.warn("ImageIO.read returned null for logo: {}", tokenType);
                     return null;
                 }
