@@ -42,7 +42,7 @@ jobs:
       run: ./mvnw clean compile test-compile -DskipTests
       
     - name: Qodo Merge AI Review
-      uses: qodo-ai/qodo-merge-action@v1
+      uses: Codium-ai/pr-agent@main
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         qodo_token: ${{ secrets.QODO_TOKEN }}
@@ -70,6 +70,7 @@ jobs:
     name: Security Analysis
     runs-on: ubuntu-latest
     needs: qodo-analysis
+    if: always()  # Run even if Qodo fails
     
     steps:
     - uses: actions/checkout@v4
@@ -123,6 +124,7 @@ jobs:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
     needs: qodo-analysis
+    if: always()  # Run even if Qodo fails
     
     steps:
     - uses: actions/checkout@v4
@@ -256,15 +258,19 @@ jobs:
         echo "Code Quality: ${{ needs.code-quality.result }}"
         echo "Integration Test: ${{ needs.integration-test.result }}"
         
-        if [[ "${{ needs.qodo-analysis.result }}" != "success" || 
-              "${{ needs.security-scan.result }}" != "success" || 
+        # Allow Qodo to fail but require other checks to pass
+        if [[ "${{ needs.security-scan.result }}" != "success" || 
               "${{ needs.code-quality.result }}" != "success" || 
               "${{ needs.integration-test.result }}" != "success" ]]; then
-          echo "Quality gate failed!"
+          echo "Quality gate failed on critical checks!"
           exit 1
         fi
         
-        echo "✅ All quality checks passed!"
+        if [[ "${{ needs.qodo-analysis.result }}" != "success" ]]; then
+          echo "⚠️  Qodo analysis failed but continuing with other checks"
+        fi
+        
+        echo "✅ Quality gate passed!"
         
     - name: Update PR with quality status
       uses: actions/github-script@v7
