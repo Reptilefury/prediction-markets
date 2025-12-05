@@ -62,11 +62,11 @@ public class EnclaveUdaCreationListener {
                             }
                             
                             return userRepository.save(user)
-                                    .doOnSuccess(savedUser -> generateAssetsAsync(savedUser, udaResponse.getDepositAddresses()));
+                                    .flatMap(savedUser -> generateAssetsAsync(savedUser, udaResponse.getDepositAddresses()));
                         } catch (Exception e) {
                             log.error("Failed to serialize deposit addresses for user {}: {}", event.getUserId(), e.getMessage());
                             return userRepository.save(user)
-                                    .doOnSuccess(savedUser -> generateAssetsAsync(savedUser, null));
+                                    .flatMap(savedUser -> generateAssetsAsync(savedUser, null));
                         }
                     })
                     .thenReturn(udaResponse);
@@ -100,7 +100,7 @@ public class EnclaveUdaCreationListener {
         );
     }
 
-    private void generateAssetsAsync(com.oregonMarkets.domain.user.model.User user, java.util.Map<String, Object> depositAddresses) {
+    private reactor.core.publisher.Mono<com.oregonMarkets.domain.user.model.User> generateAssetsAsync(com.oregonMarkets.domain.user.model.User user, java.util.Map<String, Object> depositAddresses) {
         // Generate avatar and QR codes asynchronously and upload to GCS
         reactor.core.publisher.Mono<String> avatarMono = avatarGenerationService.generateAndUploadAvatar(user.getId())
                 .onErrorResume(e -> {
@@ -122,27 +122,23 @@ public class EnclaveUdaCreationListener {
                 });
 
         // Execute in parallel and update user
-        reactor.core.publisher.Mono.zip(avatarMono, qrCodesMono)
+        return reactor.core.publisher.Mono.zip(avatarMono, qrCodesMono)
                 .flatMap(tuple -> {
                     String avatarUrl = tuple.getT1();
                     java.util.Map<String, String> qrCodes = tuple.getT2();
                     
-                    return userRepository.findById(user.getId())
-                            .flatMap(u -> {
-                                if (!avatarUrl.isEmpty()) u.setAvatarUrl(avatarUrl);
-                                if (qrCodes.containsKey("proxyWalletQrCode")) u.setProxyWalletQrCodeUrl(qrCodes.get("proxyWalletQrCode"));
-                                if (qrCodes.containsKey("enclaveUdaQrCode")) u.setEnclaveUdaQrCodeUrl(qrCodes.get("enclaveUdaQrCode"));
-                                if (qrCodes.containsKey("evmDepositQrCodes")) u.setEvmDepositQrCodes(qrCodes.get("evmDepositQrCodes"));
-                                if (qrCodes.containsKey("solanaDepositQrCode")) u.setSolanaDepositQrCodeUrl(qrCodes.get("solanaDepositQrCode"));
-                                if (qrCodes.containsKey("bitcoinDepositQrCodes")) u.setBitcoinDepositQrCodes(qrCodes.get("bitcoinDepositQrCodes"));
-                                return userRepository.save(u);
-                            });
+                    // Use the user passed in instead of fetching again
+                    if (!avatarUrl.isEmpty()) user.setAvatarUrl(avatarUrl);
+                    if (qrCodes.containsKey("proxyWalletQrCode")) user.setProxyWalletQrCodeUrl(qrCodes.get("proxyWalletQrCode"));
+                    if (qrCodes.containsKey("enclaveUdaQrCode")) user.setEnclaveUdaQrCodeUrl(qrCodes.get("enclaveUdaQrCode"));
+                    if (qrCodes.containsKey("evmDepositQrCodes")) user.setEvmDepositQrCodes(qrCodes.get("evmDepositQrCodes"));
+                    if (qrCodes.containsKey("solanaDepositQrCode")) user.setSolanaDepositQrCodeUrl(qrCodes.get("solanaDepositQrCode"));
+                    if (qrCodes.containsKey("bitcoinDepositQrCodes")) user.setBitcoinDepositQrCodes(qrCodes.get("bitcoinDepositQrCodes"));
+                    return userRepository.save(user);
                 })
-                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
-                .subscribe(
-                    u -> log.info("Assets generated and uploaded for user: {}", user.getId()),
-                    error -> log.error("Assets generation failed for user {}: {}", user.getId(), error.getMessage())
-                );
+                .doOnSuccess(u -> log.info("Assets generated and uploaded for user: {}", user.getId()))
+                .doOnError(error -> log.error("Assets generation failed for user {}: {}", user.getId(), error.getMessage()))
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     @SuppressWarnings("unchecked")
