@@ -23,10 +23,10 @@ import java.util.UUID;
 @Slf4j
 public class QRCodeGenerationService {
 
-    @Value("${gcp.project-id:}")
+    @Value("${spring.cloud.gcp.storage.project-id:${gcp.project-id}}")
     private String gcpProjectId;
 
-    @Value("${gcp.storage.bucket:oregon-markets-qrcodes}")
+    @Value("${spring.cloud.gcp.storage.bucket-name:prediction-markets-storage}")
     private String bucketName;
 
     private static final int QR_CODE_SIZE = 512;

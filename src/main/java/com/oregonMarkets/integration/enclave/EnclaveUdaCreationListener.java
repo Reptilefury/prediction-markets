@@ -3,6 +3,8 @@ package com.oregonMarkets.integration.enclave;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.event.EnclaveUdaCreatedEvent;
 import com.oregonMarkets.event.ProxyWalletCreatedEvent;
+import com.oregonMarkets.service.AvatarGenerationService;
+import com.oregonMarkets.service.QRCodeGenerationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +29,8 @@ public class EnclaveUdaCreationListener {
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
-    private final com.oregonMarkets.service.QrCodeAvatarService qrCodeAvatarService;
+    private final AvatarGenerationService avatarGenerationService;
+    private final QRCodeGenerationService qrCodeGenerationService;
 
     @Value("${app.enclave.destination-token-address:}")
     private String destinationTokenAddress;
@@ -54,34 +57,14 @@ public class EnclaveUdaCreationListener {
                             if (udaResponse.getDepositAddresses() != null) {
                                 String depositAddressesJson = objectMapper.writeValueAsString(udaResponse.getDepositAddresses());
                                 user.setEnclaveDepositAddresses(depositAddressesJson);
-                                
-                                // Generate QR codes for deposit addresses
-                                user.setEvmDepositQrCodes(qrCodeAvatarService.generateDepositQrCodesJson(udaResponse.getDepositAddresses()));
-                                
-                                // Generate Solana QR code
-                                user.setSolanaDepositQrCodeUrl(qrCodeAvatarService.generateSolanaDepositQrCode(depositAddressesJson));
-                                
-                                // Generate Bitcoin QR codes
-                                user.setBitcoinDepositQrCodes(qrCodeAvatarService.generateBitcoinDepositQrCodes(depositAddressesJson));
                             }
                             
-                            // Generate avatar and QR codes
-                            if (user.getAvatarUrl() == null) {
-                                user.setAvatarUrl(qrCodeAvatarService.generateAvatarUrl(user.getId().toString()));
-                            }
-                            
-                            if (user.getEnclaveUdaQrCodeUrl() == null) {
-                                user.setEnclaveUdaQrCodeUrl(qrCodeAvatarService.generateUdaQrCode(udaResponse.getUdaAddress()));
-                            }
-                            
-                            if (user.getProxyWalletQrCodeUrl() == null && user.getProxyWalletAddress() != null) {
-                                user.setProxyWalletQrCodeUrl(qrCodeAvatarService.generateProxyWalletQrCode(user.getProxyWalletAddress()));
-                            }
-                            
-                            return userRepository.save(user);
+                            return userRepository.save(user)
+                                    .doOnSuccess(savedUser -> generateAssetsAsync(savedUser, udaResponse.getDepositAddresses()));
                         } catch (Exception e) {
                             log.error("Failed to serialize deposit addresses for user {}: {}", event.getUserId(), e.getMessage());
-                            return userRepository.save(user);
+                            return userRepository.save(user)
+                                    .doOnSuccess(savedUser -> generateAssetsAsync(savedUser, null));
                         }
                     })
                     .thenReturn(udaResponse);
@@ -113,5 +96,95 @@ public class EnclaveUdaCreationListener {
                 // In production, you might want to publish a failure event or send alerts
             }
         );
+    }
+
+    private void generateAssetsAsync(com.oregonMarkets.domain.user.model.User user, java.util.Map<String, Object> depositAddresses) {
+        // Generate avatar and QR codes asynchronously and upload to GCS
+        reactor.core.publisher.Mono<String> avatarMono = avatarGenerationService.generateAndUploadAvatar(user.getId())
+                .onErrorResume(e -> {
+                    log.warn("Avatar generation failed for user {}: {}", user.getId(), e.getMessage());
+                    return reactor.core.publisher.Mono.just("");
+                });
+
+        reactor.core.publisher.Mono<java.util.Map<String, String>> qrCodesMono = qrCodeGenerationService.generateAndUploadQRCodes(
+                user.getId(),
+                user.getProxyWalletAddress(),
+                user.getEnclaveUdaAddress(),
+                extractEvmAddresses(depositAddresses),
+                extractSolanaAddress(depositAddresses),
+                extractBitcoinAddresses(depositAddresses)
+        )
+                .onErrorResume(e -> {
+                    log.warn("QR code generation failed for user {}: {}", user.getId(), e.getMessage());
+                    return reactor.core.publisher.Mono.just(java.util.Map.of());
+                });
+
+        // Execute in parallel and update user
+        reactor.core.publisher.Mono.zip(avatarMono, qrCodesMono)
+                .flatMap(tuple -> {
+                    String avatarUrl = tuple.getT1();
+                    java.util.Map<String, String> qrCodes = tuple.getT2();
+                    
+                    return userRepository.findById(user.getId())
+                            .flatMap(u -> {
+                                if (!avatarUrl.isEmpty()) u.setAvatarUrl(avatarUrl);
+                                if (qrCodes.containsKey("proxyWalletQrCode")) u.setProxyWalletQrCodeUrl(qrCodes.get("proxyWalletQrCode"));
+                                if (qrCodes.containsKey("enclaveUdaQrCode")) u.setEnclaveUdaQrCodeUrl(qrCodes.get("enclaveUdaQrCode"));
+                                if (qrCodes.containsKey("evmDepositQrCodes")) u.setEvmDepositQrCodes(qrCodes.get("evmDepositQrCodes"));
+                                if (qrCodes.containsKey("solanaDepositQrCode")) u.setSolanaDepositQrCodeUrl(qrCodes.get("solanaDepositQrCode"));
+                                if (qrCodes.containsKey("bitcoinDepositQrCodes")) u.setBitcoinDepositQrCodes(qrCodes.get("bitcoinDepositQrCodes"));
+                                return userRepository.save(u);
+                            });
+                })
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .subscribe(
+                    u -> log.info("Assets generated and uploaded for user: {}", user.getId()),
+                    error -> log.error("Assets generation failed for user {}: {}", user.getId(), error.getMessage())
+                );
+    }
+
+    @SuppressWarnings("unchecked")
+    private java.util.Map<String, String> extractEvmAddresses(java.util.Map<String, Object> depositAddresses) {
+        if (depositAddresses == null) return null;
+        java.util.Map<String, String> evmAddresses = new java.util.HashMap<>();
+        
+        // Extract addresses by chain ID
+        for (String chainId : java.util.Arrays.asList("1", "137", "8453")) {
+            Object chainData = depositAddresses.get(chainId);
+            if (chainData instanceof java.util.Map) {
+                Object address = ((java.util.Map<String, Object>) chainData).get("address");
+                if (address != null) {
+                    String chainName = chainId.equals("1") ? "ethereum" : 
+                                     chainId.equals("137") ? "polygon" : "base";
+                    evmAddresses.put(chainName, address.toString());
+                }
+            }
+        }
+        return evmAddresses.isEmpty() ? null : evmAddresses;
+    }
+    
+    @SuppressWarnings("unchecked")
+    private String extractSolanaAddress(java.util.Map<String, Object> depositAddresses) {
+        if (depositAddresses == null) return null;
+        Object solanaData = depositAddresses.get("solana");
+        if (solanaData instanceof java.util.Map) {
+            Object address = ((java.util.Map<String, Object>) solanaData).get("address");
+            return address != null ? address.toString() : null;
+        }
+        return null;
+    }
+    
+    @SuppressWarnings("unchecked")
+    private java.util.Map<String, String> extractBitcoinAddresses(java.util.Map<String, Object> depositAddresses) {
+        if (depositAddresses == null) return null;
+        java.util.Map<String, String> btcAddresses = new java.util.HashMap<>();
+        Object btcData = depositAddresses.get("bitcoin");
+        if (btcData instanceof java.util.Map) {
+            Object address = ((java.util.Map<String, Object>) btcData).get("address");
+            if (address != null) {
+                btcAddresses.put("bitcoin", address.toString());
+            }
+        }
+        return btcAddresses.isEmpty() ? null : btcAddresses;
     }
 }
