@@ -69,10 +69,7 @@ class UserRegistrationServiceTest {
         when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
         when(proxyWalletOnboardingService.createUserProxyWallet(anyString())).thenReturn(Mono.just("0x456"));
         when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString())).thenReturn(Mono.just(udaResponse));
-        when(blnkClient.createIdentity(anyString(), anyString(), any())).thenReturn(Mono.just("blnk-identity-id"));
-        when(blnkClient.createBalance(anyString())).thenReturn(Mono.just("blnk-balance-id"));
         when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
-        when(cacheService.set(anyString(), any(), any())).thenReturn(Mono.empty());
 
         // Then
         StepVerifier.create(userRegistrationService.registerUser(request, magicUser, didToken))
