@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class KeycloakTokenValidator {
 
+  private static final String PREFERRED_USERNAME = "preferred_username";
   private final ObjectMapper mapper = new ObjectMapper();
 
   public Mono<Map<String, Object>> validate(String bearerToken) {
@@ -42,8 +43,8 @@ public class KeycloakTokenValidator {
       Map<String, Object> userInfo = new HashMap<>();
       if (payload.has("sub")) userInfo.put("sub", payload.get("sub").asText());
       if (payload.has("email")) userInfo.put("email", payload.get("email").asText());
-      if (payload.has("preferred_username"))
-        userInfo.put("preferred_username", payload.get("preferred_username").asText());
+      if (payload.has(PREFERRED_USERNAME))
+        userInfo.put(PREFERRED_USERNAME, payload.get(PREFERRED_USERNAME).asText());
       return Mono.just(userInfo);
     } catch (IllegalArgumentException e) {
       return Mono.error(new KeycloakAuthException("Invalid base64 in JWT", e));

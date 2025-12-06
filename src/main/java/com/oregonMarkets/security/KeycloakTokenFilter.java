@@ -24,7 +24,6 @@ import reactor.core.publisher.Mono;
 public class KeycloakTokenFilter implements WebFilter {
 
   private final KeycloakTokenValidator validator;
-  private final com.oregonMarkets.integration.keycloak.KeycloakAdminClient keycloakAdminClient;
   private final ObjectMapper objectMapper;
 
   @Override

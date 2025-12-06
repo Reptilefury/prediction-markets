@@ -54,7 +54,6 @@ class UserRegistrationServiceTest {
     UserRegistrationRequest request = createValidRequest();
     MagicDIDValidator.MagicUserInfo magicUser = createMagicUserInfo();
     String didToken = "test-did-token";
-    EnclaveClient.EnclaveUDAResponse udaResponse = createUdaResponse();
     User savedUser = createSavedUser();
 
     // When

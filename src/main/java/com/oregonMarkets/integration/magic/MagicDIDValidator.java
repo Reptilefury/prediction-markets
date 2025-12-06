@@ -30,12 +30,6 @@ public class MagicDIDValidator {
   @Value("${app.magic.api-key}")
   private String magicApiKey;
 
-  private final ObjectMapper objectMapper;
-
-  public MagicDIDValidator(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
-
   /**
    * Validate a Magic DID token asynchronously Magic tokens are in custom format: [proof, claim]
    * where: - proof: Ethereum personal_sign signature (hex string) - claim: JSON payload as string

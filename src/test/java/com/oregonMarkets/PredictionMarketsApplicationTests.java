@@ -10,5 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class PredictionMarketsApplicationTests {
 
   @Test
-  void contextLoads() {}
+  void contextLoads() {
+    // Empty test method - validates Spring Boot application context loads successfully
+  }
 }

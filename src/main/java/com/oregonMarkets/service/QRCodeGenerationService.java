@@ -358,10 +358,10 @@ public class QRCodeGenerationService {
           case ETHEREUM_TYPE -> ETHEREUM_TYPE;
           case POLYGON_TYPE -> POLYGON_TYPE;
           case "base" -> "base";
-          case "solana" -> SOLANA_TYPE;
-          case "bitcoin" -> BITCOIN_TYPE;
+          case SOLANA_TYPE -> SOLANA_TYPE;
+          case BITCOIN_TYPE -> BITCOIN_TYPE;
           case "uda" -> null; // Custom token, use fallback
-          case "wallet" -> null; // Generic wallet, use fallback
+          case WALLET_TYPE -> null; // Generic wallet, use fallback
           default -> null;
         };
 
