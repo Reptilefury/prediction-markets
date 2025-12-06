@@ -265,8 +265,9 @@
 				<version>4.8.2.0</version>
 				<configuration>
 					<effort>Max</effort>
-					<threshold>Low</threshold>
+					<threshold>Medium</threshold>
 					<xmlOutput>true</xmlOutput>
+					<excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
 				</configuration>
 				<executions>
 					<execution>

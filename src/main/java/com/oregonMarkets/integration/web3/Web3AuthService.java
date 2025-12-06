@@ -38,7 +38,7 @@ public class Web3AuthService {
     
     public String generateAuthMessage(String walletAddress) {
         long timestamp = System.currentTimeMillis();
-        return String.format("%s\n\nWallet: %s\nTimestamp: %d", 
+        return String.format("%s%n%nWallet: %s%nTimestamp: %d", 
                            EXPECTED_MESSAGE_PREFIX, walletAddress, timestamp);
     }
 }

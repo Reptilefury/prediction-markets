@@ -21,4 +21,13 @@ public class AssetsGenerationEvent {
     private String magicWalletAddress;
     private Map<String, Object> depositAddresses; // From Enclave response
     private Instant timestamp;
+
+    // Defensive copying for mutable fields
+    public Map<String, Object> getDepositAddresses() {
+        return depositAddresses == null ? null : Map.copyOf(depositAddresses);
+    }
+
+    public void setDepositAddresses(Map<String, Object> depositAddresses) {
+        this.depositAddresses = depositAddresses == null ? null : Map.copyOf(depositAddresses);
+    }
 }

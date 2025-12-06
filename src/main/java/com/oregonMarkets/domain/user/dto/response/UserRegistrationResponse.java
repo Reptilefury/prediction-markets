@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +38,15 @@ public class UserRegistrationResponse {
     private String solanaDepositQrCodeUrl;
     private String bitcoinDepositQrCodes;
 
+    // Defensive copying for mutable fields
+    public DepositAddresses getDepositAddresses() {
+        return depositAddresses;
+    }
+
+    public void setDepositAddresses(DepositAddresses depositAddresses) {
+        this.depositAddresses = depositAddresses;
+    }
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -46,6 +56,31 @@ public class UserRegistrationResponse {
         private List<EVMDepositAddress> evmDepositAddress;
         private SolanaDepositAddress solanaDepositAddress;
         private BitcoinDepositAddress bitcoinDepositAddress;
+
+        // Defensive copying for mutable fields
+        public List<EVMDepositAddress> getEvmDepositAddress() {
+            return evmDepositAddress == null ? null : new ArrayList<>(evmDepositAddress);
+        }
+
+        public void setEvmDepositAddress(List<EVMDepositAddress> evmDepositAddress) {
+            this.evmDepositAddress = evmDepositAddress == null ? null : new ArrayList<>(evmDepositAddress);
+        }
+
+        public SolanaDepositAddress getSolanaDepositAddress() {
+            return solanaDepositAddress;
+        }
+
+        public void setSolanaDepositAddress(SolanaDepositAddress solanaDepositAddress) {
+            this.solanaDepositAddress = solanaDepositAddress;
+        }
+
+        public BitcoinDepositAddress getBitcoinDepositAddress() {
+            return bitcoinDepositAddress;
+        }
+
+        public void setBitcoinDepositAddress(BitcoinDepositAddress bitcoinDepositAddress) {
+            this.bitcoinDepositAddress = bitcoinDepositAddress;
+        }
     }
 
     @Data

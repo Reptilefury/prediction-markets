@@ -116,7 +116,7 @@ public class Web3RegistrationService {
             })
             .onErrorResume(error -> {
                 log.warn("Failed to create UDA, continuing without it: {}", error.getMessage());
-                return Mono.just(reactor.util.function.Tuples.of(user, null));
+                return Mono.just(reactor.util.function.Tuples.of(user, (EnclaveClient.EnclaveUDAResponse) null));
             });
     }
     

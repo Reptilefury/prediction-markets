@@ -36,6 +36,23 @@ public class ApiResponse<T> {
 
     private ErrorDetails error;
 
+    // Defensive copying for mutable fields
+    public Map<String, Object> getMetadata() {
+        return metadata == null ? null : new HashMap<>(metadata);
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata == null ? null : new HashMap<>(metadata);
+    }
+
+    public ErrorDetails getError() {
+        return error;
+    }
+
+    public void setError(ErrorDetails error) {
+        this.error = error;
+    }
+
     /**
      * Create a success response
      */
@@ -191,5 +208,14 @@ public class ApiResponse<T> {
         private String field;
         private Map<String, String> validationErrors;
         private String traceId;
+
+        // Defensive copying for mutable fields
+        public Map<String, String> getValidationErrors() {
+            return validationErrors == null ? null : new HashMap<>(validationErrors);
+        }
+
+        public void setValidationErrors(Map<String, String> validationErrors) {
+            this.validationErrors = validationErrors == null ? null : new HashMap<>(validationErrors);
+        }
     }
 }
