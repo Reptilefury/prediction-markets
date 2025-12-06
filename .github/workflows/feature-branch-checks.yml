@@ -54,6 +54,12 @@ jobs:
     - name: Run Maven Build
       run: ./mvnw clean package -DskipTests
       
+    - name: Setup Java for Snyk
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+      
     - name: Run Snyk Security Scan (Dependencies)
       uses: snyk/actions/maven@master
       env:
