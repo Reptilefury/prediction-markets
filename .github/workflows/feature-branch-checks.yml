@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Code Quality & Security Checks
     
+    env:
+      JDBC_DATABASE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
