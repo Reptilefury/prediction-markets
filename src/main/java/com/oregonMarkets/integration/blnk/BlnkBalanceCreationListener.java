@@ -55,7 +55,7 @@ public class BlnkBalanceCreationListener {
                             log.info(
                                 "User {} has identity but no USDC balance, creating USDC balance",
                                 event.getUserId());
-                            return createUsdcBalance(user.getBlnkIdentityId(), user, event);
+                            return createUsdcBalance(user.getBlnkIdentityId(), user);
                           }
                         });
               } else {
@@ -80,7 +80,7 @@ public class BlnkBalanceCreationListener {
                           user.setBlnkIdentityId(identityId);
                           return userRepository
                               .save(user)
-                              .then(createUsdcBalance(identityId, user, event));
+                              .then(createUsdcBalance(identityId, user));
                         });
               }
             })
@@ -123,9 +123,7 @@ public class BlnkBalanceCreationListener {
   }
 
   private Mono<BlnkBalanceDetails> createUsdcBalance(
-      String identityId,
-      com.oregonMarkets.domain.user.model.User user,
-      EnclaveUdaCreatedEvent event) {
+      String identityId, com.oregonMarkets.domain.user.model.User user) {
     return blnkClient
         .createBalance("USDC")
         .flatMap(

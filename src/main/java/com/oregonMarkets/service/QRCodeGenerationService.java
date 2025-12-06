@@ -376,10 +376,10 @@ public class QRCodeGenerationService {
       case ETHEREUM_TYPE -> new Color(0x627EEA);
       case POLYGON_TYPE -> new Color(0x8247E5);
       case "base" -> new Color(0x0052FF);
-      case "solana" -> new Color(0x9945FF);
-      case "bitcoin" -> new Color(0xF7931A);
+      case SOLANA_TYPE -> new Color(0x9945FF);
+      case BITCOIN_TYPE -> new Color(0xF7931A);
       case "uda" -> new Color(0x00D4AA);
-      case "wallet" -> new Color(0x6366F1);
+      case WALLET_TYPE -> new Color(0x6366F1);
       default -> new Color(0x6B7280);
     };
   }

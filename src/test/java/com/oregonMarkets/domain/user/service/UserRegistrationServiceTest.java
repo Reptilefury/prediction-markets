@@ -110,15 +110,6 @@ class UserRegistrationServiceTest {
     return magicUser;
   }
 
-  private EnclaveClient.EnclaveUDAResponse createUdaResponse() {
-    EnclaveClient.EnclaveUDAResponse udaResponse = new EnclaveClient.EnclaveUDAResponse();
-    udaResponse.setUserId("enclave-user-id");
-    udaResponse.setUdaAddress("0xuda123");
-    udaResponse.setTag("tag123");
-    udaResponse.setCreatedAt(System.currentTimeMillis());
-    return udaResponse;
-  }
-
   private User createSavedUser() {
     return User.builder()
         .id(UUID.randomUUID())

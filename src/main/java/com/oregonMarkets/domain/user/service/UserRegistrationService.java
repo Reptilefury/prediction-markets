@@ -218,17 +218,7 @@ public class UserRegistrationService {
         });
   }
 
-  private Mono<Void> publishKeycloakProvisionEvent(User user, String magicUserId, String didToken) {
-    return Mono.fromRunnable(
-        () -> {
-          com.oregonMarkets.event.KeycloakProvisionEvent event =
-              com.oregonMarkets.event.KeycloakProvisionEvent.of(
-                  user.getId(), magicUserId, didToken);
-          eventPublisher.publishEvent(event);
-        });
-  }
-
-  private Mono<Void> cacheUserData(User user) {
+    private Mono<Void> cacheUserData(User user) {
     String cacheKey = "user:" + user.getId();
     return cacheService
         .set(cacheKey, user, java.time.Duration.ofHours(1))
