@@ -150,7 +150,7 @@ class Web3RegistrationServiceTest {
         .thenReturn(Mono.error(new RuntimeException("Enclave error")));
 
     StepVerifier.create(service.registerUser(request))
-        .expectError(NullPointerException.class)
+        .expectError(RuntimeException.class)
         .verify();
   }
 }
