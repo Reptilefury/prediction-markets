@@ -1,5 +1,7 @@
 package com.oregonMarkets.scheduler;
 
+import static org.mockito.Mockito.*;
+
 import com.oregonMarkets.domain.blockchain.repository.BlockchainChainRepository;
 import com.oregonMarkets.domain.blockchain.service.DepositScannerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,32 +10,27 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DepositMonitoringSchedulerTest {
 
-    @Mock
-    private BlockchainChainRepository chainRepository;
-    
-    @Mock
-    private DepositScannerService depositScannerService;
+  @Mock private BlockchainChainRepository chainRepository;
 
-    private DepositMonitoringScheduler scheduler;
+  @Mock private DepositScannerService depositScannerService;
 
-    @BeforeEach
-    void setUp() {
-        scheduler = new DepositMonitoringScheduler(chainRepository, depositScannerService);
-    }
+  private DepositMonitoringScheduler scheduler;
 
-    @Test
-    void scanChainsForDeposits_CallsRepositoryAndService() {
-        when(chainRepository.findByIsActiveTrue()).thenReturn(Flux.empty());
+  @BeforeEach
+  void setUp() {
+    scheduler = new DepositMonitoringScheduler(chainRepository, depositScannerService);
+  }
 
-        scheduler.scanChainsForDeposits();
+  @Test
+  void scanChainsForDeposits_CallsRepositoryAndService() {
+    when(chainRepository.findByIsActiveTrue()).thenReturn(Flux.empty());
 
-        verify(chainRepository).findByIsActiveTrue();
-    }
+    scheduler.scanChainsForDeposits();
+
+    verify(chainRepository).findByIsActiveTrue();
+  }
 }

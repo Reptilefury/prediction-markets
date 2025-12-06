@@ -5,11 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-@Disabled("Redis configuration issue with multiple ReactiveRedisConnectionFactory beans. This is a separate infrastructure setup issue.")
+@Disabled(
+    "Redis configuration issue with multiple ReactiveRedisConnectionFactory beans. This is a separate infrastructure setup issue.")
 class PredictionMarketsApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+  @Test
+  void contextLoads() {}
 }

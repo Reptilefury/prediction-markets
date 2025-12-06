@@ -7,17 +7,17 @@ import lombok.Data;
 
 @Data
 public class UserRegistrationRequest {
-    
-    @Email(message = "Invalid email format")
-    @NotBlank(message = "Email is required")
-    private String email;
-    
-    @Pattern(regexp = "^[A-Z]{2}$", message = "Invalid country code")
-    private String countryCode;
-    
-    private String referralCode;
-    
-    private String utmSource;
-    private String utmMedium;
-    private String utmCampaign;
+
+  @Email(message = "Invalid email format")
+  @NotBlank(message = "Email is required")
+  private String email;
+
+  @Pattern(regexp = "^[A-Z]{2}$", message = "Invalid country code")
+  private String countryCode;
+
+  private String referralCode;
+
+  private String utmSource;
+  private String utmMedium;
+  private String utmCampaign;
 }
