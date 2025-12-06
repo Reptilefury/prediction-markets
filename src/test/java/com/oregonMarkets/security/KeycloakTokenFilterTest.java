@@ -33,7 +33,7 @@ class KeycloakTokenFilterTest {
   void setUp() {
     objectMapper = new ObjectMapper();
     objectMapper.registerModule(new JavaTimeModule());
-    filter = new KeycloakTokenFilter(validator, keycloakAdminClient, objectMapper);
+    filter = new KeycloakTokenFilter(validator, objectMapper);
   }
 
   @Test

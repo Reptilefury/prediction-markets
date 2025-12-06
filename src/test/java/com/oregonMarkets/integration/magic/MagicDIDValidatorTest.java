@@ -14,7 +14,7 @@ class MagicDIDValidatorTest {
 
   @BeforeEach
   void setUp() {
-    validator = new MagicDIDValidator(new ObjectMapper());
+    validator = new MagicDIDValidator();
     ReflectionTestUtils.setField(validator, "magicApiKey", "test-api-key");
   }
 
