@@ -50,6 +50,8 @@ public class QRCodeGenerationService {
   private static final String BITCOIN_TYPE = "bitcoin";
   private static final String ETHEREUM_TYPE = "ethereum";
   private static final String POLYGON_TYPE = "polygon";
+  private static final String UDA_TYPE = "uda";
+  private static final String BASE_TYPE = "base";
 
   /**
    * Generate QR codes for all deposit addresses and proxy wallet Returns a map with address type as
@@ -80,7 +82,7 @@ public class QRCodeGenerationService {
             if (enclaveUdaAddress != null && !enclaveUdaAddress.isBlank()) {
               qrCodeUrls.put(
                   "enclaveUdaQrCode",
-                  generateAndUploadBrandedQRCode(userId, "enclave_uda", enclaveUdaAddress, "uda"));
+                  generateAndUploadBrandedQRCode(userId, "enclave_uda", enclaveUdaAddress, UDA_TYPE));
             }
 
             // Generate QR codes for EVM deposit addresses
@@ -388,11 +390,11 @@ public class QRCodeGenerationService {
     return switch (tokenType.toLowerCase()) {
       case ETHEREUM_TYPE -> "ETH";
       case POLYGON_TYPE -> "MATIC";
-      case "base" -> "BASE";
-      case "solana" -> "SOL";
-      case "bitcoin" -> "BTC";
-      case "uda" -> "UDA";
-      case "wallet" -> "💳";
+      case BASE_TYPE -> "BASE";
+      case SOLANA_TYPE -> "SOL";
+      case BITCOIN_TYPE -> "BTC";
+      case UDA_TYPE -> "UDA";
+      case WALLET_TYPE -> "💳";
       default -> "?";
     };
   }

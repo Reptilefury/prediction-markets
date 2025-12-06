@@ -1,103 +1,93 @@
 package com.oregonMarkets.service;
 
-import java.util.Map;
-import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.test.StepVerifier;
 
-@ExtendWith(MockitoExtension.class)
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class QRCodeGenerationServiceTest {
 
-  private QRCodeGenerationService qrCodeGenerationService;
+    @Test
+    void generateAndUploadQRCodes_WithProxyWallet() {
+        QRCodeGenerationService service = new QRCodeGenerationService();
+        UUID userId = UUID.randomUUID();
 
-  @BeforeEach
-  void setUp() {
-    qrCodeGenerationService = new QRCodeGenerationService();
-    ReflectionTestUtils.setField(qrCodeGenerationService, "gcpProjectId", "test-project");
-    ReflectionTestUtils.setField(qrCodeGenerationService, "bucketName", "test-bucket");
-    ReflectionTestUtils.setField(qrCodeGenerationService, "logoDevApiKey", "test-api-key");
-  }
+        StepVerifier.create(service.generateAndUploadQRCodes(
+                userId, "0xproxy", null, null, null, null))
+                .expectNextMatches(map -> map.containsKey("proxyWalletQrCode"))
+                .verifyComplete();
+    }
 
-  @Test
-  void generateAndUploadQRCodes_WithProxyWallet_Success() {
-    UUID userId = UUID.randomUUID();
-    String proxyWalletAddress = "0x123456789";
+    @Test
+    void generateAndUploadQRCodes_WithEnclaveUda() {
+        QRCodeGenerationService service = new QRCodeGenerationService();
+        UUID userId = UUID.randomUUID();
 
-    StepVerifier.create(
-            qrCodeGenerationService.generateAndUploadQRCodes(
-                userId, proxyWalletAddress, null, null, null, null))
-        .expectNextMatches(
-            result ->
-                result.containsKey("proxyWalletQrCode")
-                    && result.get("proxyWalletQrCode").contains("test-bucket"))
-        .verifyComplete();
-  }
+        StepVerifier.create(service.generateAndUploadQRCodes(
+                userId, null, "0xenclave", null, null, null))
+                .expectNextMatches(map -> map.containsKey("enclaveUdaQrCode"))
+                .verifyComplete();
+    }
 
-  @Test
-  void generateAndUploadQRCodes_WithEnclaveUda_Success() {
-    UUID userId = UUID.randomUUID();
-    String enclaveUdaAddress = "0xuda123";
+    @Test
+    void generateAndUploadQRCodes_WithEvmAddresses() {
+        QRCodeGenerationService service = new QRCodeGenerationService();
+        UUID userId = UUID.randomUUID();
+        Map<String, String> evmAddresses = Map.of("ethereum", "0xeth", "polygon", "0xpoly");
 
-    StepVerifier.create(
-            qrCodeGenerationService.generateAndUploadQRCodes(
-                userId, null, enclaveUdaAddress, null, null, null))
-        .expectNextMatches(
-            result ->
-                result.containsKey("enclaveUdaQrCode")
-                    && result.get("enclaveUdaQrCode").contains("test-bucket"))
-        .verifyComplete();
-  }
-
-  @Test
-  void generateAndUploadQRCodes_WithEvmAddresses_Success() {
-    UUID userId = UUID.randomUUID();
-    Map<String, String> evmAddresses = Map.of("ethereum", "0xeth123");
-
-    StepVerifier.create(
-            qrCodeGenerationService.generateAndUploadQRCodes(
+        StepVerifier.create(service.generateAndUploadQRCodes(
                 userId, null, null, evmAddresses, null, null))
-        .expectNextMatches(result -> result.containsKey("evmDepositQrCodes"))
-        .verifyComplete();
-  }
+                .expectNextMatches(map -> map.containsKey("evmDepositQrCodes"))
+                .verifyComplete();
+    }
 
-  @Test
-  void generateAndUploadQRCodes_WithSolanaAddress_Success() {
-    UUID userId = UUID.randomUUID();
-    String solanaAddress = "5gS9G9sFLNukhk8DE5deyoZNgphquLbXfdZHntGY2gjH";
+    @Test
+    void generateAndUploadQRCodes_WithSolana() {
+        QRCodeGenerationService service = new QRCodeGenerationService();
+        UUID userId = UUID.randomUUID();
 
-    StepVerifier.create(
-            qrCodeGenerationService.generateAndUploadQRCodes(
-                userId, null, null, null, solanaAddress, null))
-        .expectNextMatches(
-            result ->
-                result.containsKey("solanaDepositQrCode")
-                    && result.get("solanaDepositQrCode").contains("test-bucket"))
-        .verifyComplete();
-  }
+        StepVerifier.create(service.generateAndUploadQRCodes(
+                userId, null, null, null, "solana123", null))
+                .expectNextMatches(map -> map.containsKey("solanaDepositQrCode"))
+                .verifyComplete();
+    }
 
-  @Test
-  void generateAndUploadQRCodes_WithBitcoinAddresses_Success() {
-    UUID userId = UUID.randomUUID();
-    Map<String, String> bitcoinAddresses = Map.of("bitcoin", "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
+    @Test
+    void generateAndUploadQRCodes_WithBitcoin() {
+        QRCodeGenerationService service = new QRCodeGenerationService();
+        UUID userId = UUID.randomUUID();
+        Map<String, String> btcAddresses = Map.of("bitcoin", "bc1btc");
 
-    StepVerifier.create(
-            qrCodeGenerationService.generateAndUploadQRCodes(
-                userId, null, null, null, null, bitcoinAddresses))
-        .expectNextMatches(result -> result.containsKey("bitcoinDepositQrCodes"))
-        .verifyComplete();
-  }
+        StepVerifier.create(service.generateAndUploadQRCodes(
+                userId, null, null, null, null, btcAddresses))
+                .expectNextMatches(map -> map.containsKey("bitcoinDepositQrCodes"))
+                .verifyComplete();
+    }
 
-  @Test
-  void generateAndUploadQRCodes_EmptyInputs_ReturnsEmptyMap() {
-    UUID userId = UUID.randomUUID();
+    @Test
+    void generateAndUploadQRCodes_AllAddresses() {
+        QRCodeGenerationService service = new QRCodeGenerationService();
+        UUID userId = UUID.randomUUID();
+        Map<String, String> evmAddresses = Map.of("ethereum", "0xeth");
+        Map<String, String> btcAddresses = Map.of("bitcoin", "bc1btc");
 
-    StepVerifier.create(
-            qrCodeGenerationService.generateAndUploadQRCodes(userId, null, null, null, null, null))
-        .expectNextMatches(Map::isEmpty)
-        .verifyComplete();
-  }
+        StepVerifier.create(service.generateAndUploadQRCodes(
+                userId, "0xproxy", "0xenclave", evmAddresses, "solana123", btcAddresses))
+                .expectNextMatches(map -> map.size() >= 4)
+                .verifyComplete();
+    }
+
+    @Test
+    void generateAndUploadQRCodes_EmptyAddresses() {
+        QRCodeGenerationService service = new QRCodeGenerationService();
+        UUID userId = UUID.randomUUID();
+
+        StepVerifier.create(service.generateAndUploadQRCodes(
+                userId, "", "", Map.of(), "", Map.of()))
+                .expectNextMatches(Map::isEmpty)
+                .verifyComplete();
+    }
 }

@@ -61,32 +61,7 @@ public class WebClientConfig {
         .build();
   }
 
-  private HttpClient createHttpClient() {
-    ConnectionProvider connectionProvider =
-        ConnectionProvider.builder("custom")
-            .maxConnections(MAX_CONNECTIONS)
-            .maxIdleTime(Duration.ofSeconds(20))
-            .maxLifeTime(Duration.ofSeconds(60))
-            .pendingAcquireMaxCount(MAX_PENDING_REQUESTS)
-            .pendingAcquireTimeout(Duration.ofSeconds(30))
-            .evictInBackground(Duration.ofSeconds(15))
-            .lifo() // Use LIFO for better connection reuse
-            .build();
 
-    return HttpClient.create(connectionProvider)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT)
-        .option(ChannelOption.SO_KEEPALIVE, true)
-        .responseTimeout(Duration.ofSeconds(30))
-        .option(ChannelOption.TCP_NODELAY, true)
-        .option(ChannelOption.SO_REUSEADDR, true)
-        .doOnConnected(
-            conn ->
-                conn.addHandlerLast(new ReadTimeoutHandler(READ_TIMEOUT, TimeUnit.MILLISECONDS))
-                    .addHandlerLast(new WriteTimeoutHandler(WRITE_TIMEOUT, TimeUnit.MILLISECONDS)))
-        .compress(true)
-        .keepAlive(true)
-        .wiretap(false);
-  }
 
   private HttpClient createBlnkHttpClient() {
     // Optimized for Cloud Run: HTTP/1.1 + no pooling to prevent premature close

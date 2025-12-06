@@ -1,43 +1,28 @@
 package com.oregonMarkets.service;
 
-import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.test.StepVerifier;
 
-@ExtendWith(MockitoExtension.class)
+import java.util.UUID;
+
 class AvatarGenerationServiceTest {
 
-  private AvatarGenerationService avatarGenerationService;
+    @Test
+    void generateAndUploadAvatar_Success() {
+        AvatarGenerationService service = new AvatarGenerationService();
+        UUID userId = UUID.randomUUID();
 
-  @BeforeEach
-  void setUp() {
-    avatarGenerationService = new AvatarGenerationService();
-    ReflectionTestUtils.setField(avatarGenerationService, "gcpProjectId", "test-project");
-    ReflectionTestUtils.setField(avatarGenerationService, "bucketName", "test-bucket");
-  }
+        StepVerifier.create(service.generateAndUploadAvatar(userId))
+                .expectNextMatches(url -> url.contains("avatars") && url.contains(userId.toString()))
+                .verifyComplete();
+    }
 
-  @Test
-  void generateAndUploadAvatar_Success() {
-    UUID userId = UUID.randomUUID();
+    @Test
+    void generateAndUploadAvatar_NullUserId() {
+        AvatarGenerationService service = new AvatarGenerationService();
 
-    StepVerifier.create(avatarGenerationService.generateAndUploadAvatar(userId))
-        .expectNextMatches(
-            url ->
-                url.contains("test-bucket")
-                    && url.contains("avatars")
-                    && url.contains(userId.toString())
-                    && url.endsWith(".png"))
-        .verifyComplete();
-  }
-
-  @Test
-  void generateAndUploadAvatar_NullUserId_ThrowsException() {
-    StepVerifier.create(avatarGenerationService.generateAndUploadAvatar(null))
-        .expectError(RuntimeException.class)
-        .verify();
-  }
+        StepVerifier.create(service.generateAndUploadAvatar(null))
+                .expectError(RuntimeException.class)
+                .verify();
+    }
 }

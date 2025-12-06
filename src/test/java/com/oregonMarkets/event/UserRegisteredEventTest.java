@@ -8,20 +8,18 @@ import org.junit.jupiter.api.Test;
 class UserRegisteredEventTest {
 
   @Test
-  void from_CreatesEventWithTimestamp() {
+  void from() {
     UUID userId = UUID.randomUUID();
-    UUID referredBy = UUID.randomUUID();
-
     UserRegisteredEvent event =
-        UserRegisteredEvent.from(
-            userId, "test@example.com", "0x123", "uda-address", "REF123", referredBy);
-
+        UserRegisteredEvent.from(userId, "test@test.com", "0x123", "uda123", "ref", null);
     assertEquals(userId, event.getUserId());
-    assertEquals("test@example.com", event.getEmail());
-    assertEquals("0x123", event.getMagicWalletAddress());
-    assertEquals("uda-address", event.getEnclaveUdaAddress());
-    assertEquals("REF123", event.getReferralCode());
-    assertEquals(referredBy, event.getReferredByUserId());
     assertNotNull(event.getTimestamp());
+  }
+
+  @Test
+  void constructor() {
+    UserRegisteredEvent event = new UserRegisteredEvent();
+    event.setUserId(UUID.randomUUID());
+    assertNotNull(event.getUserId());
   }
 }

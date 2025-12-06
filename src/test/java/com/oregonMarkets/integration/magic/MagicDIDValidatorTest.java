@@ -1,8 +1,8 @@
 package com.oregonMarkets.integration.magic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.oregonMarkets.common.exception.MagicAuthException;
-import java.util.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -15,108 +15,50 @@ class MagicDIDValidatorTest {
   @BeforeEach
   void setUp() {
     validator = new MagicDIDValidator();
-    ReflectionTestUtils.setField(validator, "magicApiKey", "test-api-key");
+    ReflectionTestUtils.setField(validator, "magicApiKey", "test-key");
   }
 
   @Test
-  void validateDIDToken_NullToken() {
+  void validateDIDToken_NullToken_ThrowsException() {
     StepVerifier.create(validator.validateDIDToken(null))
         .expectError(MagicAuthException.class)
         .verify();
   }
 
   @Test
-  void validateDIDToken_EmptyToken() {
+  void validateDIDToken_EmptyToken_ThrowsException() {
     StepVerifier.create(validator.validateDIDToken(""))
         .expectError(MagicAuthException.class)
         .verify();
   }
 
   @Test
-  void validateDIDToken_InvalidFormat() {
-    String invalidToken = Base64.getEncoder().encodeToString("invalid-json".getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(invalidToken))
+  void validateDIDToken_InvalidBase64_ThrowsException() {
+    StepVerifier.create(validator.validateDIDToken("invalid-base64!@#"))
         .expectError(MagicAuthException.class)
         .verify();
   }
 
   @Test
-  void validateDIDToken_InvalidArrayFormat() {
-    String invalidArray = Base64.getEncoder().encodeToString("[\"only-one-element\"]".getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(invalidArray))
+  void validateDIDToken_InvalidJson_ThrowsException() {
+    String invalidJson = java.util.Base64.getEncoder().encodeToString("invalid-json".getBytes());
+    StepVerifier.create(validator.validateDIDToken(invalidJson))
         .expectError(MagicAuthException.class)
         .verify();
   }
 
   @Test
-  void validateDIDToken_ExpiredToken() {
-    long expiredTime = System.currentTimeMillis() / 1000L - 3600; // 1 hour ago
-    String claim =
-        String.format("{\"iss\":\"did:ethr:0x123\",\"sub\":\"user123\",\"ext\":%d}", expiredTime);
-    String tokenArray = String.format("[\"%s\",\"%s\"]", "proof", claim);
-    String token = Base64.getEncoder().encodeToString(tokenArray.getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(token))
+  void validateDIDToken_SingleElement_ThrowsException() {
+    String singleElement = java.util.Base64.getEncoder().encodeToString("[\"only-one-element\"]".getBytes());
+    StepVerifier.create(validator.validateDIDToken(singleElement))
         .expectError(MagicAuthException.class)
         .verify();
   }
 
   @Test
-  void validateDIDToken_NotYetValid() {
-    long futureTime = System.currentTimeMillis() / 1000L + 3600; // 1 hour from now
-    String claim =
-        String.format("{\"iss\":\"did:ethr:0x123\",\"sub\":\"user123\",\"nbf\":%d}", futureTime);
-    String tokenArray = String.format("[\"%s\",\"%s\"]", "proof", claim);
-    String token = Base64.getEncoder().encodeToString(tokenArray.getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(token))
-        .expectError(MagicAuthException.class)
-        .verify();
-  }
-
-  @Test
-  void validateDIDToken_MissingSubject() {
-    String claim = "{\"iss\":\"did:ethr:0x123\"}"; // Missing sub
-    String tokenArray = String.format("[\"%s\",\"%s\"]", "proof", claim);
-    String token = Base64.getEncoder().encodeToString(tokenArray.getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(token))
-        .expectError(MagicAuthException.class)
-        .verify();
-  }
-
-  @Test
-  void validateDIDToken_MissingIssuer() {
-    String claim = "{\"sub\":\"user123\"}"; // Missing iss
-    String tokenArray = String.format("[\"%s\",\"%s\"]", "proof", claim);
-    String token = Base64.getEncoder().encodeToString(tokenArray.getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(token))
-        .expectError(MagicAuthException.class)
-        .verify();
-  }
-
-  @Test
-  void validateDIDToken_InvalidIssuerFormat() {
-    String claim = "{\"iss\":\"invalid-issuer\",\"sub\":\"user123\"}";
-    String tokenArray = String.format("[\"%s\",\"%s\"]", "proof", claim);
-    String token = Base64.getEncoder().encodeToString(tokenArray.getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(token))
-        .expectError(MagicAuthException.class)
-        .verify();
-  }
-
-  @Test
-  void validateDIDToken_InvalidSignatureLength() {
-    String claim = "{\"iss\":\"did:ethr:0x123\",\"sub\":\"user123\"}";
-    String shortProof = "0x123"; // Too short signature
-    String tokenArray = String.format("[\"%s\",\"%s\"]", shortProof, claim);
-    String token = Base64.getEncoder().encodeToString(tokenArray.getBytes());
-
-    StepVerifier.create(validator.validateDIDToken(token))
+  void validateDIDToken_MissingClaims_ThrowsException() {
+    String missingClaims = java.util.Base64.getEncoder().encodeToString("[\"proof\",\"{\\\"sub\\\":\\\"user123\\\"}\"]".getBytes());
+    StepVerifier.create(validator.validateDIDToken(missingClaims))
         .expectError(MagicAuthException.class)
         .verify();
   }

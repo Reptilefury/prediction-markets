@@ -53,12 +53,10 @@ public class KeycloakTokenFilter implements WebFilter {
               e -> {
                 // If Magic succeeded earlier in the chain, we should have magic context
                 Object magicUserObj = exchange.getAttribute("magicUser");
-                Object magicTokenObj = exchange.getAttribute("magicToken");
                 if (magicUserObj
                         instanceof
                         com.oregonMarkets.integration.magic.MagicClient.MagicUserInfo
                         magicUser
-                    && magicTokenObj instanceof String magicToken
                     && magicUser.getEmail() != null) {
                   // Note: setPassword now requires accessToken, but we're in a filter context
                   // The proper flow is in UserRegistrationService which handles this during

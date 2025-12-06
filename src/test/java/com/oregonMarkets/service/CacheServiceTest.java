@@ -1,10 +1,5 @@
 package com.oregonMarkets.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,80 +10,129 @@ import org.springframework.data.redis.core.ReactiveValueOperations;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class CacheServiceTest {
 
-  @Mock private ReactiveRedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private ReactiveRedisTemplate<String, Object> redisTemplate;
 
-  @Mock private ReactiveValueOperations<String, Object> valueOps;
+    @Mock
+    private ReactiveValueOperations<String, Object> valueOperations;
 
-  private CacheService cacheService;
+    private CacheService cacheService;
 
-  @BeforeEach
-  void setUp() {
-    cacheService = new CacheService(redisTemplate);
-  }
+    @BeforeEach
+    void setUp() {
+        cacheService = new CacheService(redisTemplate);
+    }
 
-  @Test
-  void set_Success() {
-    when(redisTemplate.opsForValue()).thenReturn(valueOps);
-    when(valueOps.set(eq("key"), eq("value"), any(Duration.class))).thenReturn(Mono.just(true));
+    @Test
+    void set_Success() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.set(eq("key1"), eq("value1"), any(Duration.class)))
+                .thenReturn(Mono.just(true));
 
-    StepVerifier.create(cacheService.set("key", "value", Duration.ofMinutes(5))).verifyComplete();
-  }
+        StepVerifier.create(cacheService.set("key1", "value1", Duration.ofMinutes(5)))
+                .verifyComplete();
+    }
 
-  @Test
-  void set_Error() {
-    when(redisTemplate.opsForValue()).thenReturn(valueOps);
-    when(valueOps.set(eq("key"), eq("value"), any(Duration.class)))
-        .thenReturn(Mono.error(new RuntimeException("Redis error")));
+    @Test
+    void set_Failure() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.set(eq("key1"), eq("value1"), any(Duration.class)))
+                .thenReturn(Mono.error(new RuntimeException("Redis error")));
 
-    StepVerifier.create(cacheService.set("key", "value", Duration.ofMinutes(5)))
-        .expectError(RuntimeException.class)
-        .verify();
-  }
+        StepVerifier.create(cacheService.set("key1", "value1", Duration.ofMinutes(5)))
+                .expectError(RuntimeException.class)
+                .verify();
+    }
 
-  @Test
-  void get_Success() {
-    when(redisTemplate.opsForValue()).thenReturn(valueOps);
-    when(valueOps.get("key")).thenReturn(Mono.just("value"));
+    @Test
+    void get_Success() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("key1")).thenReturn(Mono.just("value1"));
 
-    StepVerifier.create(cacheService.get("key")).expectNext("value").verifyComplete();
-  }
+        StepVerifier.create(cacheService.get("key1"))
+                .expectNext("value1")
+                .verifyComplete();
+    }
 
-  @Test
-  void get_NotFound() {
-    when(redisTemplate.opsForValue()).thenReturn(valueOps);
-    when(valueOps.get("key")).thenReturn(Mono.empty());
+    @Test
+    void get_NotFound() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("key1")).thenReturn(Mono.empty());
 
-    StepVerifier.create(cacheService.get("key")).verifyComplete();
-  }
+        StepVerifier.create(cacheService.get("key1"))
+                .verifyComplete();
+    }
 
-  @Test
-  void delete_Success() {
-    when(redisTemplate.delete("key")).thenReturn(Mono.just(1L));
+    @Test
+    void get_Failure() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("key1")).thenReturn(Mono.error(new RuntimeException("Redis error")));
 
-    StepVerifier.create(cacheService.delete("key")).expectNext(true).verifyComplete();
-  }
+        StepVerifier.create(cacheService.get("key1"))
+                .expectError(RuntimeException.class)
+                .verify();
+    }
 
-  @Test
-  void delete_NotFound() {
-    when(redisTemplate.delete("key")).thenReturn(Mono.just(0L));
+    @Test
+    void delete_Success() {
+        when(redisTemplate.delete("key1")).thenReturn(Mono.just(1L));
 
-    StepVerifier.create(cacheService.delete("key")).expectNext(false).verifyComplete();
-  }
+        StepVerifier.create(cacheService.delete("key1"))
+                .expectNext(true)
+                .verifyComplete();
+    }
 
-  @Test
-  void exists_True() {
-    when(redisTemplate.hasKey("key")).thenReturn(Mono.just(true));
+    @Test
+    void delete_NotFound() {
+        when(redisTemplate.delete("key1")).thenReturn(Mono.just(0L));
 
-    StepVerifier.create(cacheService.exists("key")).expectNext(true).verifyComplete();
-  }
+        StepVerifier.create(cacheService.delete("key1"))
+                .expectNext(false)
+                .verifyComplete();
+    }
 
-  @Test
-  void exists_False() {
-    when(redisTemplate.hasKey("key")).thenReturn(Mono.just(false));
+    @Test
+    void delete_Failure() {
+        when(redisTemplate.delete("key1")).thenReturn(Mono.error(new RuntimeException("Redis error")));
 
-    StepVerifier.create(cacheService.exists("key")).expectNext(false).verifyComplete();
-  }
+        StepVerifier.create(cacheService.delete("key1"))
+                .expectError(RuntimeException.class)
+                .verify();
+    }
+
+    @Test
+    void exists_True() {
+        when(redisTemplate.hasKey("key1")).thenReturn(Mono.just(true));
+
+        StepVerifier.create(cacheService.exists("key1"))
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    void exists_False() {
+        when(redisTemplate.hasKey("key1")).thenReturn(Mono.just(false));
+
+        StepVerifier.create(cacheService.exists("key1"))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void exists_Failure() {
+        when(redisTemplate.hasKey("key1")).thenReturn(Mono.error(new RuntimeException("Redis error")));
+
+        StepVerifier.create(cacheService.exists("key1"))
+                .expectError(RuntimeException.class)
+                .verify();
+    }
 }

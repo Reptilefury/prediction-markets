@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 public class KeycloakTokenValidator {
 
   private static final String PREFERRED_USERNAME = "preferred_username";
+  private static final String EMAIL = "email";
   private final ObjectMapper mapper = new ObjectMapper();
 
   public Mono<Map<String, Object>> validate(String bearerToken) {
@@ -42,7 +43,7 @@ public class KeycloakTokenValidator {
       }
       Map<String, Object> userInfo = new HashMap<>();
       if (payload.has("sub")) userInfo.put("sub", payload.get("sub").asText());
-      if (payload.has("email")) userInfo.put("email", payload.get("email").asText());
+      if (payload.has(EMAIL)) userInfo.put(EMAIL, payload.get(EMAIL).asText());
       if (payload.has(PREFERRED_USERNAME))
         userInfo.put(PREFERRED_USERNAME, payload.get(PREFERRED_USERNAME).asText());
       return Mono.just(userInfo);

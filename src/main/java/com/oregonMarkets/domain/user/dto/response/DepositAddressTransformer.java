@@ -6,6 +6,10 @@ import java.util.Map;
 
 public class DepositAddressTransformer {
 
+  private DepositAddressTransformer() {
+    // Utility class - prevent instantiation
+  }
+
   public static UserRegistrationResponse.DepositAddresses transform(
       Map<String, Object> rawDepositAddresses) {
     if (rawDepositAddresses == null) {
@@ -34,7 +38,7 @@ public class DepositAddressTransformer {
   private static List<UserRegistrationResponse.EVMDepositAddress> transformEVMAddresses(
       List<Map<String, Object>> rawList) {
     if (rawList == null) {
-      return null;
+      return new ArrayList<>();
     }
 
     List<UserRegistrationResponse.EVMDepositAddress> evmAddresses = new ArrayList<>();

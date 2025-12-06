@@ -170,7 +170,6 @@ public class Web3RegistrationService {
                   user.getEnclaveUdaAddress(),
                   user.getReferralCode(),
                   user.getReferredByUserId());
-          // eventPublisher.publishEvent("user.registered", user.getId().toString(), event);
         });
   }
 

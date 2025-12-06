@@ -31,8 +31,7 @@ class KeycloakProvisionListenerTest {
   }
 
   @Test
-  void onBlnkBalanceCreated_SuccessfulProvisioning_PublishesAssetsEvent()
-      throws InterruptedException {
+  void onBlnkBalanceCreated_SuccessfulProvisioning_PublishesAssetsEvent() {
 
     BlnkBalanceCreatedEvent event =
         BlnkBalanceCreatedEvent.builder()

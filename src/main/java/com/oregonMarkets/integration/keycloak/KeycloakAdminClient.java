@@ -15,6 +15,9 @@ import reactor.util.retry.Retry;
 @Slf4j
 public class KeycloakAdminClient {
 
+  private static final String AUTHORIZATION_HEADER = "Authorization";
+  private static final String BEARER_PREFIX = "Bearer ";
+
   private final WebClient webClient;
 
   public KeycloakAdminClient(@Qualifier("keycloakAdminWebClient") WebClient webClient) {
@@ -132,7 +135,7 @@ public class KeycloakAdminClient {
         .post()
         .uri(uriBuilder -> uriBuilder.path("/admin/realms/{realm}/users").build(realm))
         .contentType(MediaType.APPLICATION_JSON)
-        .header("Authorization", "Bearer " + accessToken)
+        .header(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken)
         .bodyValue(payload)
         .retrieve()
         .onStatus(
@@ -170,7 +173,7 @@ public class KeycloakAdminClient {
                                 .path("/admin/realms/{realm}/users/{id}/reset-password")
                                 .build(realm, userId))
                     .contentType(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + accessToken)
+                    .header(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken)
                     .bodyValue(Map.of("type", "password", "value", password, "temporary", false))
                     .retrieve()
                     .toBodilessEntity()
@@ -192,7 +195,7 @@ public class KeycloakAdminClient {
                     .path("/admin/realms/{realm}/users")
                     .queryParam("username", username)
                     .build(realm))
-        .header("Authorization", "Bearer " + accessToken)
+        .header(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken)
         .retrieve()
         .onStatus(
             status -> !status.is2xxSuccessful(),

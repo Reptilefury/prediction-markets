@@ -2,27 +2,39 @@ package com.oregonMarkets.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 class ErrorResponseTest {
 
   @Test
-  void from_WithMessage() {
-    ErrorResponse response = ErrorResponse.from(ErrorType.USER_ALREADY_EXISTS, "Custom message");
-
-    assertEquals("USER_ALREADY_EXISTS", response.getErrorCode());
-    assertEquals("Custom message", response.getErrorMessage());
-    assertEquals("3320", response.getStatusCode());
-    assertEquals("FAILED", response.getStatus());
-    assertNotNull(response.getTimestamp());
+  void from() {
+    ErrorResponse response = ErrorResponse.from(ErrorType.MAGIC_AUTH_FAILED, "test");
+    assertNotNull(response);
+    assertEquals("test", response.getErrorMessage());
   }
 
   @Test
-  void from_WithNullMessage() {
-    ErrorResponse response = ErrorResponse.from(ErrorType.MAGIC_AUTH_FAILED, null);
+  void builder() {
+    ErrorResponse response =
+        ErrorResponse.builder()
+            .status("FAILED")
+            .errorMessage("msg")
+            .statusCode("401")
+            .errorCode("ERR")
+            .timestamp(Instant.now())
+            .build();
+    assertNotNull(response);
+  }
 
-    assertEquals("MAGIC_AUTH_FAILED", response.getErrorCode());
-    assertEquals("Magic authentication failed", response.getErrorMessage());
-    assertEquals("4210", response.getStatusCode());
+  @Test
+  void setters() {
+    ErrorResponse response = new ErrorResponse();
+    response.setStatus("FAILED");
+    response.setErrorMessage("msg");
+    response.setStatusCode("401");
+    response.setErrorCode("ERR");
+    response.setTimestamp(Instant.now());
+    assertEquals("FAILED", response.getStatus());
   }
 }

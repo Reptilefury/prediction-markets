@@ -11,6 +11,7 @@ class PredictionMarketsApplicationTests {
 
   @Test
   void contextLoads() {
-    // Empty test method - validates Spring Boot application context loads successfully
+    // This test validates that the Spring Boot application context loads successfully.
+    // No additional assertions needed as the test will fail if context loading fails.
   }
 }
