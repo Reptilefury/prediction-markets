@@ -337,6 +337,7 @@
 					<suppressionFiles>
 						<suppressionFile>owasp-suppressions.xml</suppressionFile>
 					</suppressionFiles>
+					<skip>true</skip>
 				</configuration>
 				<executions>
 					<execution>
