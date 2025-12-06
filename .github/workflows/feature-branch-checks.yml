@@ -11,6 +11,7 @@ env:
   REGISTRY: gcr.io
   PROJECT_ID: heroic-equinox-474616-i5
   SERVICE_NAME: prediction-markets
+  JDBC_DATABASE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
 
 jobs:
   code-quality-checks:
