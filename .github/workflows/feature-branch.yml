@@ -7,6 +7,11 @@ on:
   push:
     branches-ignore: [ master ]
 
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
 env:
   JAVA_VERSION: '21'
   MAVEN_OPTS: '-Xmx1024m'
