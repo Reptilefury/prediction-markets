@@ -13,27 +13,28 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.data.redis.host:localhost}")
-    private String host;
+  @Value("${spring.data.redis.host:localhost}")
+  private String host;
 
-    @Value("${spring.data.redis.port:6379}")
-    private int port;
+  @Value("${spring.data.redis.port:6379}")
+  private int port;
 
-    @Bean
-    @org.springframework.context.annotation.Primary
-    public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
-        return new LettuceConnectionFactory(host, port);
-    }
+  @Bean
+  @org.springframework.context.annotation.Primary
+  public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
+    return new LettuceConnectionFactory(host, port);
+  }
 
-    @Bean
-    public ReactiveRedisTemplate<String, Object> reactiveRedisTemplate(
-            ReactiveRedisConnectionFactory connectionFactory) {
-        
-        RedisSerializationContext<String, Object> context = RedisSerializationContext
-            .<String, Object>newSerializationContext(new StringRedisSerializer())
+  @Bean
+  public ReactiveRedisTemplate<String, Object> reactiveRedisTemplate(
+      ReactiveRedisConnectionFactory connectionFactory) {
+
+    RedisSerializationContext<String, Object> context =
+        RedisSerializationContext.<String, Object>newSerializationContext(
+                new StringRedisSerializer())
             .value(new GenericJackson2JsonRedisSerializer())
             .build();
 
-        return new ReactiveRedisTemplate<>(connectionFactory, context);
-    }
+    return new ReactiveRedisTemplate<>(connectionFactory, context);
+  }
 }

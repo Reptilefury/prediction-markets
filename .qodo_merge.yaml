@@ -1,0 +1,35 @@
+# Qodo Merge Configuration - Code Quality Setup
+ai_review:
+  enabled: true
+  auto_review: true
+  review_depth: "deep"
+  focus_areas: [security, performance, maintainability, best_practices]
+
+code_duplication:
+  enabled: true
+  sensitivity: "medium"
+  min_lines: 5
+  min_tokens: 50
+  cross_file_detection: true
+  semantic_similarity: true
+  suggest_refactoring: true
+  include_patterns: ["**/*.java", "**/*.kt", "**/*.js", "**/*.ts"]
+  exclude_patterns: ["**/target/**", "**/build/**", "**/generated/**"]
+
+security_analysis:
+  enabled: true
+  scan_depth: "comprehensive"
+  owasp_compliance: true
+  enforce_security_practices: true
+
+performance_analysis:
+  enabled: true
+  complexity_analysis: true
+  async_patterns_analysis: true
+
+rag_context_enrichment:
+  enabled: true
+  context_window: 5
+  include_related_files: true
+  include_docs: true
+  semantic_understanding: true

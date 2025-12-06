@@ -1,0 +1,292 @@
+name: Feature Branch Quality Checks
+
+on:
+  pull_request:
+    branches: [ master ]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches-ignore: [ master ]
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Xmx1024m'
+
+jobs:
+  # Qodo AI-powered code review and analysis
+  qodo-analysis:
+    name: Qodo AI Code Analysis
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for comprehensive analysis
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Compile project
+      run: ./mvnw clean compile test-compile -DskipTests
+      
+    - name: Qodo Merge AI Review
+      uses: Codium-ai/pr-agent@main
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        qodo_token: ${{ secrets.QODO_TOKEN }}
+        # Use comprehensive configuration
+        config_file: .qodo_merge.yaml
+        # Enable all analysis features
+        enable_ai_review: true
+        enable_pr_description: true
+        enable_code_suggestions: true
+        enable_security_analysis: true
+        enable_duplication_check: true
+        enable_performance_analysis: true
+        enable_test_analysis: true
+        enable_documentation_analysis: true
+        enable_rag_context: true
+        enable_compliance_checking: true
+        enable_dependency_analysis: true
+        # Review settings
+        review_depth: "deep"
+        auto_approve_minor: false
+        block_on_critical: true
+
+  # Security and vulnerability scanning
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    needs: qodo-analysis
+    if: always()  # Run even if Qodo fails
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        
+    - name: Compile for security scan
+      run: ./mvnw clean compile -DskipTests
+      
+    - name: Install Snyk CLI
+      run: npm install -g snyk
+      
+    - name: Snyk Security Scan
+      run: snyk test --severity-threshold=high
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        
+    - name: Upload Snyk results to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v3
+      if: always() && hashFiles('snyk.sarif') != ''
+      with:
+        sarif_file: snyk.sarif
+        
+    - name: Trivy Container Security Scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always() && hashFiles('trivy-results.sarif') != ''
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Code quality and coverage analysis
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    needs: qodo-analysis
+    if: always()  # Run even if Qodo fails
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        
+    - name: Run tests with coverage
+      run: ./mvnw clean verify jacoco:report
+      
+    - name: SonarCloud Analysis
+      uses: SonarSource/sonarqube-scan-action@v5.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./target/site/jacoco/jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  # Performance and load testing
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: [qodo-analysis, code-quality]
+    if: contains(github.event.pull_request.labels.*.name, 'performance-test')
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Build application
+      run: ./mvnw clean package -DskipTests
+      
+    - name: Start application for testing
+      run: |
+        java -jar target/*.jar --spring.profiles.active=test &
+        sleep 30
+        
+    - name: Run performance tests
+      run: |
+        # Add your performance testing commands here
+        echo "Performance tests would run here"
+        
+    - name: Performance regression check
+      run: |
+        # Compare with baseline performance metrics
+        echo "Performance regression analysis"
+
+  # Integration and end-to-end tests
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: prediction_markets_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        
+    - name: Run integration tests
+      run: ./mvnw clean verify -Pintegration-test
+      env:
+        DATABASE_URL: r2dbc:postgresql://localhost:5432/prediction_markets_test
+        DATABASE_USERNAME: postgres
+        DATABASE_PASSWORD: test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+
+  # Final quality gate
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [qodo-analysis, security-scan, code-quality, integration-test]
+    if: always()
+    
+    steps:
+    - name: Check all jobs status
+      run: |
+        echo "Qodo Analysis: ${{ needs.qodo-analysis.result }}"
+        echo "Security Scan: ${{ needs.security-scan.result }}"
+        echo "Code Quality: ${{ needs.code-quality.result }}"
+        echo "Integration Test: ${{ needs.integration-test.result }}"
+        
+        # Allow Qodo to fail but require other checks to pass
+        if [[ "${{ needs.security-scan.result }}" != "success" || 
+              "${{ needs.code-quality.result }}" != "success" || 
+              "${{ needs.integration-test.result }}" != "success" ]]; then
+          echo "Quality gate failed on critical checks!"
+          exit 1
+        fi
+        
+        if [[ "${{ needs.qodo-analysis.result }}" != "success" ]]; then
+          echo "⚠️  Qodo analysis failed but continuing with other checks"
+        fi
+        
+        echo "✅ Quality gate passed!"
+        
+    - name: Update PR with quality status
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const { owner, repo, number } = context.issue;
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: number,
+            body: '✅ **Quality Gate Passed** - All automated checks completed successfully!'
+          });

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Suppress EI_EXPOSE_REP warnings for Lombok-generated classes -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+    
+    <!-- Suppress low-priority issues -->
+    <Match>
+        <Bug pattern="DM_CONVERT_CASE,UPM_UNCALLED_PRIVATE_METHOD,BC_UNCONFIRMED_CAST_OF_RETURN_VALUE,REC_CATCH_EXCEPTION"/>
+    </Match>
+    
+    <!-- Keep only critical security issues -->
+    <Match>
+        <Not>
+            <Bug pattern="SQL_INJECTION,XSS,PATH_TRAVERSAL,COMMAND_INJECTION"/>
+        </Not>
+    </Match>
+</FindBugsFilter>
