@@ -1,0 +1,40 @@
+[config]
+# Enable codebase context for duplication checks
+model = "gpt-4o"
+
+[pr_code_suggestions]
+# Enable codebase context enrichment
+enable_help_text = true
+rank_suggestions = true
+
+[pr_description]
+# Enable context-aware descriptions
+enable_help_text = true
+use_bullet_points = true
+
+[pr_reviewer]
+# Enable context-aware reviews
+enable_help_text = true
+require_focused_review = true
+require_score_review = true
+
+[github_app]
+# Enable codebase context
+override_deployment_type = true
+
+[litellm]
+# Model configuration for context processing
+drop_params = true
+
+[pr_similar_issue]
+# Enable similar issue detection using codebase context
+max_issues_to_scan = 500
+force_update_descriptions = true
+
+[pr_update_changelog]
+# Enable changelog updates with context
+push_changelog_changes = true
+
+[config.git_provider]
+# Repository context configuration
+deployment_type = "app"

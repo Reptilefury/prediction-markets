@@ -1,15 +1,14 @@
 package com.oregonMarkets.domain.user.model;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
 
 @Table("users")
 @Getter
@@ -19,169 +18,178 @@ import java.util.UUID;
 @Builder
 public class User {
 
-    @Id
-    private UUID id;
+  @Id private UUID id;
 
-    @Column("email")
-    private String email;
+  @Column("email")
+  private String email;
 
-    @Column("username")
-    private String username;
+  @Column("username")
+  private String username;
 
-    @Column("display_name")
-    private String displayName;
+  @Column("display_name")
+  private String displayName;
 
-    // Magic.link Integration
-    @Column("magic_user_id")
-    private String magicUserId;
+  // Magic.link Integration
+  @Column("magic_user_id")
+  private String magicUserId;
 
-    @Column("magic_wallet_address")
-    private String magicWalletAddress;
+  @Column("magic_wallet_address")
+  private String magicWalletAddress;
 
-    @Column("magic_issuer")
-    private String magicIssuer;
-    
-    // Web3 Wallet Integration
-    @Column("web3_wallet_address")
-    private String web3WalletAddress;
-    
-    @Column("auth_method")
-    @Builder.Default
-    private AuthMethod authMethod = AuthMethod.MAGIC;
-    
-    @Column("wallet_verified_at")
-    private Instant walletVerifiedAt;
+  @Column("magic_issuer")
+  private String magicIssuer;
 
-    // Enclave UDA Integration
-    @Column("enclave_user_id")
-    private String enclaveUserId;
+  // Web3 Wallet Integration
+  @Column("web3_wallet_address")
+  private String web3WalletAddress;
 
-    @Column("enclave_uda_address")
-    private String enclaveUdaAddress;
+  @Column("auth_method")
+  @Builder.Default
+  private AuthMethod authMethod = AuthMethod.MAGIC;
 
-    @Column("enclave_uda_tag")
-    private String enclaveUdaTag;
+  @Column("wallet_verified_at")
+  private Instant walletVerifiedAt;
 
-    @Column("enclave_uda_created_at")
-    private Instant enclaveUdaCreatedAt;
+  // Enclave UDA Integration
+  @Column("enclave_user_id")
+  private String enclaveUserId;
 
-    @Column("enclave_uda_status")
-    @Builder.Default
-    private EnclaveUdaStatus enclaveUdaStatus = EnclaveUdaStatus.PENDING;
+  @Column("enclave_uda_address")
+  private String enclaveUdaAddress;
 
-    @Column("enclave_deposit_addresses")
-    private String enclaveDepositAddresses;  // JSON serialized Map<String, Object> from Enclave API
+  @Column("enclave_uda_tag")
+  private String enclaveUdaTag;
 
-    // Location
-    @Column("country_code")
-    private String countryCode;
+  @Column("enclave_uda_created_at")
+  private Instant enclaveUdaCreatedAt;
 
-    // Account Status
-    @Column("is_active")
-    @Builder.Default
-    private Boolean isActive = true;
+  @Column("enclave_uda_status")
+  @Builder.Default
+  private EnclaveUdaStatus enclaveUdaStatus = EnclaveUdaStatus.PENDING;
 
-    @Column("email_verified")
-    @Builder.Default
-    private Boolean emailVerified = false;
+  @Column("enclave_deposit_addresses")
+  private String enclaveDepositAddresses; // JSON serialized Map<String, Object> from Enclave API
 
-    @Column("email_verified_at")
-    private Instant emailVerifiedAt;
+  // Location
+  @Column("country_code")
+  private String countryCode;
 
-    // KYC
-    @Column("kyc_status")
-    @Builder.Default
-    private KycStatus kycStatus = KycStatus.NOT_STARTED;
+  // Account Status
+  @Column("is_active")
+  @Builder.Default
+  private Boolean isActive = true;
 
-    @Column("kyc_level")
-    @Builder.Default
-    private Integer kycLevel = 0;
+  @Column("email_verified")
+  @Builder.Default
+  private Boolean emailVerified = false;
 
-    // Trading Limits
-    @Column("daily_deposit_limit")
-    private BigDecimal dailyDepositLimit;
+  @Column("email_verified_at")
+  private Instant emailVerifiedAt;
 
-    @Column("daily_withdrawal_limit")
-    private BigDecimal dailyWithdrawalLimit;
+  // KYC
+  @Column("kyc_status")
+  @Builder.Default
+  private KycStatus kycStatus = KycStatus.NOT_STARTED;
 
-    // Blnk Integration
-    @Column("blnk_identity_id")
-    private String blnkIdentityId;
+  @Column("kyc_level")
+  @Builder.Default
+  private Integer kycLevel = 0;
 
-    @Column("blnk_balance_id")
-    private String blnkBalanceId;
+  // Trading Limits
+  @Column("daily_deposit_limit")
+  private BigDecimal dailyDepositLimit;
 
-    @Column("blnk_created_at")
-    private Instant blnkCreatedAt;
+  @Column("daily_withdrawal_limit")
+  private BigDecimal dailyWithdrawalLimit;
 
-    // Polymarket Proxy Wallet Integration
-    @Column("proxy_wallet_address")
-    private String proxyWalletAddress;
+  // Blnk Integration
+  @Column("blnk_identity_id")
+  private String blnkIdentityId;
 
-    @Column("proxy_wallet_created_at")
-    private Instant proxyWalletCreatedAt;
+  @Column("blnk_balance_id")
+  private String blnkBalanceId;
 
-    @Column("proxy_wallet_status")
-    @Builder.Default
-    private ProxyWalletStatus proxyWalletStatus = ProxyWalletStatus.PENDING;
+  @Column("blnk_created_at")
+  private Instant blnkCreatedAt;
 
-    // Referral
-    @Column("referral_code")
-    private String referralCode;
+  // Polymarket Proxy Wallet Integration
+  @Column("proxy_wallet_address")
+  private String proxyWalletAddress;
 
-    @Column("referred_by_user_id")
-    private UUID referredByUserId;
+  @Column("proxy_wallet_created_at")
+  private Instant proxyWalletCreatedAt;
 
-    @Column("utm_source")
-    private String utmSource;
+  @Column("proxy_wallet_status")
+  @Builder.Default
+  private ProxyWalletStatus proxyWalletStatus = ProxyWalletStatus.PENDING;
 
-    @Column("utm_medium")
-    private String utmMedium;
+  // Referral
+  @Column("referral_code")
+  private String referralCode;
 
-    @Column("utm_campaign")
-    private String utmCampaign;
+  @Column("referred_by_user_id")
+  private UUID referredByUserId;
 
-    // Avatar and QR Codes
-    @Column("avatar_url")
-    private String avatarUrl;
+  @Column("utm_source")
+  private String utmSource;
 
-    @Column("proxy_wallet_qr_code_url")
-    private String proxyWalletQrCodeUrl;
+  @Column("utm_medium")
+  private String utmMedium;
 
-    @Column("enclave_uda_qr_code_url")
-    private String enclaveUdaQrCodeUrl;
+  @Column("utm_campaign")
+  private String utmCampaign;
 
-    @Column("evm_deposit_qr_codes")
-    private String evmDepositQrCodes;
+  // Avatar and QR Codes
+  @Column("avatar_url")
+  private String avatarUrl;
 
-    @Column("solana_deposit_qr_code_url")
-    private String solanaDepositQrCodeUrl;
+  @Column("proxy_wallet_qr_code_url")
+  private String proxyWalletQrCodeUrl;
 
-    @Column("bitcoin_deposit_qr_codes")
-    private String bitcoinDepositQrCodes;
+  @Column("enclave_uda_qr_code_url")
+  private String enclaveUdaQrCodeUrl;
 
-    // Timestamps
-    @CreatedDate
-    @Column("created_at")
-    private Instant createdAt;
+  @Column("evm_deposit_qr_codes")
+  private String evmDepositQrCodes;
 
-    @LastModifiedDate
-    @Column("updated_at")
-    private Instant updatedAt;
+  @Column("solana_deposit_qr_code_url")
+  private String solanaDepositQrCodeUrl;
 
-    public enum EnclaveUdaStatus {
-        PENDING, ACTIVE, SUSPENDED, CLOSED
-    }
+  @Column("bitcoin_deposit_qr_codes")
+  private String bitcoinDepositQrCodes;
 
-    public enum KycStatus {
-        NOT_STARTED, PENDING, APPROVED, REJECTED
-    }
+  // Timestamps
+  @CreatedDate
+  @Column("created_at")
+  private Instant createdAt;
 
-    public enum AuthMethod {
-        MAGIC, WEB3_WALLET
-    }
+  @LastModifiedDate
+  @Column("updated_at")
+  private Instant updatedAt;
 
-    public enum ProxyWalletStatus {
-        PENDING, ACTIVE, FAILED, SUSPENDED
-    }
+  public enum EnclaveUdaStatus {
+    PENDING,
+    ACTIVE,
+    SUSPENDED,
+    CLOSED
+  }
+
+  public enum KycStatus {
+    NOT_STARTED,
+    PENDING,
+    APPROVED,
+    REJECTED
+  }
+
+  public enum AuthMethod {
+    MAGIC,
+    WEB3_WALLET
+  }
+
+  public enum ProxyWalletStatus {
+    PENDING,
+    ACTIVE,
+    FAILED,
+    SUSPENDED
+  }
 }

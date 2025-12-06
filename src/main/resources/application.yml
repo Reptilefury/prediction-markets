@@ -88,6 +88,9 @@ app:
   
   dynamic:
     environment-id: ${DYNAMIC_ENVIRONMENT_ID}
+  
+  logodev:
+    api-key: ${LOGODEV_API_KEY}
 
 logging:
   level:

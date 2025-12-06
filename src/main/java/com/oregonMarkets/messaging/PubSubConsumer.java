@@ -11,17 +11,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class PubSubConsumer extends RouteBuilder {
 
-    private final GcpPubSubProperties props;
-    
-    @Override
-    public void configure() {
-        String subscriptionUri = String.format(
+  private final GcpPubSubProperties props;
+
+  @Override
+  public void configure() {
+    String subscriptionUri =
+        String.format(
             "google-pubsub:%s:%s",
-            props.getProjectId(),
-            props.getSubscriptionUniversalDepositWallet()
-        );
-        log.info("PubSubConsumer subscription URI: {}", subscriptionUri);
-        from(subscriptionUri)
-            .to("reactive-streams:wallet-requests");
-    }
+            props.getProjectId(), props.getSubscriptionUniversalDepositWallet());
+    log.info("PubSubConsumer subscription URI: {}", subscriptionUri);
+    from(subscriptionUri).to("reactive-streams:wallet-requests");
+  }
 }
