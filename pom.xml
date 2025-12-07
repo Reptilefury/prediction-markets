@@ -410,6 +410,11 @@
 		<!-- Integration Test Profile -->
 		<profile>
 			<id>integration-test</id>
+			<activation>
+				<property>
+					<name>!skipIntegrationTests</name>
+				</property>
+			</activation>
 			<build>
 				<plugins>
 					<plugin>
