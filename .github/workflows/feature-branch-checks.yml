@@ -12,6 +12,7 @@ env:
   PROJECT_ID: heroic-equinox-474616-i5
   SERVICE_NAME: prediction-markets
   JDBC_DATABASE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+  DATABASE_URL: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
 
 jobs:
   code-quality-checks:
@@ -53,7 +54,7 @@ jobs:
         file: ./target/site/jacoco/jacoco.xml
         
     - name: Run Maven Build
-      run: ./mvnw clean package -DskipTests -DskipITs -DskipIntegrationTests
+      run: ./mvnw clean package
       
     - name: Setup Java for Snyk
       uses: actions/setup-java@v4
