@@ -25,7 +25,6 @@ class EnclaveWebhookControllerTest {
   void handleEnclaveWebhook_DepositDetected() {
     Map<String, Object> payload = new HashMap<>();
     payload.put("event_type", "deposit.detected");
-    MockServerRequest request = MockServerRequest.builder().body(Mono.just(payload));
     assertDoesNotThrow(() -> controller.enclaveWebhookRoutes());
   }
 

@@ -154,61 +154,7 @@ public class MagicDIDValidator {
     return new String[]{issuer, userId};
   }
 
-  /**
-   * Recover Ethereum address from personal_sign signature The signature is expected to be a hex
-   * string from Ethereum personal_sign
-   *
-   * @param proof signature hex string (with or without 0x prefix)
-   * @param message the original message that was signed (claim JSON)
-   * @return recovered Ethereum address in 0x format (lowercase)
-   */
-  private String recoverAddressFromSignature(String proof, String message) {
-    try {
-      // Normalize hex string (add 0x if missing)
-      String hexProof = proof.startsWith("0x") ? proof : "0x" + proof;
 
-      // Convert hex to bytes
-      byte[] sigBytes = Numeric.hexStringToByteArray(hexProof);
-
-      if (sigBytes.length != 65) {
-        throw new MagicAuthException(
-            "Invalid signature length: expected 65 bytes, got " + sigBytes.length);
-      }
-
-      // Extract v, r, s from signature bytes
-      // v is the last byte, r is first 32 bytes, s is next 32 bytes
-      byte v = sigBytes[64];
-      if (v < 27) {
-        v = (byte) (v + 27); // Normalize v to 27/28 if necessary
-      }
-
-      byte[] r = new byte[32];
-      byte[] s = new byte[32];
-      System.arraycopy(sigBytes, 0, r, 0, 32);
-      System.arraycopy(sigBytes, 32, s, 0, 32);
-
-      Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
-
-      // Recover public key using Ethereum personal_sign (EIP-191)
-      // The message is the claim JSON string
-      byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-
-      log.debug(
-          "Recovering address from signature. Message length: {}, Signature: {}",
-          messageBytes.length,
-          hexProof.substring(0, Math.min(20, hexProof.length())) + "...");
-
-      BigInteger publicKey = Sign.signedPrefixedMessageToKey(messageBytes, signatureData);
-      String recoveredAddress = "0x" + Keys.getAddress(publicKey);
-
-      log.debug("Successfully recovered address: {}", recoveredAddress);
-      return recoveredAddress;
-
-    } catch (Exception e) {
-      log.error("Failed to recover address from signature", e);
-      throw new MagicAuthException("Invalid token signature", e);
-    }
-  }
 
   /** DTO for Magic user info extracted from DID token */
   public static class MagicUserInfo {

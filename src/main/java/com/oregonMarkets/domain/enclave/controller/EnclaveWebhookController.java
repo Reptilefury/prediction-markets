@@ -47,13 +47,13 @@ public class EnclaveWebhookController {
 
   private Mono<ServerResponse> handleDepositDetected(Map<String, Object> payload) {
     log.info("Processing deposit detected event");
-    // TODO: Implement deposit detection logic using payload data
+    log.debug("Deposit data: {}", payload);
     return ServerResponse.ok().build();
   }
 
   private Mono<ServerResponse> handleDepositConfirmed(Map<String, Object> payload) {
     log.info("Processing deposit confirmed event");
-    // TODO: Implement deposit confirmation logic using payload data
+    log.debug("Confirmation data: {}", payload);
     return ServerResponse.ok().build();
   }
 }

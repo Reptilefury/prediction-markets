@@ -17,11 +17,7 @@ import reactor.netty.resources.ConnectionProvider;
 @Configuration
 public class WebClientConfig {
 
-  private static final int CONNECTION_TIMEOUT = 10000; // 10 seconds
-  private static final int READ_TIMEOUT = 30000; // 30 seconds
-  private static final int WRITE_TIMEOUT = 30000; // 30 seconds
-  private static final int MAX_CONNECTIONS = 50; // Reduced for stability
-  private static final int MAX_PENDING_REQUESTS = 500;
+
 
   @Bean("magicWebClient")
   public WebClient magicWebClient(@Value("${app.magic.api-url}") String baseUrl) {
