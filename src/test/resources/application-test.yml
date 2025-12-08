@@ -1,9 +1,85 @@
 spring:
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/testdb
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
   flyway:
     enabled: false
+  redis:
+    host: localhost
+    port: 6379
+    password: ""
+  cloud:
+    gcp:
+      storage:
+        enabled: false
+        project-id: test-project
+        bucket-name: test-bucket
+      project-id: test-project
+      pubsub:
+        subscriber:
+          parallel-pull-count: 1
+          max-ack-extension-period: 600s
+
+server:
+  port: 0
+
+# Test environment variables
+gcp:
+  project-id: test-project
+  pubsub:
+    topics:
+      universal-deposit-wallet: test-topic
+    subscriptions:
+      universal-deposit-wallet: test-subscription
+
+app:
+  base-url: http://localhost:8080
+  magic:
+    api-key: test-magic-key
+    api-url: http://localhost
+  blnk:
+    api-url: http://localhost:3000
+    ledger-id: test-ledger
+  enclave:
+    api-url: http://localhost:4000
+    api-key: test-enclave-key
+    destination-token-address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+  walletconnect:
+    project-id: test-project
+  dynamic:
+    environment-id: test-env
+  logodev:
+    api-key: test-key
+
+keycloak:
+  admin:
+    base-url: http://localhost:8080
+    realm: test-realm
+    client-id: test-client
+    client-secret: test-secret
+
+# Environment variables that might be referenced
+APP_ENCLAVE_DESTINATION_TOKEN_ADDRESS: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+APP_KEYCLOAK_SERVER_URL: http://localhost:8080
+APP_KEYCLOAK_REALM: test-realm
+APP_KEYCLOAK_CLIENT_ID: test-client
+APP_KEYCLOAK_CLIENT_SECRET: test-secret
+APP_MAGIC_SECRET_KEY: test-magic-key
+APP_BLNK_API_URL: http://localhost:3000
+APP_BLNK_API_KEY: test-blnk-key
+APP_ENCLAVE_API_URL: http://localhost:4000
+APP_ENCLAVE_API_KEY: test-enclave-key
+APP_WEB3_RPC_URL: http://localhost:8545
+APP_WEB3_PRIVATE_KEY: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+LOGODEV_API_KEY: test-logodev-key
+KEYCLOAK_BASE_URL: http://localhost:8080
 
 logging:
   level:
     com.oregonMarkets: DEBUG
-    reactor.netty: INFO
-    io.netty: INFO
+    org.springframework.r2dbc: DEBUG
+    org.testcontainers: INFO

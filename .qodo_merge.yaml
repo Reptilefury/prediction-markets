@@ -1,288 +1,35 @@
-# Qodo Merge Configuration - Comprehensive Setup
-# Based on: https://qodo-merge-docs.qodo.ai/core-abilities/
-
-# Core AI-powered code review capabilities
+# Qodo Merge Configuration - Code Quality Setup
 ai_review:
   enabled: true
-  # Auto-review all PRs
   auto_review: true
-  # Review depth: surface, standard, deep
   review_depth: "deep"
-  # Focus areas for AI review
-  focus_areas:
-    - security
-    - performance
-    - maintainability
-    - best_practices
-    - code_style
-    - documentation
+  focus_areas: [security, performance, maintainability, best_practices]
 
-# Automatic PR description generation
-pr_description:
-  enabled: true
-  # Auto-generate comprehensive PR descriptions
-  auto_generate: true
-  # Include code analysis summary
-  include_analysis_summary: true
-  # Include duplication analysis
-  include_duplication_summary: true
-  # Include security findings
-  include_security_summary: true
-  # Include performance insights
-  include_performance_summary: true
-  # Template customization
-  template: |
-    ## Summary
-    {summary}
-    
-    ## Changes
-    {changes}
-    
-    ## Code Quality Analysis
-    {analysis_summary}
-    
-    ## Security Review
-    {security_summary}
-    
-    ## Performance Impact
-    {performance_summary}
-
-# Code suggestions and improvements
-code_suggestions:
-  enabled: true
-  # Auto-suggest improvements
-  auto_suggest: true
-  # Suggestion categories
-  categories:
-    - refactoring
-    - performance_optimization
-    - security_hardening
-    - code_simplification
-    - best_practices
-    - documentation_improvements
-  # Minimum confidence level for suggestions
-  min_confidence: 0.7
-
-# Security analysis
-security_analysis:
-  enabled: true
-  # Security scan depth
-  scan_depth: "comprehensive"
-  # Check for common vulnerabilities
-  vulnerability_checks:
-    - sql_injection
-    - xss
-    - csrf
-    - insecure_dependencies
-    - hardcoded_secrets
-    - weak_cryptography
-    - path_traversal
-    - deserialization
-  # OWASP compliance checking
-  owasp_compliance: true
-  # Security best practices enforcement
-  enforce_security_practices: true
-
-# Code duplication detection (enhanced)
 code_duplication:
   enabled: true
-  # Detection sensitivity: low, medium, high
   sensitivity: "medium"
-  # Minimum lines for duplication
   min_lines: 5
-  # Minimum tokens for duplication
   min_tokens: 50
-  # Cross-file duplication detection
   cross_file_detection: true
-  # Semantic similarity detection
   semantic_similarity: true
-  # Auto-refactoring suggestions
   suggest_refactoring: true
-  # File patterns to analyze
-  include_patterns:
-    - "**/*.java"
-    - "**/*.kt"
-    - "**/*.js"
-    - "**/*.ts"
-    - "**/*.jsx"
-    - "**/*.tsx"
-  exclude_patterns:
-    - "**/target/**"
-    - "**/build/**"
-    - "**/node_modules/**"
-    - "**/*.min.js"
-    - "**/generated/**"
-    - "**/test/**/*.java"
+  include_patterns: ["**/*.java", "**/*.kt", "**/*.js", "**/*.ts"]
+  exclude_patterns: ["**/target/**", "**/build/**", "**/generated/**"]
 
-# Performance analysis
+security_analysis:
+  enabled: true
+  scan_depth: "comprehensive"
+  owasp_compliance: true
+  enforce_security_practices: true
+
 performance_analysis:
   enabled: true
-  # Analyze algorithmic complexity
   complexity_analysis: true
-  # Memory usage analysis
-  memory_analysis: true
-  # Database query optimization
-  db_query_optimization: true
-  # Async/reactive patterns analysis
   async_patterns_analysis: true
-  # Performance regression detection
-  regression_detection: true
 
-# Test coverage and quality
-test_analysis:
-  enabled: true
-  # Analyze test coverage
-  coverage_analysis: true
-  # Test quality assessment
-  test_quality_check: true
-  # Missing test detection
-  missing_tests_detection: true
-  # Test maintainability analysis
-  test_maintainability: true
-  # Flaky test detection
-  flaky_test_detection: true
-
-# Documentation analysis
-documentation_analysis:
-  enabled: true
-  # Check for missing documentation
-  missing_docs_detection: true
-  # Documentation quality assessment
-  docs_quality_check: true
-  # API documentation completeness
-  api_docs_completeness: true
-  # Code comment analysis
-  comment_analysis: true
-
-# RAG context enrichment (enhanced)
 rag_context_enrichment:
   enabled: true
-  # Context window size
   context_window: 5
-  # Include related files
   include_related_files: true
-  # Include documentation
   include_docs: true
-  # Include test files
-  include_tests: true
-  # Include configuration files
-  include_config_files: true
-  # Include dependency information
-  include_dependencies: true
-  # Semantic code understanding
   semantic_understanding: true
-
-# Code compliance and standards
-compliance_checking:
-  enabled: true
-  # Coding standards enforcement
-  coding_standards:
-    - java_conventions
-    - spring_boot_best_practices
-    - reactive_programming_patterns
-  # Architecture compliance
-  architecture_compliance: true
-  # Design pattern validation
-  design_patterns_validation: true
-  # SOLID principles checking
-  solid_principles: true
-
-# Dependency analysis
-dependency_analysis:
-  enabled: true
-  # Vulnerability scanning
-  vulnerability_scanning: true
-  # License compliance
-  license_compliance: true
-  # Outdated dependencies detection
-  outdated_deps_detection: true
-  # Unused dependencies detection
-  unused_deps_detection: true
-  # Dependency conflict resolution
-  conflict_resolution: true
-
-# Code review workflow
-review_workflow:
-  # Auto-assign reviewers based on code expertise
-  auto_assign_reviewers: true
-  # Require AI review before human review
-  ai_review_first: true
-  # Block merge on critical issues
-  block_on_critical_issues: true
-  # Auto-approve minor changes
-  auto_approve_minor_changes: false
-  # Review checklist
-  checklist:
-    - "Security vulnerabilities addressed"
-    - "Performance impact assessed"
-    - "Tests added/updated"
-    - "Documentation updated"
-    - "Code duplication minimized"
-
-# Integration settings
-integrations:
-  # GitHub integration
-  github:
-    # Comment on PRs with findings
-    pr_comments: true
-    # Update PR status checks
-    status_checks: true
-    # Create issues for critical findings
-    create_issues_for_critical: true
-  
-  # SonarCloud integration
-  sonarcloud:
-    enabled: true
-    # Sync findings with SonarCloud
-    sync_findings: true
-  
-  # Snyk integration  
-  snyk:
-    enabled: true
-    # Sync security findings
-    sync_security_findings: true
-
-# Notification settings
-notifications:
-  # Slack notifications
-  slack:
-    enabled: false
-    webhook_url: ""
-  
-  # Email notifications
-  email:
-    enabled: false
-    recipients: []
-  
-  # Teams notifications
-  teams:
-    enabled: false
-    webhook_url: ""
-
-# Custom rules for Spring Boot projects
-custom_rules:
-  spring_boot:
-    # Check for proper exception handling
-    exception_handling: true
-    # Validate reactive streams usage
-    reactive_streams_validation: true
-    # Security configuration validation
-    security_config_validation: true
-    # Database transaction management
-    transaction_management: true
-    # Configuration properties validation
-    config_properties_validation: true
-    # Actuator endpoint security
-    actuator_security: true
-
-# Language-specific settings
-language_settings:
-  java:
-    # Java version compliance
-    version_compliance: "21"
-    # Spring Boot specific checks
-    spring_boot_checks: true
-    # Reactive programming patterns
-    reactive_patterns: true
-    # JPA/R2DBC best practices
-    orm_best_practices: true

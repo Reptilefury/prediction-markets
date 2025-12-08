@@ -11,17 +11,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class PubSubProducer extends RouteBuilder {
 
-    private final GcpPubSubProperties props;
-    
-    @Override
-    public void configure() {
-        String topicUri = String.format(
+  private final GcpPubSubProperties props;
+
+  @Override
+  public void configure() {
+    String topicUri =
+        String.format(
             "google-pubsub:%s:%s?lazyStartProducer=true",
-            props.getProjectId(),
-            props.getTopicUniversalDepositWallet()
-        );
-        log.info("PubSubProducer topic URI: {}", topicUri);
-        from("reactive-streams:wallet-creation-requests")
-            .to(topicUri);
-    }
+            props.getProjectId(), props.getTopicUniversalDepositWallet());
+    log.info("PubSubProducer topic URI: {}", topicUri);
+    from("reactive-streams:wallet-creation-requests").to(topicUri);
+  }
 }
