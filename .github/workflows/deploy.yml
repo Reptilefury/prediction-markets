@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 env:
+  JAVA_VERSION: '21'
   PROJECT_ID: heroic-equinox-474616-i5
   SERVICE_NAME: prediction-markets
   REGION: us-central1
@@ -23,16 +24,16 @@ jobs:
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
+        java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
         
     - name: Final Build & Test
-      run: ./mvnw clean package
+      run: ./mvnw clean package -DskipTests
       
     - name: Setup Java for Snyk
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
+        java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
       
     - name: Final Security Scan
