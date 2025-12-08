@@ -29,6 +29,12 @@ jobs:
     - name: Final Build & Test
       run: ./mvnw clean package
       
+    - name: Setup Java for Snyk
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+      
     - name: Final Security Scan
       uses: snyk/actions/maven@master
       env:
