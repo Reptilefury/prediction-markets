@@ -45,7 +45,6 @@ jobs:
       
     - name: Final Security Scan
       uses: snyk/actions/maven@master
-      continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
@@ -69,12 +68,11 @@ jobs:
         
     - name: Final Trivy Security Scan
       uses: aquasecurity/trivy-action@master
-      continue-on-error: true
       with:
         image-ref: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
         format: 'table'
         severity: 'CRITICAL,HIGH'
-        exit-code: '0'
+        exit-code: '1'
         
     - name: Push Image to GCR
       run: |
