@@ -54,33 +54,7 @@ jobs:
         file: ./target/site/jacoco/jacoco.xml
         
     - name: Run Maven Build
-      run: ./mvnw clean package -DskipTests
-      env:
-        JDBC_DATABASE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-        DATABASE_URL: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-        DATABASE_USERNAME: sa
-        DATABASE_PASSWORD: ""
-        REDIS_HOST: localhost
-        REDIS_PORT: 6379
-        REDIS_PASSWORD: ""
-        GCP_PROJECT_ID: test-project
-        BASE_URL: http://localhost:8080
-        MAGIC_API_KEY: test-key
-        MAGIC_API_URL: http://localhost
-        ENCLAVE_API_KEY: test-key
-        ENCLAVE_API_URL: http://localhost
-        APP_ENCLAVE_DESTINATION_TOKEN_ADDRESS: "0x123"
-        BLNK_API_URL: http://localhost
-        BLNK_LEDGER_ID: test-ledger
-        WALLETCONNECT_PROJECT_ID: test-project
-        DYNAMIC_ENVIRONMENT_ID: test-env
-        LOGODEV_API_KEY: test-key
-        PUBSUB_TOPIC_WALLET: test-topic
-        PUBSUB_SUBSCRIPTION_WALLET: test-subscription
-        KEYCLOAK_BASE_URL: http://localhost
-        KEYCLOAK_REALM: test-realm
-        KEYCLOAK_CLIENT_ID: test-client
-        KEYCLOAK_CLIENT_SECRET: test-secret
+      run: ./mvnw clean package -DskipTests -DskipITs
       
     - name: Setup Java for Snyk
       uses: actions/setup-java@v4
