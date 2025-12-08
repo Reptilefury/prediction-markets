@@ -54,7 +54,7 @@ jobs:
         file: ./target/site/jacoco/jacoco.xml
         
     - name: Run Maven Build
-      run: ./mvnw clean package -DskipTests -P-integration-test
+      run: ./mvnw clean install -DskipTests -Dmaven.integration-test.skip=true
       
     - name: Setup Java for Snyk
       uses: actions/setup-java@v4
