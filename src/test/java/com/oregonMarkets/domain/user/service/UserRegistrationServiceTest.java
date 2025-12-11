@@ -9,6 +9,8 @@ import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.model.User;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.integration.blnk.BlnkClient;
+import com.oregonMarkets.integration.crypto.dto.SmartAccountResponse;
+import com.oregonMarkets.integration.crypto.dto.WalletCreateResponseData;
 import com.oregonMarkets.integration.enclave.EnclaveClient;
 import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService;
@@ -56,11 +58,31 @@ class UserRegistrationServiceTest {
     String didToken = "test-did-token";
     User savedUser = createSavedUser();
 
+    // Mock crypto-service smart account response
+    WalletCreateResponseData walletResponse =
+        WalletCreateResponseData.builder()
+            .user(
+                WalletCreateResponseData.UserInfo.builder()
+                    .id("user123")
+                    .walletAddress("0x123")
+                    .build())
+            .smartAccount(
+                SmartAccountResponse.builder()
+                    .smartAccountAddress("0x456")
+                    .userAddress("0x123")
+                    .deployed(false)
+                    .chainId(137)
+                    .bundlerUrl("https://bundler.example.com")
+                    .paymasterUrl("https://paymaster.example.com")
+                    .usdcContract("0xUSDC")
+                    .build())
+            .build();
+
     // When
     when(userRepository.existsByEmail(anyString())).thenReturn(Mono.just(false));
     when(userRepository.existsByMagicUserId(anyString())).thenReturn(Mono.just(false));
-    when(proxyWalletOnboardingService.createUserProxyWallet(anyString()))
-        .thenReturn(Mono.just("0x456"));
+    when(proxyWalletOnboardingService.createUserProxyWallet(anyString(), anyString()))
+        .thenReturn(Mono.just(walletResponse));
     when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
     when(cacheService.set(anyString(), any(), any())).thenReturn(Mono.empty());
 

@@ -82,13 +82,16 @@ app:
   blnk:
     api-url: ${BLNK_API_URL}
     ledger-id: ${BLNK_LEDGER_ID}
-  
+
+  crypto-service:
+    base-url: ${CRYPTO_SERVICE_URL}
+
   walletconnect:
     project-id: ${WALLETCONNECT_PROJECT_ID}
-  
+
   dynamic:
     environment-id: ${DYNAMIC_ENVIRONMENT_ID}
-  
+
   logodev:
     api-key: ${LOGODEV_API_KEY}
 
