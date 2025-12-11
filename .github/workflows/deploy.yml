@@ -58,7 +58,7 @@ jobs:
         docker build -t $REGISTRY/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }} .
         
     - name: Final Trivy Security Scan
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.33.1
       with:
         image-ref: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
         format: 'table'
