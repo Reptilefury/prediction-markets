@@ -98,18 +98,22 @@ public class MagicDIDValidator {
       ObjectMapper mapper = new ObjectMapper();
       String claimJson = claim.asText();
       JsonNode claimData = mapper.readTree(claimJson);
-      
+
       validateTemporalConstraints(claimData);
       String[] claimFields = extractClaimFields(claimData);
       String issuer = claimFields[0];
       String userId = claimFields[1];
-      
+
+      // Extract public address from issuer (did:ethr:0x...)
+      String publicAddress = extractPublicAddressFromIssuer(issuer);
+
       // Signature verification would go here in production
-      log.info("Magic DID token validated successfully for user: {} (issuer: {})", userId, issuer);
-      
+      log.info("Magic DID token validated successfully for user: {} (issuer: {}, address: {})", userId, issuer, publicAddress);
+
       MagicUserInfo userInfo = new MagicUserInfo();
       userInfo.setIssuer(issuer);
       userInfo.setUserId(userId);
+      userInfo.setPublicAddress(publicAddress);
       return userInfo;
     } catch (Exception e) {
       log.error("Magic DID token validation failed", e);
@@ -138,20 +142,42 @@ public class MagicDIDValidator {
   private String[] extractClaimFields(JsonNode claim) {
     String issuer = claim.has("iss") ? claim.get("iss").asText() : null;
     String userId = claim.has("sub") ? claim.get("sub").asText() : null;
-    
+
     if (userId == null || userId.isEmpty()) {
       throw new MagicAuthException("Missing 'sub' (user ID) claim in token");
     }
-    
+
     if (issuer == null || issuer.isEmpty()) {
       throw new MagicAuthException("Missing 'iss' (issuer) claim in token");
     }
-    
+
     if (!issuer.startsWith("did:ethr:")) {
       throw new MagicAuthException("Invalid issuer format: must start with 'did:ethr:', got: " + issuer);
     }
-    
+
     return new String[]{issuer, userId};
+  }
+
+  /**
+   * Extract the Ethereum public address from Magic issuer DID
+   * DID format: did:ethr:0x1234567890abcdef...
+   * @param issuer The DID issuer string
+   * @return The Ethereum public address (0x...)
+   */
+  private String extractPublicAddressFromIssuer(String issuer) {
+    if (issuer == null || !issuer.startsWith("did:ethr:0x")) {
+      throw new MagicAuthException("Invalid issuer format for address extraction: " + issuer);
+    }
+
+    // Extract address after "did:ethr:" prefix
+    String address = issuer.substring("did:ethr:".length());
+
+    // Validate address format (0x followed by 40 hex characters)
+    if (!address.matches("^0x[0-9a-fA-F]{40}$")) {
+      throw new MagicAuthException("Invalid Ethereum address format in issuer: " + address);
+    }
+
+    return address;
   }
 
 

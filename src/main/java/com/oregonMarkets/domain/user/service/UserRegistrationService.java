@@ -46,13 +46,10 @@ public class UserRegistrationService {
     log.info("Starting user registration for email: {}", request.getEmail());
     return checkUserExists(magicUser, request)
         .then(createUser(magicUser, request))
-        .flatMap(userRepository::save) // Save first to generate UUID
+        .flatMap(userRepository::save)
         .flatMap(
             user ->
-                setupExternalIntegrationsAsyncViawEvents(
-                        user,
-                        magicUser.getUserId(),
-                        didToken) // Setup proxy wallet and publish event for async chain
+                setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)
                     .flatMap(
                         savedUser ->
                             publishUserRegisteredEvent(savedUser)
@@ -132,29 +129,43 @@ public class UserRegistrationService {
   }
 
   /**
-   * New async-first approach: Create proxy wallet and publish event for async processing chain
+   * New async-first approach: Create Biconomy smart account and publish event for async processing chain
    * ProxyWalletCreatedEvent → EnclaveUdaCreationListener → EnclaveUdaCreatedEvent →
    * BlnkBalanceCreationListener → BlnkBalanceCreatedEvent → KeycloakProvisionListener
    */
   private Mono<User> setupExternalIntegrationsAsyncViawEvents(
       User user, String magicUserId, String didToken) {
-    // Create proxy wallet synchronously (needed for event data)
+    // Create Biconomy smart account via crypto-service
     return proxyWalletService
-        .createUserProxyWallet(user.getMagicWalletAddress())
+        .createUserProxyWallet(user.getMagicWalletAddress(), didToken)
         .map(
-            proxyWalletAddress -> {
-              user.setProxyWalletAddress(proxyWalletAddress);
+            walletData -> {
+              // Set Polymarket proxy wallet (for backward compatibility)
+              user.setProxyWalletAddress(walletData.getSmartAccount().getSmartAccountAddress());
               user.setProxyWalletStatus(User.ProxyWalletStatus.ACTIVE);
               user.setProxyWalletCreatedAt(Instant.now());
+
+              // Set Biconomy smart account data
+              user.setBiconomySmartAccountAddress(walletData.getSmartAccount().getSmartAccountAddress());
+              user.setBiconomyDeployed(walletData.getSmartAccount().getDeployed());
+              user.setBiconomyChainId(walletData.getSmartAccount().getChainId());
+              user.setBiconomyBundlerUrl(walletData.getSmartAccount().getBundlerUrl());
+              user.setBiconomyPaymasterUrl(walletData.getSmartAccount().getPaymasterUrl());
+              user.setBiconomyCreatedAt(Instant.now());
+
+              log.info("Smart account created: {} (deployed: {})",
+                  walletData.getSmartAccount().getSmartAccountAddress(),
+                  walletData.getSmartAccount().getDeployed());
+
               return user;
             })
         .onErrorResume(
             error -> {
               log.warn(
-                  "Failed to create proxy wallet, continuing without it: {}", error.getMessage());
+                  "Failed to create smart account, continuing without it: {}", error.getMessage());
               return Mono.just(user);
             })
-        .flatMap(u -> userRepository.save(u)) // Save updated user with proxy wallet
+        .flatMap(u -> userRepository.save(u)) // Save updated user with smart account
         .doOnSuccess(
             u -> {
               // Publish ProxyWalletCreatedEvent to kickoff the async event chain

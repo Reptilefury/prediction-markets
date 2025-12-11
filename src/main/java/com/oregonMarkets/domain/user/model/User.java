@@ -123,6 +123,27 @@ public class User {
   @Builder.Default
   private ProxyWalletStatus proxyWalletStatus = ProxyWalletStatus.PENDING;
 
+  // Biconomy Smart Account Integration (Account Abstraction)
+  @Column("biconomy_smart_account_address")
+  private String biconomySmartAccountAddress;
+
+  @Column("biconomy_deployed")
+  @Builder.Default
+  private Boolean biconomyDeployed = false;
+
+  @Column("biconomy_chain_id")
+  @Builder.Default
+  private Integer biconomyChainId = 137; // Polygon mainnet
+
+  @Column("biconomy_bundler_url")
+  private String biconomyBundlerUrl;
+
+  @Column("biconomy_paymaster_url")
+  private String biconomyPaymasterUrl;
+
+  @Column("biconomy_created_at")
+  private Instant biconomyCreatedAt;
+
   // Referral
   @Column("referral_code")
   private String referralCode;
