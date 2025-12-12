@@ -27,6 +27,7 @@ public class Web3RegistrationService {
   private final Web3AuthService web3AuthService;
   private final EnclaveClient enclaveClient;
   private final CacheService cacheService;
+  private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
 
   @Value("${app.enclave.destination-token-address:0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174}")
   private String destinationTokenAddress;
@@ -92,6 +93,9 @@ public class Web3RegistrationService {
             .utmMedium(request.getUtmMedium())
             .utmCampaign(request.getUtmCampaign())
             .build();
+
+    // Generate username and display name using Datafaker with UUID uniqueness
+    usernameGenerationService.applyUsernameAndDisplayName(user);
 
     if (request.getReferralCode() != null && !request.getReferralCode().isBlank()) {
       return userRepository

@@ -32,10 +32,6 @@ class EnclaveUdaCreationListenerTest {
 
   @Mock private ObjectMapper objectMapper;
 
-  @Mock private AvatarGenerationService avatarGenerationService;
-
-  @Mock private QRCodeGenerationService qrCodeGenerationService;
-
   private EnclaveUdaCreationListener listener;
 
   @BeforeEach
@@ -45,9 +41,7 @@ class EnclaveUdaCreationListenerTest {
             enclaveClient,
             eventPublisher,
             userRepository,
-            objectMapper,
-            avatarGenerationService,
-            qrCodeGenerationService);
+            objectMapper);
     ReflectionTestUtils.setField(listener, "destinationTokenAddress", "0x456");
   }
 
@@ -76,10 +70,6 @@ class EnclaveUdaCreationListenerTest {
     when(userRepository.findById(userId)).thenReturn(Mono.just(user));
     when(userRepository.save(any(User.class))).thenReturn(Mono.just(user));
     when(objectMapper.writeValueAsString(any())).thenReturn("{\"1\":{\"address\":\"0xabc\"}}");
-    when(avatarGenerationService.generateAndUploadAvatar(userId))
-        .thenReturn(Mono.just("https://avatar.url"));
-    when(qrCodeGenerationService.generateAndUploadQRCodes(any(), any(), any(), any(), any(), any()))
-        .thenReturn(Mono.just(Map.of("proxyWalletQrCode", "https://qr.url")));
 
     listener.onProxyWalletCreated(event);
 

@@ -34,12 +34,15 @@ class Web3RegistrationServiceTest {
 
   @Mock private CacheService cacheService;
 
+  @Mock private com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
+
   private Web3RegistrationService service;
 
   @BeforeEach
   void setUp() {
     service =
-        new Web3RegistrationService(userRepository, web3AuthService, enclaveClient, cacheService);
+        new Web3RegistrationService(
+            userRepository, web3AuthService, enclaveClient, cacheService, usernameGenerationService);
     ReflectionTestUtils.setField(
         service, "destinationTokenAddress", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
   }
