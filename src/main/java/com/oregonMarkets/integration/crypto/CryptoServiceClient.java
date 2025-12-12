@@ -2,6 +2,7 @@ package com.oregonMarkets.integration.crypto;
 
 import com.oregonMarkets.common.exception.ExternalServiceException;
 import com.oregonMarkets.common.response.ResponseCode;
+import com.oregonMarkets.common.util.DataMaskingUtil;
 import com.oregonMarkets.integration.crypto.dto.CryptoServiceApiResponse;
 import com.oregonMarkets.integration.crypto.dto.WalletCreateResponseData;
 import java.time.Duration;
@@ -44,8 +45,8 @@ public class CryptoServiceClient {
 
     log.info("[CRYPTO-SERVICE] Initiating smart account creation request");
     log.info("[CRYPTO-SERVICE] Endpoint: {}", endpoint);
-    log.info("[CRYPTO-SERVICE] Request payload: walletAddress={}", walletAddress);
-    log.info("[CRYPTO-SERVICE] Authorization: Bearer token present={}", didToken != null && !didToken.isEmpty());
+    log.info("[CRYPTO-SERVICE] Request payload: walletAddress={}", DataMaskingUtil.maskWalletAddress(walletAddress));
+    log.debug("[CRYPTO-SERVICE] Authentication configured");
 
     WebClient webClient =
         webClientBuilder
@@ -65,12 +66,13 @@ public class CryptoServiceClient {
               log.error("[CRYPTO-SERVICE] Client error response: status={}", response.statusCode());
               return response.bodyToMono(String.class)
                   .flatMap(body -> {
-                    log.error("[CRYPTO-SERVICE] Error response body: {}", body);
+                    String sanitized = DataMaskingUtil.sanitizeErrorBody(body);
+                    log.error("[CRYPTO-SERVICE] Error response (sanitized): {}", sanitized);
                     return Mono.error(
                         new ExternalServiceException(
                             ResponseCode.EXTERNAL_SERVICE_ERROR,
                             "Crypto Service",
-                            "Client error creating smart account: " + body));
+                            "Client error creating smart account - check logs for details"));
                   });
             })
         .onStatus(
@@ -79,12 +81,13 @@ public class CryptoServiceClient {
               log.error("[CRYPTO-SERVICE] Server error response: status={}", response.statusCode());
               return response.bodyToMono(String.class)
                   .flatMap(body -> {
-                    log.error("[CRYPTO-SERVICE] Error response body: {}", body);
+                    String sanitized = DataMaskingUtil.sanitizeErrorBody(body);
+                    log.error("[CRYPTO-SERVICE] Error response (sanitized): {}", sanitized);
                     return Mono.error(
                         new ExternalServiceException(
                             ResponseCode.EXTERNAL_SERVICE_ERROR,
                             "Crypto Service",
-                            "Server error creating smart account: " + body));
+                            "Server error creating smart account - check logs for details"));
                   });
             })
         .bodyToMono(
@@ -92,7 +95,7 @@ public class CryptoServiceClient {
                 CryptoServiceApiResponse<WalletCreateResponseData>>() {})
         .doOnNext(response -> {
           log.info("[CRYPTO-SERVICE] Received response from crypto-service");
-          log.debug("[CRYPTO-SERVICE] Response data: {}", response);
+          log.debug("[CRYPTO-SERVICE] Response type: {}", DataMaskingUtil.maskResponseObject(response));
         })
         .map(CryptoServiceApiResponse::getData)
         .timeout(Duration.ofSeconds(30))
@@ -106,15 +109,15 @@ public class CryptoServiceClient {
         .doOnSuccess(response -> {
           log.info("[CRYPTO-SERVICE] ✓ Successfully created smart account");
           log.info("[CRYPTO-SERVICE] Smart Account Address: {}",
-              response.getSmartAccount().getSmartAccountAddress());
+              DataMaskingUtil.maskWalletAddress(response.getSmartAccount().getSmartAccountAddress()));
           log.info("[CRYPTO-SERVICE] Deployed: {}", response.getSmartAccount().getDeployed());
           log.info("[CRYPTO-SERVICE] Chain ID: {}", response.getSmartAccount().getChainId());
-          log.info("[CRYPTO-SERVICE] Bundler URL: {}", response.getSmartAccount().getBundlerUrl());
-          log.info("[CRYPTO-SERVICE] Paymaster URL: {}", response.getSmartAccount().getPaymasterUrl());
+          log.debug("[CRYPTO-SERVICE] Bundler URL configured");
+          log.debug("[CRYPTO-SERVICE] Paymaster URL configured");
         })
         .doOnError(error ->
             log.error("[CRYPTO-SERVICE] ✗ Failed to create smart account for wallet {}: {}",
-                walletAddress,
+                DataMaskingUtil.maskWalletAddress(walletAddress),
                 error.getMessage(),
                 error))
         .onErrorMap(throwable -> {

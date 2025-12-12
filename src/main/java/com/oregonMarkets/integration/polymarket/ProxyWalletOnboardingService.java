@@ -2,6 +2,7 @@ package com.oregonMarkets.integration.polymarket;
 
 import com.oregonMarkets.common.exception.ExternalServiceException;
 import com.oregonMarkets.common.response.ResponseCode;
+import com.oregonMarkets.common.util.DataMaskingUtil;
 import com.oregonMarkets.integration.crypto.CryptoServiceClient;
 import com.oregonMarkets.integration.crypto.dto.WalletCreateResponseData;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public class ProxyWalletOnboardingService {
    */
   public Mono<WalletCreateResponseData> createUserProxyWallet(String userEOA, String didToken) {
     log.info("[PROXY-WALLET] Initiating Biconomy smart account creation");
-    log.info("[PROXY-WALLET] User EOA: {}", userEOA);
+    log.info("[PROXY-WALLET] User EOA: {}", DataMaskingUtil.maskWalletAddress(userEOA));
 
     // Validate inputs
     if (userEOA == null || userEOA.trim().isEmpty()) {
@@ -75,7 +76,7 @@ public class ProxyWalletOnboardingService {
             ? userEOA.toLowerCase()
             : "0x" + userEOA.toLowerCase();
 
-    log.info("[PROXY-WALLET] Normalized EOA address: {}", normalizedEOA);
+    log.info("[PROXY-WALLET] Normalized EOA address: {}", DataMaskingUtil.maskWalletAddress(normalizedEOA));
     log.info("[PROXY-WALLET] Calling crypto-service to create smart account...");
 
     return cryptoServiceClient
@@ -85,18 +86,17 @@ public class ProxyWalletOnboardingService {
               log.info("[PROXY-WALLET] ✓ Smart account creation successful");
               log.info(
                   "[PROXY-WALLET] Smart Account Address: {}",
-                  response.getSmartAccount().getSmartAccountAddress());
-              log.info(
-                  "[PROXY-WALLET] User EOA: {} -> Smart Account: {}",
-                  normalizedEOA,
-                  response.getSmartAccount().getSmartAccountAddress());
+                  DataMaskingUtil.maskWalletAddress(response.getSmartAccount().getSmartAccountAddress()));
+              log.debug(
+                  "[PROXY-WALLET] User EOA mapped to Smart Account successfully");
               log.info(
                   "[PROXY-WALLET] Deployment status: {} (will deploy on first transaction)",
                   response.getSmartAccount().getDeployed() ? "Already deployed" : "Lazy deployment");
             })
         .doOnError(
             error -> {
-              log.error("[PROXY-WALLET] ✗ Smart account creation failed for user EOA: {}", userEOA);
+              log.error("[PROXY-WALLET] ✗ Smart account creation failed for user EOA: {}",
+                  DataMaskingUtil.maskWalletAddress(userEOA));
               log.error("[PROXY-WALLET] Error type: {}", error.getClass().getSimpleName());
               log.error("[PROXY-WALLET] Error message: {}", error.getMessage());
               if (error.getCause() != null) {
