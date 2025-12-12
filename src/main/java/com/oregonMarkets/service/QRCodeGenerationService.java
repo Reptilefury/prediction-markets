@@ -39,6 +39,10 @@ public class QRCodeGenerationService {
 
   // Removed unused secret key to avoid accidental exposure
 
+  // Logo cache for instant access (populated on startup)
+  private final java.util.concurrent.ConcurrentHashMap<String, BufferedImage> logoCache =
+      new java.util.concurrent.ConcurrentHashMap<>();
+
   private static final int QR_CODE_SIZE = 512;
   private static final int LOGO_SIZE = 80;
   private static final Color QR_COLOR = new Color(0x1a1a1a);
@@ -54,6 +58,47 @@ public class QRCodeGenerationService {
   private static final String BASE_TYPE = "base";
 
   /**
+   * Pre-cache all cryptocurrency logos on application startup This eliminates logo download latency
+   * during QR code generation
+   */
+  @javax.annotation.PostConstruct
+  public void initializeLogoCache() {
+    log.info("[LOGO-CACHE] Initializing cryptocurrency logo cache on startup...");
+    long startTime = System.currentTimeMillis();
+
+    // List of all supported token types that have logos
+    java.util.List<String> tokenTypes =
+        java.util.Arrays.asList(ETHEREUM_TYPE, POLYGON_TYPE, BASE_TYPE, SOLANA_TYPE, BITCOIN_TYPE);
+
+    int successCount = 0;
+    int failureCount = 0;
+
+    for (String tokenType : tokenTypes) {
+      try {
+        BufferedImage logo = downloadAndResizeTokenLogo(tokenType);
+        if (logo != null) {
+          logoCache.put(tokenType, logo);
+          successCount++;
+          log.info("[LOGO-CACHE] ✓ Cached logo for: {}", tokenType);
+        } else {
+          failureCount++;
+          log.warn("[LOGO-CACHE] ✗ Failed to cache logo for: {}", tokenType);
+        }
+      } catch (Exception e) {
+        failureCount++;
+        log.warn("[LOGO-CACHE] ✗ Error caching logo for {}: {}", tokenType, e.getMessage());
+      }
+    }
+
+    long duration = System.currentTimeMillis() - startTime;
+    log.info(
+        "[LOGO-CACHE] Logo cache initialized: {} succeeded, {} failed in {}ms",
+        successCount,
+        failureCount,
+        duration);
+  }
+
+  /**
    * Generate QR codes for all deposit addresses and proxy wallet Returns a map with address type as
    * key and QR code URL as value
    */
@@ -65,67 +110,130 @@ public class QRCodeGenerationService {
       String solanaDepositAddress,
       Map<String, String> bitcoinDepositAddresses) {
 
-    return Mono.fromCallable(
-        () -> {
-          Map<String, String> qrCodeUrls = new HashMap<>();
+    log.info("[QR-PARALLEL] Starting parallel QR code generation for user: {}", userId);
+    long startTime = System.currentTimeMillis();
 
-          try {
-            // Generate QR code for proxy wallet
-            if (proxyWalletAddress != null && !proxyWalletAddress.isBlank()) {
-              qrCodeUrls.put(
-                  "proxyWalletQrCode",
-                  generateAndUploadBrandedQRCode(
-                      userId, "proxy_wallet", proxyWalletAddress, WALLET_TYPE));
-            }
+    // Create a list to hold all QR code generation tasks
+    java.util.List<Mono<java.util.Map.Entry<String, String>>> qrCodeTasks =
+        new java.util.ArrayList<>();
 
-            // Generate QR code for Enclave UDA
-            if (enclaveUdaAddress != null && !enclaveUdaAddress.isBlank()) {
-              qrCodeUrls.put(
-                  "enclaveUdaQrCode",
-                  generateAndUploadBrandedQRCode(
-                      userId, "enclave_uda", enclaveUdaAddress, UDA_TYPE));
-            }
+    // Task 1: Proxy wallet QR code
+    if (proxyWalletAddress != null && !proxyWalletAddress.isBlank()) {
+      qrCodeTasks.add(
+          Mono.fromCallable(
+                  () ->
+                      java.util.Map.entry(
+                          "proxyWalletQrCode",
+                          generateAndUploadBrandedQRCode(
+                              userId, "proxy_wallet", proxyWalletAddress, WALLET_TYPE)))
+              .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()));
+    }
 
-            // Generate QR codes for EVM deposit addresses
-            if (evmDepositAddresses != null && !evmDepositAddresses.isEmpty()) {
-              Map<String, String> evmQrCodes = new HashMap<>();
-              for (Map.Entry<String, String> entry : evmDepositAddresses.entrySet()) {
-                String qrUrl =
-                    generateAndUploadBrandedQRCode(
-                        userId, "evm_" + entry.getKey(), entry.getValue(), entry.getKey());
-                evmQrCodes.put(entry.getKey(), qrUrl);
-              }
-              qrCodeUrls.put("evmDepositQrCodes", evmQrCodes.toString());
-            }
+    // Task 2: Enclave UDA QR code
+    if (enclaveUdaAddress != null && !enclaveUdaAddress.isBlank()) {
+      qrCodeTasks.add(
+          Mono.fromCallable(
+                  () ->
+                      java.util.Map.entry(
+                          "enclaveUdaQrCode",
+                          generateAndUploadBrandedQRCode(
+                              userId, "enclave_uda", enclaveUdaAddress, UDA_TYPE)))
+              .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()));
+    }
 
-            // Generate QR code for Solana deposit address
-            if (solanaDepositAddress != null && !solanaDepositAddress.isBlank()) {
-              qrCodeUrls.put(
-                  "solanaDepositQrCode",
-                  generateAndUploadBrandedQRCode(
-                      userId, "solana_deposit", solanaDepositAddress, SOLANA_TYPE));
-            }
+    // Task 3-N: EVM deposit addresses (parallel generation)
+    if (evmDepositAddresses != null && !evmDepositAddresses.isEmpty()) {
+      java.util.List<Mono<java.util.Map.Entry<String, String>>> evmTasks =
+          new java.util.ArrayList<>();
+      for (Map.Entry<String, String> entry : evmDepositAddresses.entrySet()) {
+        String network = entry.getKey();
+        String address = entry.getValue();
+        evmTasks.add(
+            Mono.fromCallable(
+                    () ->
+                        java.util.Map.entry(
+                            "evm_" + network,
+                            generateAndUploadBrandedQRCode(
+                                userId, "evm_" + network, address, network)))
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()));
+      }
 
-            // Generate QR codes for Bitcoin addresses
-            if (bitcoinDepositAddresses != null && !bitcoinDepositAddresses.isEmpty()) {
-              Map<String, String> btcQrCodes = new HashMap<>();
-              for (Map.Entry<String, String> entry : bitcoinDepositAddresses.entrySet()) {
-                String qrUrl =
-                    generateAndUploadBrandedQRCode(
-                        userId, "btc_" + entry.getKey(), entry.getValue(), BITCOIN_TYPE);
-                btcQrCodes.put(entry.getKey(), qrUrl);
-              }
-              qrCodeUrls.put("bitcoinDepositQrCodes", btcQrCodes.toString());
-            }
+      // Combine all EVM QR codes into a single entry
+      qrCodeTasks.add(
+          reactor.core.publisher.Flux.merge(evmTasks)
+              .collectMap(java.util.Map.Entry::getKey, java.util.Map.Entry::getValue)
+              .map(
+                  evmMap -> {
+                    // Convert to format expected by frontend
+                    Map<String, String> cleanedMap = new HashMap<>();
+                    evmMap.forEach((key, value) -> cleanedMap.put(key.replace("evm_", ""), value));
+                    return java.util.Map.entry("evmDepositQrCodes", cleanedMap.toString());
+                  }));
+    }
 
-            log.info(
-                "QR codes generated and uploaded successfully, total count: {}", qrCodeUrls.size());
-            return qrCodeUrls;
-          } catch (Exception e) {
-            log.error("Failed to generate/upload QR codes: {}", e.getMessage(), e);
-            throw e;
-          }
-        });
+    // Task N+1: Solana deposit address
+    if (solanaDepositAddress != null && !solanaDepositAddress.isBlank()) {
+      qrCodeTasks.add(
+          Mono.fromCallable(
+                  () ->
+                      java.util.Map.entry(
+                          "solanaDepositQrCode",
+                          generateAndUploadBrandedQRCode(
+                              userId, "solana_deposit", solanaDepositAddress, SOLANA_TYPE)))
+              .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()));
+    }
+
+    // Task N+2-M: Bitcoin addresses (parallel generation)
+    if (bitcoinDepositAddresses != null && !bitcoinDepositAddresses.isEmpty()) {
+      java.util.List<Mono<java.util.Map.Entry<String, String>>> btcTasks =
+          new java.util.ArrayList<>();
+      for (Map.Entry<String, String> entry : bitcoinDepositAddresses.entrySet()) {
+        String format = entry.getKey();
+        String address = entry.getValue();
+        btcTasks.add(
+            Mono.fromCallable(
+                    () ->
+                        java.util.Map.entry(
+                            "btc_" + format,
+                            generateAndUploadBrandedQRCode(
+                                userId, "btc_" + format, address, BITCOIN_TYPE)))
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()));
+      }
+
+      // Combine all Bitcoin QR codes into a single entry
+      qrCodeTasks.add(
+          reactor.core.publisher.Flux.merge(btcTasks)
+              .collectMap(java.util.Map.Entry::getKey, java.util.Map.Entry::getValue)
+              .map(
+                  btcMap -> {
+                    // Convert to format expected by frontend
+                    Map<String, String> cleanedMap = new HashMap<>();
+                    btcMap.forEach((key, value) -> cleanedMap.put(key.replace("btc_", ""), value));
+                    return java.util.Map.entry("bitcoinDepositQrCodes", cleanedMap.toString());
+                  }));
+    }
+
+    // Execute all QR code generation tasks in parallel
+    return reactor.core.publisher.Flux.merge(qrCodeTasks)
+        .collectMap(java.util.Map.Entry::getKey, java.util.Map.Entry::getValue)
+        .doOnSuccess(
+            qrCodeUrls -> {
+              long duration = System.currentTimeMillis() - startTime;
+              log.info(
+                  "[QR-PARALLEL] ✓ All {} QR codes generated in {}ms (parallel execution)",
+                  qrCodeUrls.size(),
+                  duration);
+            })
+        .doOnError(
+            e ->
+                log.error(
+                    "[QR-PARALLEL] Failed to generate QR codes in parallel: {}", e.getMessage(), e))
+        .onErrorResume(
+            e -> {
+              log.warn(
+                  "[QR-PARALLEL] Falling back to empty result due to error: {}", e.getMessage());
+              return Mono.just(new HashMap<>());
+            });
   }
 
   private String generateAndUploadBrandedQRCode(
@@ -254,7 +362,35 @@ public class QRCodeGenerationService {
     }
   }
 
+  /**
+   * Get token logo from cache, or download if not cached Runtime method - checks cache first for
+   * instant access
+   */
   private BufferedImage downloadTokenLogo(String tokenType) {
+    // Check cache first for instant access
+    BufferedImage cachedLogo = logoCache.get(tokenType);
+    if (cachedLogo != null) {
+      log.debug("[LOGO-CACHE] ✓ Cache hit for: {}", tokenType);
+      return cachedLogo;
+    }
+
+    log.debug("[LOGO-CACHE] Cache miss for: {}, downloading...", tokenType);
+
+    // Cache miss - download and cache for future use
+    BufferedImage downloadedLogo = downloadAndResizeTokenLogo(tokenType);
+    if (downloadedLogo != null) {
+      logoCache.put(tokenType, downloadedLogo);
+      log.info("[LOGO-CACHE] ✓ Downloaded and cached logo for: {}", tokenType);
+    }
+
+    return downloadedLogo;
+  }
+
+  /**
+   * Download and resize token logo from logo.dev Used for both cache initialization and runtime
+   * downloads
+   */
+  private BufferedImage downloadAndResizeTokenLogo(String tokenType) {
     try {
       String logoUrl = getLogoDevUrl(tokenType);
       if (logoUrl == null) {
