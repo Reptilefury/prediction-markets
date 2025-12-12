@@ -12,8 +12,10 @@ import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService;
 import com.oregonMarkets.service.CacheService;
 import jakarta.validation.Valid;
+
 import java.time.Instant;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,219 +26,205 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class UserRegistrationService {
 
-  private final UserRepository userRepository;
-  private final ProxyWalletOnboardingService proxyWalletService;
-  private final CacheService cacheService;
-  private final org.springframework.context.ApplicationEventPublisher eventPublisher;
-  private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
+    private final UserRepository userRepository;
+    private final ProxyWalletOnboardingService proxyWalletService;
+    private final CacheService cacheService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
 
-  /**
-   * Deprecated path: registration should no longer receive DID token in body. Kept for tests/mocks
-   * compatibility.
-   */
-  @Deprecated
-  public Mono<UserRegistrationResponse> registerUser(@Valid UserRegistrationRequest request) {
-    return Mono.error(
-        new IllegalStateException(
-            "Deprecated registration path; DID token must come from Magic header"));
-  }
-
-  public Mono<UserRegistrationResponse> registerUser(
-      @Valid UserRegistrationRequest request,
-      MagicDIDValidator.MagicUserInfo magicUser,
-      String didToken) {
-    log.info("Starting user registration for email: {}", request.getEmail());
-    return checkUserExists(magicUser, request)
-        .then(createUser(magicUser, request))
-        .flatMap(userRepository::save)
-        .flatMap(user ->
-                setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)
-                    .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
-                                .then(cacheUserData(savedUser))
-                                .thenReturn(buildResponse(savedUser)) // Return immediately, rest happens async
-                             ))
-        .doOnSuccess(response -> log.info("Successfully registered user: {}", response.getUserId()))
-        .doOnError(error -> log.error("Failed to register user: {}", error.getMessage()));
-  }
-
-  private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
-    log.info("Creating user ");
-    User user = User.builder()
-            .email(request.getEmail())
-            .magicUserId(magicUser.getUserId()) // Use getUserId() for the actual Magic User ID
-            .magicWalletAddress(magicUser.getPublicAddress())
-            .magicIssuer(magicUser.getIssuer())
-            .emailVerified(true)
-            .emailVerifiedAt(Instant.now())
-            .countryCode(request.getCountryCode())
-            .kycStatus(User.KycStatus.NOT_STARTED)
-            .kycLevel(0)
-            .enclaveUdaStatus(User.EnclaveUdaStatus.PENDING)
-            .referralCode(generateReferralCode())
-            .utmSource(request.getUtmSource())
-            .utmMedium(request.getUtmMedium())
-            .utmCampaign(request.getUtmCampaign())
-            .build();
-    // Generate username and display name using Datafaker with UUID uniqueness
-    usernameGenerationService.applyUsernameAndDisplayName(user);
-    Mono<User> userMono = Mono.just(user);
-    if (request.getReferralCode() != null && !request.getReferralCode().isBlank()) {
-      userMono = userRepository.findByReferralCode(request.getReferralCode())
-              .map(referrer -> {
-                    user.setReferredByUserId(referrer.getId());
-                    return user;
-                  })
-              .switchIfEmpty(Mono.just(user));
+    /**
+     * Deprecated path: registration should no longer receive DID token in body. Kept for tests/mocks
+     * compatibility.
+     */
+    @Deprecated
+    public Mono<UserRegistrationResponse> registerUser(@Valid UserRegistrationRequest request) {
+        return Mono.error(
+                new IllegalStateException(
+                        "Deprecated registration path; DID token must come from Magic header"));
     }
-    return userMono;
-  }
 
-  private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
-    String emailToCheck = request.getEmail(); // Use email from request, not magicUser
-    log.info("Checking user exists : {}", emailToCheck);
-    return userRepository
-        .existsByEmail(emailToCheck)
-        .flatMap(exists -> {
-              log.info("Exists : {}", exists);
-              return Boolean.TRUE.equals(exists)
-                  ? Mono.error(new UserAlreadyExistsException(emailToCheck))
-                  : Mono.empty();
-            })
-        .then(userRepository.existsByMagicUserId(magicUser.getIssuer())
-                .flatMap(exists -> Boolean.TRUE.equals(exists)
-                            ? Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getIssuer()))
-                        : Mono.empty()));
-  }                                                                                                                                                                                                         
+    public Mono<UserRegistrationResponse> registerUser(
+            @Valid UserRegistrationRequest request,
+            MagicDIDValidator.MagicUserInfo magicUser,
+            String didToken) {
+        log.info("Starting user registration for email: {}", request.getEmail());
+        return checkUserExists(magicUser, request)
+                .then(createUser(magicUser, request))
+                .flatMap(userRepository::save)
+                .flatMap(user ->
+                        setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)
+                                .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
+                                        .then(cacheUserData(savedUser))
+                                        .thenReturn(buildResponse(savedUser))
+                                ))
+                .doOnSuccess(response -> log.info("Successfully registered user: {}", response.getUserId()))
+                .doOnError(error -> log.error("Failed to register user: {}", error.getMessage()));
+    }
 
-  /**
-   * New async-first approach: Create Biconomy smart account and publish event for async processing chain
-   * ProxyWalletCreatedEvent → EnclaveUdaCreationListener → EnclaveUdaCreatedEvent →
-   * BlnkBalanceCreationListener → BlnkBalanceCreatedEvent → KeycloakProvisionListener
-   *
-   * IMPORTANT: This method will fail user registration if smart account creation fails
-   */
-  private Mono<User> setupExternalIntegrationsAsyncViawEvents(
-      User user, String magicUserId, String didToken) {
+    private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+        log.info("Creating user ");
+        User user = User.builder()
+                .id(UUID.randomUUID()) // Generate UUID before username generation
+                .email(request.getEmail())
+                .magicUserId(magicUser.getUserId())
+                .magicWalletAddress(magicUser.getPublicAddress())
+                .magicIssuer(magicUser.getIssuer())
+                .emailVerified(true)
+                .emailVerifiedAt(Instant.now())
+                .countryCode(request.getCountryCode())
+                .kycStatus(User.KycStatus.NOT_STARTED)
+                .kycLevel(0)
+                .enclaveUdaStatus(User.EnclaveUdaStatus.PENDING)
+                .referralCode(generateReferralCode())
+                .utmSource(request.getUtmSource())
+                .utmMedium(request.getUtmMedium())
+                .utmCampaign(request.getUtmCampaign())
+                .build();
+        usernameGenerationService.applyUsernameAndDisplayName(user);
+        Mono<User> userMono = Mono.just(user);
+        if (request.getReferralCode() != null && !request.getReferralCode().isBlank()) {
+            userMono = userRepository.findByReferralCode(request.getReferralCode())
+                    .map(referrer -> {
+                        user.setReferredByUserId(referrer.getId());
+                        return user;
+                    }).switchIfEmpty(Mono.just(user));
+        }
+        return userMono;
+    }
 
-    log.info("[USER-REGISTRATION] Setting up external integrations for user: {}", DataMaskingUtil.maskUserId(user.getId().toString()));
-    log.info("[USER-REGISTRATION] Magic wallet address: {}", DataMaskingUtil.maskWalletAddress(user.getMagicWalletAddress()));
+    private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+        String emailToCheck = request.getEmail();
+        log.info("Checking user exists : {}", emailToCheck);
+        return userRepository
+                .existsByEmail(emailToCheck)
+                .flatMap(exists -> {
+                    log.info("Exists : {}", exists);
+                    return Boolean.TRUE.equals(exists)
+                            ? Mono.error(new UserAlreadyExistsException(emailToCheck))
+                            : Mono.empty();
+                })
+                .then(userRepository.existsByMagicUserId(magicUser.getIssuer())
+                        .flatMap(exists -> Boolean.TRUE.equals(exists)
+                                ? Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getIssuer()))
+                                : Mono.empty()));
+    }
 
-    // Create Biconomy smart account via crypto-service - CRITICAL OPERATION
-    return proxyWalletService
-        .createUserProxyWallet(user.getMagicWalletAddress(), didToken)
-        .map(
-            walletData -> {
-              log.info("[USER-REGISTRATION] Processing smart account creation response");
+    /**
+     * New async-first approach: Create Biconomy smart account and publish event for async processing chain
+     * ProxyWalletCreatedEvent → EnclaveUdaCreationListener → EnclaveUdaCreatedEvent →
+     * BlnkBalanceCreationListener → BlnkBalanceCreatedEvent → KeycloakProvisionListener
+     * <p>
+     * IMPORTANT: This method will fail user registration if smart account creation fails
+     */
+    private Mono<User> setupExternalIntegrationsAsyncViawEvents(
+            User user, String magicUserId, String didToken) {
+        log.info("[USER-REGISTRATION] Setting up external integrations for user: {}", DataMaskingUtil.maskUserId(user.getId().toString()));
+        log.info("[USER-REGISTRATION] Magic wallet address: {}", DataMaskingUtil.maskWalletAddress(user.getMagicWalletAddress()));
+        return proxyWalletService
+                .createUserProxyWallet(user.getMagicWalletAddress(), didToken)
+                .map(walletData -> {
+                    log.info("[USER-REGISTRATION] Processing smart account creation response");
 
-              // Set Polymarket proxy wallet (for backward compatibility)
-              user.setProxyWalletAddress(walletData.getSmartAccount().getSmartAccountAddress());
-              user.setProxyWalletStatus(User.ProxyWalletStatus.ACTIVE);
-              user.setProxyWalletCreatedAt(Instant.now());
+                    user.setProxyWalletAddress(walletData.getSmartAccount().getSmartAccountAddress());
+                    user.setProxyWalletStatus(User.ProxyWalletStatus.ACTIVE);
+                    user.setProxyWalletCreatedAt(Instant.now());
 
-              // Set Biconomy smart account data
-              user.setBiconomySmartAccountAddress(walletData.getSmartAccount().getSmartAccountAddress());
-              user.setBiconomyDeployed(walletData.getSmartAccount().getDeployed());
-              user.setBiconomyChainId(walletData.getSmartAccount().getChainId());
-              user.setBiconomyBundlerUrl(walletData.getSmartAccount().getBundlerUrl());
-              user.setBiconomyPaymasterUrl(walletData.getSmartAccount().getPaymasterUrl());
-              user.setBiconomyCreatedAt(Instant.now());
+                    user.setBiconomySmartAccountAddress(walletData.getSmartAccount().getSmartAccountAddress());
+                    user.setBiconomyDeployed(walletData.getSmartAccount().getDeployed());
+                    user.setBiconomyChainId(walletData.getSmartAccount().getChainId());
+                    user.setBiconomyBundlerUrl(walletData.getSmartAccount().getBundlerUrl());
+                    user.setBiconomyPaymasterUrl(walletData.getSmartAccount().getPaymasterUrl());
+                    user.setBiconomyCreatedAt(Instant.now());
 
-              log.info("[USER-REGISTRATION] ✓ Smart account data saved to user entity");
-              log.info("[USER-REGISTRATION] Smart Account: {}",
-                  DataMaskingUtil.maskWalletAddress(walletData.getSmartAccount().getSmartAccountAddress()));
-              log.info("[USER-REGISTRATION] Deployed: {}",
-                  walletData.getSmartAccount().getDeployed());
+                    log.info("[USER-REGISTRATION] ✓ Smart account data saved to user entity");
+                    log.info("[USER-REGISTRATION] Smart Account: {}",
+                            DataMaskingUtil.maskWalletAddress(walletData.getSmartAccount().getSmartAccountAddress()));
+                    log.info("[USER-REGISTRATION] Deployed: {}",
+                            walletData.getSmartAccount().getDeployed());
 
-              return user;
-            })
-        .doOnError(error -> {
-          log.error("[USER-REGISTRATION] ✗ CRITICAL: Smart account creation failed - user registration will be aborted");
-          log.error("[USER-REGISTRATION] User ID: {}", DataMaskingUtil.maskUserId(user.getId().toString()));
-          log.error("[USER-REGISTRATION] Email: {}", DataMaskingUtil.maskEmail(user.getEmail()));
-          log.error("[USER-REGISTRATION] Magic Wallet: {}", DataMaskingUtil.maskWalletAddress(user.getMagicWalletAddress()));
-          log.error("[USER-REGISTRATION] Error: {}", error.getMessage(), error);
-        })
-        // NO onErrorResume - let the error propagate to fail user registration
-        .flatMap(u -> {
-          log.info("[USER-REGISTRATION] Saving user with smart account data to database");
-          return userRepository.save(u);
-        })
-        .doOnSuccess(
-            u -> {
-              log.info("[USER-REGISTRATION] User saved successfully with smart account");
+                    return user;
+                })
+                .doOnError(error -> {
+                    log.error("[USER-REGISTRATION] ✗ CRITICAL: Smart account creation failed - user registration will be aborted");
+                    log.error("[USER-REGISTRATION] User ID: {}", DataMaskingUtil.maskUserId(user.getId().toString()));
+                    log.error("[USER-REGISTRATION] Email: {}", DataMaskingUtil.maskEmail(user.getEmail()));
+                    log.error("[USER-REGISTRATION] Magic Wallet: {}", DataMaskingUtil.maskWalletAddress(user.getMagicWalletAddress()));
+                    log.error("[USER-REGISTRATION] Error: {}", error.getMessage(), error);
+                }).flatMap(u -> {
+                    log.info("[USER-REGISTRATION] Saving user with smart account data to database");
+                    return userRepository.save(u);
+                }).doOnSuccess(u -> {
+                    log.info("[USER-REGISTRATION] User saved successfully with smart account");
+                    if (u.getProxyWalletAddress() != null) {
+                        ProxyWalletCreatedEvent event =
+                                ProxyWalletCreatedEvent.builder()
+                                        .userId(u.getId())
+                                        .magicWalletAddress(u.getMagicWalletAddress())
+                                        .proxyWalletAddress(u.getProxyWalletAddress())
+                                        .email(u.getEmail())
+                                        .magicUserId(magicUserId)
+                                        .didToken(didToken)
+                                        .timestamp(Instant.now())
+                                        .build();
+                        eventPublisher.publishEvent(event);
+                        log.info(
+                                "[USER-REGISTRATION] ✓ Published ProxyWalletCreatedEvent for user: {}, starting async chain",
+                                DataMaskingUtil.maskUserId(u.getId().toString()));
+                    } else {
+                        log.warn(
+                                "[USER-REGISTRATION] No proxy wallet address - skipping event publication");
+                    }
+                });
+    }
 
-              // Only publish event if we have a proxy wallet address
-              if (u.getProxyWalletAddress() != null) {
-                // Publish ProxyWalletCreatedEvent to kickoff the async event chain
-                ProxyWalletCreatedEvent event =
-                    ProxyWalletCreatedEvent.builder()
-                        .userId(u.getId())
-                        .magicWalletAddress(u.getMagicWalletAddress())
-                        .proxyWalletAddress(u.getProxyWalletAddress())
-                        .email(u.getEmail())
-                        .magicUserId(magicUserId)
-                        .didToken(didToken)
-                        .timestamp(Instant.now())
-                        .build();
-                eventPublisher.publishEvent(event);
-                log.info(
-                    "[USER-REGISTRATION] ✓ Published ProxyWalletCreatedEvent for user: {}, starting async chain",
-                    DataMaskingUtil.maskUserId(u.getId().toString()));
-              } else {
-                log.warn(
-                    "[USER-REGISTRATION] No proxy wallet address - skipping event publication");
-              }
-            });
-  }
+    private UserRegistrationResponse buildResponse(User user) {
+        return UserRegistrationResponse.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .magicWalletAddress(user.getMagicWalletAddress())
+                .enclaveUdaAddress(user.getEnclaveUdaAddress())
+                .proxyWalletAddress(user.getProxyWalletAddress())
+                .referralCode(user.getReferralCode())
+                .avatarUrl(user.getAvatarUrl())
+                .proxyWalletQrCodeUrl(user.getProxyWalletQrCodeUrl())
+                .enclaveUdaQrCodeUrl(user.getEnclaveUdaQrCodeUrl())
+                .evmDepositQrCodes(user.getEvmDepositQrCodes())
+                .solanaDepositQrCodeUrl(user.getSolanaDepositQrCodeUrl())
+                .bitcoinDepositQrCodes(user.getBitcoinDepositQrCodes())
+                .accessToken("mock-access-token")
+                .refreshToken("mock-refresh-token")
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
 
-  private UserRegistrationResponse buildResponse(User user) {
-    return UserRegistrationResponse.builder()
-        .userId(user.getId())
-        .email(user.getEmail())
-        .username(user.getUsername())
-        .magicWalletAddress(user.getMagicWalletAddress())
-        .enclaveUdaAddress(user.getEnclaveUdaAddress())
-        .proxyWalletAddress(user.getProxyWalletAddress())
-        .referralCode(user.getReferralCode())
-        .avatarUrl(user.getAvatarUrl())
-        .proxyWalletQrCodeUrl(user.getProxyWalletQrCodeUrl())
-        .enclaveUdaQrCodeUrl(user.getEnclaveUdaQrCodeUrl())
-        .evmDepositQrCodes(user.getEvmDepositQrCodes())
-        .solanaDepositQrCodeUrl(user.getSolanaDepositQrCodeUrl())
-        .bitcoinDepositQrCodes(user.getBitcoinDepositQrCodes())
-        .accessToken("mock-access-token")
-        .refreshToken("mock-refresh-token")
-        .createdAt(user.getCreatedAt())
-        .build();
-  }
+    private String generateReferralCode() {
+        return "REF" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
 
-  private String generateReferralCode() {
-    return "REF" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-  }
-
-  private Mono<Void> publishUserRegisteredEvent(User user) {
-    return Mono.fromRunnable(
-        () -> {
-          UserRegisteredEvent event =
-              UserRegisteredEvent.from(
-                  user.getId(),
-                  user.getEmail(),
-                  user.getMagicWalletAddress(),
-                  user.getEnclaveUdaAddress(),
-                  user.getReferralCode(),
-                  user.getReferredByUserId());
-          eventPublisher.publishEvent(event);
-        });
-  }
+    private Mono<Void> publishUserRegisteredEvent(User user) {
+        return Mono.fromRunnable(
+                () -> {
+                    UserRegisteredEvent event =
+                            UserRegisteredEvent.from(
+                                    user.getId(),
+                                    user.getEmail(),
+                                    user.getMagicWalletAddress(),
+                                    user.getEnclaveUdaAddress(),
+                                    user.getReferralCode(),
+                                    user.getReferredByUserId());
+                    eventPublisher.publishEvent(event);
+                });
+    }
 
     private Mono<Void> cacheUserData(User user) {
-    String cacheKey = "user:" + user.getId();
-    return cacheService
-        .set(cacheKey, user, java.time.Duration.ofHours(1))
-        .onErrorResume(
-            error -> {
-              log.warn("Failed to cache user data: {}", error.getMessage());
-              return Mono.empty();
-            });
-  }
+        String cacheKey = "user:" + user.getId();
+        return cacheService
+                .set(cacheKey, user, java.time.Duration.ofHours(1))
+                .onErrorResume(
+                        error -> {
+                            log.warn("Failed to cache user data: {}", error.getMessage());
+                            return Mono.empty();
+                        });
+    }
 }
