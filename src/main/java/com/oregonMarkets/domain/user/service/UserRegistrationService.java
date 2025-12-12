@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserRegistrationService {
+public class UserRegistrationService implements IUserRegistrationService {
 
     private final UserRepository userRepository;
     private final ProxyWalletOnboardingService proxyWalletService;
@@ -32,17 +32,7 @@ public class UserRegistrationService {
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
 
-    /**
-     * Deprecated path: registration should no longer receive DID token in body. Kept for tests/mocks
-     * compatibility.
-     */
-    @Deprecated
-    public Mono<UserRegistrationResponse> registerUser(@Valid UserRegistrationRequest request) {
-        return Mono.error(
-                new IllegalStateException(
-                        "Deprecated registration path; DID token must come from Magic header"));
-    }
-
+    @Override
     public Mono<UserRegistrationResponse> registerUser(
             @Valid UserRegistrationRequest request,
             MagicDIDValidator.MagicUserInfo magicUser,
@@ -50,7 +40,12 @@ public class UserRegistrationService {
         log.info("Starting user registration for email: {}", request.getEmail());
         return checkUserExists(magicUser, request)
                 .then(createUser(magicUser, request))
-                .flatMap(userRepository::save)
+                .flatMap(userRepository::save) // Database assigns UUID here
+                .flatMap(user -> {
+                    // Generate username AFTER database assigns UUID
+                    usernameGenerationService.applyUsernameAndDisplayName(user);
+                    return userRepository.save(user); // Save again with username
+                })
                 .flatMap(user ->
                         setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)
                                 .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
@@ -64,7 +59,7 @@ public class UserRegistrationService {
     private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
         log.info("Creating user ");
         User user = User.builder()
-                .id(UUID.randomUUID()) // Generate UUID before username generation
+                // No ID - let database generate via uuid_generate_v4()
                 .email(request.getEmail())
                 .magicUserId(magicUser.getUserId())
                 .magicWalletAddress(magicUser.getPublicAddress())
@@ -80,7 +75,7 @@ public class UserRegistrationService {
                 .utmMedium(request.getUtmMedium())
                 .utmCampaign(request.getUtmCampaign())
                 .build();
-        usernameGenerationService.applyUsernameAndDisplayName(user);
+        // Username will be generated AFTER first save when DB assigns UUID
         Mono<User> userMono = Mono.just(user);
         if (request.getReferralCode() != null && !request.getReferralCode().isBlank()) {
             userMono = userRepository.findByReferralCode(request.getReferralCode())
