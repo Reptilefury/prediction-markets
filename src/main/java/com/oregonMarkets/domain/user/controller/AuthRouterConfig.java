@@ -5,7 +5,7 @@ import com.oregonMarkets.common.response.ApiResponse;
 import com.oregonMarkets.common.response.ResponseCode;
 import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.request.Web3RegistrationRequest;
-import com.oregonMarkets.domain.user.service.UserRegistrationService;
+import com.oregonMarkets.domain.user.service.IUserRegistrationService;
 import com.oregonMarkets.domain.user.service.Web3RegistrationService;
 import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class AuthRouterConfig {
 
-  private final UserRegistrationService userRegistrationService;
+  private final IUserRegistrationService userRegistrationService;
   private final Web3RegistrationService web3RegistrationService;
 
   @Bean
