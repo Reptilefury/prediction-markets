@@ -93,7 +93,7 @@ app:
     environment-id: ${DYNAMIC_ENVIRONMENT_ID}
 
   logodev:
-    api-key: ${LOGODEV_API_KEY}
+    publishable-key: ${LOGODEV_PUBLISHABLE_KEY:}
 
 logging:
   level:
