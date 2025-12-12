@@ -71,20 +71,14 @@ public class UsernameGenerationService {
   public String generateMarketThemedUsername(UUID userId) {
     // Combine prediction market terms with cool adjectives
     String adjective =
-        faker.options()
+        faker
+            .options()
             .option(
-                "Quantum",
-                "Oracle",
-                "Cyber",
-                "Neon",
-                "Dark",
-                "Silent",
-                "Epic",
-                "Alpha",
-                "Prime",
+                "Quantum", "Oracle", "Cyber", "Neon", "Dark", "Silent", "Epic", "Alpha", "Prime",
                 "Nova");
     String noun =
-        faker.options()
+        faker
+            .options()
             .option(
                 "Trader",
                 "Seer",
@@ -105,8 +99,8 @@ public class UsernameGenerationService {
   }
 
   /**
-   * Apply username and display name to a User entity
-   * This is a helper to avoid code duplication across registration services
+   * Apply username and display name to a User entity This is a helper to avoid code duplication
+   * across registration services
    *
    * @param user User entity to update
    */

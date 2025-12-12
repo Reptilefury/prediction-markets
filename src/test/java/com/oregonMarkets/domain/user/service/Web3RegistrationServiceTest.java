@@ -42,7 +42,11 @@ class Web3RegistrationServiceTest {
   void setUp() {
     service =
         new Web3RegistrationService(
-            userRepository, web3AuthService, enclaveClient, cacheService, usernameGenerationService);
+            userRepository,
+            web3AuthService,
+            enclaveClient,
+            cacheService,
+            usernameGenerationService);
     ReflectionTestUtils.setField(
         service, "destinationTokenAddress", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
   }
@@ -152,8 +156,6 @@ class Web3RegistrationServiceTest {
     when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(Mono.error(new RuntimeException("Enclave error")));
 
-    StepVerifier.create(service.registerUser(request))
-        .expectError(RuntimeException.class)
-        .verify();
+    StepVerifier.create(service.registerUser(request)).expectError(RuntimeException.class).verify();
   }
 }

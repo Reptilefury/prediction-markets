@@ -21,11 +21,26 @@ public class AssetsGenerationListener {
   private final QRCodeGenerationService qrCodeService;
   private final UserRepository userRepository;
 
+  /**
+   * Redacts sensitive data by showing only first 4 and last 4 characters
+   *
+   * @param sensitive The sensitive string to redact
+   * @return Redacted string in format "xxxx...yyyy"
+   */
+  private String redact(String sensitive) {
+    if (sensitive == null || sensitive.length() <= 8) {
+      return "****";
+    }
+    return sensitive.substring(0, 4) + "..." + sensitive.substring(sensitive.length() - 4);
+  }
+
   @EventListener
   public void onAssetsGenerationRequested(AssetsGenerationEvent event) {
     log.info("[ASSETS-GEN] Starting async assets generation for user: {}", event.getUserId());
-    log.info("[ASSETS-GEN] Event details - proxyWallet: {}, enclaveUda: {}",
-        event.getProxyWalletAddress(), event.getEnclaveUdaAddress());
+    log.info(
+        "[ASSETS-GEN] Event details - proxyWallet: {}, enclaveUda: {}",
+        event.getProxyWalletAddress(),
+        event.getEnclaveUdaAddress());
     log.debug("[ASSETS-GEN] Raw deposit addresses: {}", event.getDepositAddresses());
 
     // Extract addresses with detailed logging
@@ -33,34 +48,39 @@ public class AssetsGenerationListener {
     String solanaAddress = extractSolanaAddress(event.getDepositAddresses());
     Map<String, String> bitcoinAddresses = extractBitcoinAddresses(event.getDepositAddresses());
 
-    log.info("[ASSETS-GEN] Extracted addresses - EVM: {}, Solana: {}, Bitcoin: {}",
+    log.info(
+        "[ASSETS-GEN] Extracted addresses - EVM: {}, Solana: {}, Bitcoin: {}",
         evmAddresses != null ? evmAddresses.size() + " chains" : "none",
         solanaAddress != null ? "present" : "none",
         bitcoinAddresses != null ? bitcoinAddresses.size() + " formats" : "none");
 
     if (evmAddresses != null) {
-      evmAddresses.forEach((network, address) ->
-          log.debug("[ASSETS-GEN] EVM {}: {}", network, address));
+      evmAddresses.forEach(
+          (network, address) -> log.debug("[ASSETS-GEN] EVM {}: {}", network, redact(address)));
     }
     if (solanaAddress != null) {
-      log.debug("[ASSETS-GEN] Solana address: {}", solanaAddress);
+      log.debug("[ASSETS-GEN] Solana address: {}", redact(solanaAddress));
     }
     if (bitcoinAddresses != null) {
-      bitcoinAddresses.forEach((format, address) ->
-          log.debug("[ASSETS-GEN] Bitcoin {}: {}", format, address));
+      bitcoinAddresses.forEach(
+          (format, address) -> log.debug("[ASSETS-GEN] Bitcoin {}: {}", format, redact(address)));
     }
 
     // Generate avatar and QR codes in parallel
     Mono<String> avatarMono =
         avatarService
             .generateAndUploadAvatar(event.getUserId())
-            .doOnNext(url -> log.info("[ASSETS-GEN] ✓ Avatar generated for user {}: {}", event.getUserId(), url))
+            .doOnNext(
+                url ->
+                    log.info(
+                        "[ASSETS-GEN] ✓ Avatar generated for user {}: {}", event.getUserId(), url))
             .onErrorResume(
                 e -> {
                   log.error(
                       "[ASSETS-GEN] ✗ Avatar generation failed for user {}: {}",
                       event.getUserId(),
-                      e.getMessage(), e);
+                      e.getMessage(),
+                      e);
                   return Mono.just(""); // Continue with empty avatar URL
                 });
 
@@ -75,17 +95,20 @@ public class AssetsGenerationListener {
                 bitcoinAddresses)
             .doOnNext(
                 urls -> {
-                    log.info("[ASSETS-GEN] ✓ QR codes generated for user {}: {} codes",
-                        event.getUserId(), urls.size());
-                    urls.forEach((key, url) ->
-                        log.debug("[ASSETS-GEN] QR code {}: {}", key, url));
+                  log.info(
+                      "[ASSETS-GEN] ✓ QR codes generated for user {}: {} codes",
+                      event.getUserId(),
+                      urls.size());
+                  urls.forEach(
+                      (key, url) -> log.debug("[ASSETS-GEN] QR code {}: {}", key, redact(url)));
                 })
             .onErrorResume(
                 e -> {
                   log.error(
                       "[ASSETS-GEN] ✗ QR code generation failed for user {}: {}",
                       event.getUserId(),
-                      e.getMessage(), e);
+                      e.getMessage(),
+                      e);
                   return Mono.just(Map.of()); // Continue with empty QR codes
                 });
 
@@ -96,7 +119,9 @@ public class AssetsGenerationListener {
               String avatarUrl = tuple.getT1();
               Map<String, String> qrCodes = tuple.getT2();
 
-              log.info("[ASSETS-GEN] Both avatar and QR codes generation completed for user: {}", event.getUserId());
+              log.info(
+                  "[ASSETS-GEN] Both avatar and QR codes generation completed for user: {}",
+                  event.getUserId());
               log.info("[ASSETS-GEN] Avatar URL: {}", avatarUrl.isEmpty() ? "none" : avatarUrl);
               log.info("[ASSETS-GEN] QR codes count: {}", qrCodes.size());
 
@@ -104,7 +129,9 @@ public class AssetsGenerationListener {
                   .findById(event.getUserId())
                   .flatMap(
                       user -> {
-                        log.info("[ASSETS-GEN] Updating user {} with generated assets", event.getUserId());
+                        log.info(
+                            "[ASSETS-GEN] Updating user {} with generated assets",
+                            event.getUserId());
                         int updatedFields = 0;
 
                         // Update user with generated assets
@@ -139,19 +166,27 @@ public class AssetsGenerationListener {
                           log.debug("[ASSETS-GEN] Set Bitcoin deposit QR codes");
                         }
 
-                        log.info("[ASSETS-GEN] Saving user with {} updated asset fields", updatedFields);
-                        return userRepository.save(user)
-                            .doOnSuccess(u -> log.info("[ASSETS-GEN] ✓ User saved successfully with assets"));
+                        log.info(
+                            "[ASSETS-GEN] Saving user with {} updated asset fields", updatedFields);
+                        return userRepository
+                            .save(user)
+                            .doOnSuccess(
+                                u ->
+                                    log.info("[ASSETS-GEN] ✓ User saved successfully with assets"));
                       });
             })
         .subscribeOn(Schedulers.boundedElastic())
         .subscribe(
-            user -> log.info("[ASSETS-GEN] ✓ Assets generation completed successfully for user: {}", event.getUserId()),
+            user ->
+                log.info(
+                    "[ASSETS-GEN] ✓ Assets generation completed successfully for user: {}",
+                    event.getUserId()),
             error ->
                 log.error(
                     "[ASSETS-GEN] ✗ Assets generation failed for user {}: {}",
                     event.getUserId(),
-                    error.getMessage(), error));
+                    error.getMessage(),
+                    error));
   }
 
   @SuppressWarnings("unchecked")
@@ -181,17 +216,42 @@ public class AssetsGenerationListener {
           Object contractAddress = evmItem.get("contractAddress");
 
           if (chainIdObj != null && contractAddress != null) {
-            int chainId = chainIdObj instanceof Number ?
-                ((Number) chainIdObj).intValue() :
-                Integer.parseInt(chainIdObj.toString());
+            // Validate contractAddress is not empty
+            String addressStr = contractAddress.toString().trim();
+            if (addressStr.isEmpty()) {
+              log.warn("[ASSETS-GEN] EVM item has empty contractAddress, skipping");
+              continue;
+            }
 
-            // Map chainId to network name
-            String networkName = getNetworkName(chainId);
-            if (networkName != null) {
-              evmAddresses.put(networkName, contractAddress.toString());
-              log.debug("[ASSETS-GEN] Mapped chainId {} to {}: {}", chainId, networkName, contractAddress);
-            } else {
-              log.warn("[ASSETS-GEN] Unknown chainId: {}, skipping", chainId);
+            try {
+              int chainId =
+                  chainIdObj instanceof Number
+                      ? ((Number) chainIdObj).intValue()
+                      : Integer.parseInt(chainIdObj.toString());
+
+              // Map chainId to network name
+              String networkName = getNetworkName(chainId);
+              if (networkName != null) {
+                evmAddresses.put(networkName, addressStr);
+                log.debug(
+                    "[ASSETS-GEN] Mapped chainId {} to {}: {}",
+                    chainId,
+                    networkName,
+                    redact(addressStr));
+              } else {
+                // Store with generic key for unknown chains instead of dropping
+                String genericKey = "evm-" + chainId;
+                evmAddresses.put(genericKey, addressStr);
+                log.warn(
+                    "[ASSETS-GEN] Unknown chainId: {}, storing with generic key: {}",
+                    chainId,
+                    genericKey);
+              }
+            } catch (NumberFormatException e) {
+              log.warn(
+                  "[ASSETS-GEN] Invalid chainId format '{}', skipping: {}",
+                  chainIdObj,
+                  e.getMessage());
             }
           } else {
             log.warn("[ASSETS-GEN] EVM item missing chainId or contractAddress: {}", evmItem);
@@ -199,7 +259,9 @@ public class AssetsGenerationListener {
         }
       }
     } else {
-      log.warn("[ASSETS-GEN] 'evm_deposit_address' is not a List, found: {}", evmData.getClass().getSimpleName());
+      log.warn(
+          "[ASSETS-GEN] 'evm_deposit_address' is not a List, found: {}",
+          evmData.getClass().getSimpleName());
     }
 
     log.debug("[ASSETS-GEN] Extracted {} EVM addresses", evmAddresses.size());
@@ -239,14 +301,33 @@ public class AssetsGenerationListener {
     if (solanaData instanceof Map) {
       Object address = ((Map<String, Object>) solanaData).get(ADDRESS_KEY);
       if (address != null) {
-        log.debug("[ASSETS-GEN] Extracted Solana address: {}", address);
-        return address.toString();
+        String addressStr = address.toString().trim();
+
+        // Validate Solana address: base58 format, length 32-64 characters
+        if (addressStr.isEmpty()) {
+          log.warn("[ASSETS-GEN] Solana address is empty");
+          return null;
+        }
+        if (addressStr.length() < 32 || addressStr.length() > 64) {
+          log.warn("[ASSETS-GEN] Solana address has invalid length: {}", addressStr.length());
+          return null;
+        }
+        // Basic base58 character set validation (1-9, A-H, J-N, P-Z, a-k, m-z)
+        if (!addressStr.matches("^[1-9A-HJ-NP-Za-km-z]+$")) {
+          log.warn("[ASSETS-GEN] Solana address contains invalid characters");
+          return null;
+        }
+
+        log.debug("[ASSETS-GEN] Extracted Solana address: {}", redact(addressStr));
+        return addressStr;
       } else {
         log.warn("[ASSETS-GEN] Solana data exists but no 'address' key found");
         return null;
       }
     } else {
-      log.warn("[ASSETS-GEN] 'solana_deposit_address' is not a Map, found: {}", solanaData.getClass().getSimpleName());
+      log.warn(
+          "[ASSETS-GEN] 'solana_deposit_address' is not a Map, found: {}",
+          solanaData.getClass().getSimpleName());
     }
     return null;
   }
@@ -271,36 +352,42 @@ public class AssetsGenerationListener {
       Map<String, Object> btcMap = (Map<String, Object>) btcData;
       log.debug("[ASSETS-GEN] Processing Bitcoin deposit addresses");
 
-      // Extract all Bitcoin address formats
+      // Extract all Bitcoin address formats with validation
       Object legacyAddress = btcMap.get("legacy_address");
-      if (legacyAddress != null) {
-        btcAddresses.put("legacy", legacyAddress.toString());
-        log.debug("[ASSETS-GEN] Found Bitcoin legacy address: {}", legacyAddress);
+      if (legacyAddress != null && !legacyAddress.toString().trim().isEmpty()) {
+        String addr = legacyAddress.toString().trim();
+        btcAddresses.put("legacy", addr);
+        log.debug("[ASSETS-GEN] Found Bitcoin legacy address: {}", redact(addr));
       }
 
       Object segwitAddress = btcMap.get("segwit_address");
-      if (segwitAddress != null) {
-        btcAddresses.put("segwit", segwitAddress.toString());
-        log.debug("[ASSETS-GEN] Found Bitcoin segwit address: {}", segwitAddress);
+      if (segwitAddress != null && !segwitAddress.toString().trim().isEmpty()) {
+        String addr = segwitAddress.toString().trim();
+        btcAddresses.put("segwit", addr);
+        log.debug("[ASSETS-GEN] Found Bitcoin segwit address: {}", redact(addr));
       }
 
       Object nativeSegwitAddress = btcMap.get("native_segwit_address");
-      if (nativeSegwitAddress != null) {
-        btcAddresses.put("native_segwit", nativeSegwitAddress.toString());
-        log.debug("[ASSETS-GEN] Found Bitcoin native segwit address: {}", nativeSegwitAddress);
+      if (nativeSegwitAddress != null && !nativeSegwitAddress.toString().trim().isEmpty()) {
+        String addr = nativeSegwitAddress.toString().trim();
+        btcAddresses.put("native_segwit", addr);
+        log.debug("[ASSETS-GEN] Found Bitcoin native segwit address: {}", redact(addr));
       }
 
       Object taprootAddress = btcMap.get("taproot_address");
-      if (taprootAddress != null) {
-        btcAddresses.put("taproot", taprootAddress.toString());
-        log.debug("[ASSETS-GEN] Found Bitcoin taproot address: {}", taprootAddress);
+      if (taprootAddress != null && !taprootAddress.toString().trim().isEmpty()) {
+        String addr = taprootAddress.toString().trim();
+        btcAddresses.put("taproot", addr);
+        log.debug("[ASSETS-GEN] Found Bitcoin taproot address: {}", redact(addr));
       }
 
       if (btcAddresses.isEmpty()) {
         log.warn("[ASSETS-GEN] Bitcoin deposit address object exists but no addresses found");
       }
     } else {
-      log.warn("[ASSETS-GEN] 'bitcoin_deposit_address' is not a Map, found: {}", btcData.getClass().getSimpleName());
+      log.warn(
+          "[ASSETS-GEN] 'bitcoin_deposit_address' is not a Map, found: {}",
+          btcData.getClass().getSimpleName());
     }
 
     log.debug("[ASSETS-GEN] Extracted {} Bitcoin address formats", btcAddresses.size());

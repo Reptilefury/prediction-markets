@@ -1,8 +1,8 @@
 package com.oregonMarkets.common.util;
 
 /**
- * Utility class for masking sensitive data in logs
- * Ensures PII and sensitive information is not exposed in application logs
+ * Utility class for masking sensitive data in logs Ensures PII and sensitive information is not
+ * exposed in application logs
  */
 public class DataMaskingUtil {
 
@@ -15,8 +15,8 @@ public class DataMaskingUtil {
   }
 
   /**
-   * Mask email address - shows first 2 chars and domain
-   * Example: user@example.com -> us***@example.com
+   * Mask email address - shows first 2 chars and domain Example: user@example.com ->
+   * us***@example.com
    */
   public static String maskEmail(String email) {
     if (email == null || email.isEmpty()) {
@@ -36,8 +36,8 @@ public class DataMaskingUtil {
   }
 
   /**
-   * Mask wallet address - shows first 6 and last 4 characters
-   * Example: 0x1234567890abcdef -> 0x1234...cdef
+   * Mask wallet address - shows first 6 and last 4 characters Example: 0x1234567890abcdef ->
+   * 0x1234...cdef
    */
   public static String maskWalletAddress(String address) {
     if (address == null || address.isEmpty()) {
@@ -52,8 +52,8 @@ public class DataMaskingUtil {
   }
 
   /**
-   * Mask user ID - shows first 8 characters only
-   * Example: 550e8400-e29b-41d4-a716-446655440000 -> 550e8400-****
+   * Mask user ID - shows first 8 characters only Example: 550e8400-e29b-41d4-a716-446655440000 ->
+   * 550e8400-****
    */
   public static String maskUserId(String userId) {
     if (userId == null || userId.isEmpty()) {
@@ -67,10 +67,7 @@ public class DataMaskingUtil {
     return userId.substring(0, 8) + "-****";
   }
 
-  /**
-   * Generic string masking utility
-   * Shows specified number of characters at start and end
-   */
+  /** Generic string masking utility Shows specified number of characters at start and end */
   public static String maskString(String value, int prefixLength, int suffixLength) {
     if (value == null || value.isEmpty()) {
       return "[empty]";
@@ -89,8 +86,8 @@ public class DataMaskingUtil {
   }
 
   /**
-   * Sanitize error response body - truncate and remove potential sensitive data
-   * Shows first 100 chars only to prevent log bloat and data leakage
+   * Sanitize error response body - truncate and remove potential sensitive data Shows first 100
+   * chars only to prevent log bloat and data leakage
    */
   public static String sanitizeErrorBody(String errorBody) {
     if (errorBody == null || errorBody.isEmpty()) {
@@ -98,12 +95,13 @@ public class DataMaskingUtil {
     }
 
     // Remove common sensitive field patterns
-    String sanitized = errorBody
-        .replaceAll("\"password\"\\s*:\\s*\"[^\"]*\"", "\"password\":\"***\"")
-        .replaceAll("\"token\"\\s*:\\s*\"[^\"]*\"", "\"token\":\"***\"")
-        .replaceAll("\"secret\"\\s*:\\s*\"[^\"]*\"", "\"secret\":\"***\"")
-        .replaceAll("\"apiKey\"\\s*:\\s*\"[^\"]*\"", "\"apiKey\":\"***\"")
-        .replaceAll("\"authorization\"\\s*:\\s*\"[^\"]*\"", "\"authorization\":\"***\"");
+    String sanitized =
+        errorBody
+            .replaceAll("\"password\"\\s*:\\s*\"[^\"]*\"", "\"password\":\"***\"")
+            .replaceAll("\"token\"\\s*:\\s*\"[^\"]*\"", "\"token\":\"***\"")
+            .replaceAll("\"secret\"\\s*:\\s*\"[^\"]*\"", "\"secret\":\"***\"")
+            .replaceAll("\"apiKey\"\\s*:\\s*\"[^\"]*\"", "\"apiKey\":\"***\"")
+            .replaceAll("\"authorization\"\\s*:\\s*\"[^\"]*\"", "\"authorization\":\"***\"");
 
     // Truncate to first 200 chars to prevent log bloat
     if (sanitized.length() > 200) {
@@ -114,8 +112,7 @@ public class DataMaskingUtil {
   }
 
   /**
-   * Mask response object - for debug logging
-   * Returns a safe representation without sensitive data
+   * Mask response object - for debug logging Returns a safe representation without sensitive data
    */
   public static String maskResponseObject(Object response) {
     if (response == null) {

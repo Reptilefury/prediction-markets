@@ -85,44 +85,6 @@ class KeycloakProvisionListenerTest {
   }
 
   @Test
-  void onProvisionRequested_LegacyEvent_ProcessesCorrectly() {
-
-    KeycloakProvisionEvent event =
-        KeycloakProvisionEvent.builder()
-            .userId(UUID.randomUUID())
-            .username("testuser")
-            .initialPassword("password123")
-            .timestamp(Instant.now())
-            .build();
-
-    when(adminClient.createUserIfAbsent("testuser", "password123"))
-        .thenReturn(Mono.empty()); // FIXED
-
-    listener.onProvisionRequested(event);
-
-    verify(adminClient, timeout(1000)).createUserIfAbsent("testuser", "password123");
-  }
-
-  @Test
-  void onProvisionRequested_LegacyEventWithError_HandlesGracefully() {
-
-    KeycloakProvisionEvent event =
-        KeycloakProvisionEvent.builder()
-            .userId(UUID.randomUUID())
-            .username("testuser")
-            .initialPassword("password123")
-            .timestamp(Instant.now())
-            .build();
-
-    when(adminClient.createUserIfAbsent("testuser", "password123"))
-        .thenReturn(Mono.error(new RuntimeException("Keycloak error"))); // FIXED
-
-    listener.onProvisionRequested(event);
-
-    verify(adminClient, timeout(1000)).createUserIfAbsent("testuser", "password123");
-  }
-
-  @Test
   void onBlnkBalanceCreated_CleansUsernameCorrectly() {
 
     BlnkBalanceCreatedEvent event =

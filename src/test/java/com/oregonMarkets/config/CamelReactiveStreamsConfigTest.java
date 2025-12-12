@@ -1,15 +1,15 @@
 package com.oregonMarkets.config;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 class CamelReactiveStreamsConfigTest {
 
-    @Test
-    void testCamelReactiveStreamsConfigInstantiation() {
-        CamelReactiveStreamsConfig config = new CamelReactiveStreamsConfig();
-        
-        assertNotNull(config);
-    }
+  @Test
+  void testCamelReactiveStreamsConfigInstantiation() {
+    CamelReactiveStreamsConfig config = new CamelReactiveStreamsConfig();
+
+    assertNotNull(config);
+  }
 }

@@ -6,10 +6,7 @@ import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
-/**
- * Interface for user registration service
- * Handles user onboarding via Magic.link authentication
- */
+/** Interface for user registration service Handles user onboarding via Magic.link authentication */
 public interface IUserRegistrationService {
 
   /**

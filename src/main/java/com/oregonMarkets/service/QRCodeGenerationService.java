@@ -82,7 +82,8 @@ public class QRCodeGenerationService {
             if (enclaveUdaAddress != null && !enclaveUdaAddress.isBlank()) {
               qrCodeUrls.put(
                   "enclaveUdaQrCode",
-                  generateAndUploadBrandedQRCode(userId, "enclave_uda", enclaveUdaAddress, UDA_TYPE));
+                  generateAndUploadBrandedQRCode(
+                      userId, "enclave_uda", enclaveUdaAddress, UDA_TYPE));
             }
 
             // Generate QR codes for EVM deposit addresses

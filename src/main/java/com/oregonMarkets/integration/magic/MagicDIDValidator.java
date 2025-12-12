@@ -3,16 +3,11 @@ package com.oregonMarkets.integration.magic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oregonMarkets.common.exception.MagicAuthException;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.web3j.crypto.Keys;
-import org.web3j.crypto.Sign;
-import org.web3j.utils.Numeric;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -41,29 +36,35 @@ public class MagicDIDValidator {
    * <p>Runs in a separate scheduler to avoid blocking the event loop
    */
   public Mono<MagicUserInfo> validateDIDToken(String didToken) {
-    return Mono.fromCallable(() -> {
-      validateTokenNotEmpty(didToken);
-      String decodedToken = decodeToken(didToken);
-      JsonNode tokenArray = parseTokenArray(decodedToken);
-      JsonNode claim = extractClaim(tokenArray);
-      return validateAndExtractUserInfo(claim);
-    }).subscribeOn(Schedulers.boundedElastic());
+    return Mono.fromCallable(
+            () -> {
+              validateTokenNotEmpty(didToken);
+              String decodedToken = decodeToken(didToken);
+              JsonNode tokenArray = parseTokenArray(decodedToken);
+              JsonNode claim = extractClaim(tokenArray);
+              return validateAndExtractUserInfo(claim);
+            })
+        .subscribeOn(Schedulers.boundedElastic());
   }
 
   private void validateTokenNotEmpty(String didToken) {
     if (didToken == null || didToken.isEmpty()) {
       throw new MagicAuthException("DID token is null or empty");
     }
-    log.debug("Token length: {}, First 50 chars: {}", 
-        didToken.length(), didToken.substring(0, Math.min(50, didToken.length())));
+    log.debug(
+        "Token length: {}, First 50 chars: {}",
+        didToken.length(),
+        didToken.substring(0, Math.min(50, didToken.length())));
   }
 
   private String decodeToken(String didToken) {
     try {
       byte[] decodedBytes = Base64.getDecoder().decode(didToken);
       String decoded = new String(decodedBytes, StandardCharsets.UTF_8);
-      log.debug("Base64 decoded token length: {}, First 100 chars: {}", 
-          decoded.length(), decoded.substring(0, Math.min(100, decoded.length())));
+      log.debug(
+          "Base64 decoded token length: {}, First 100 chars: {}",
+          decoded.length(),
+          decoded.substring(0, Math.min(100, decoded.length())));
       return decoded;
     } catch (IllegalArgumentException e) {
       log.debug("Token is not base64 encoded, using as-is");
@@ -108,7 +109,11 @@ public class MagicDIDValidator {
       String publicAddress = extractPublicAddressFromIssuer(issuer);
 
       // Signature verification would go here in production
-      log.info("Magic DID token validated successfully for user: {} (issuer: {}, address: {})", userId, issuer, publicAddress);
+      log.info(
+          "Magic DID token validated successfully for user: {} (issuer: {}, address: {})",
+          userId,
+          issuer,
+          publicAddress);
 
       MagicUserInfo userInfo = new MagicUserInfo();
       userInfo.setIssuer(issuer);
@@ -123,18 +128,20 @@ public class MagicDIDValidator {
 
   private void validateTemporalConstraints(JsonNode claim) {
     long nowSec = System.currentTimeMillis() / 1000L;
-    
+
     if (claim.has("nbf")) {
       long notBefore = claim.get("nbf").asLong();
       if (nowSec < notBefore) {
-        throw new MagicAuthException("DID token is not yet valid (nbf: " + notBefore + ", now: " + nowSec + ")");
+        throw new MagicAuthException(
+            "DID token is not yet valid (nbf: " + notBefore + ", now: " + nowSec + ")");
       }
     }
-    
+
     if (claim.has("ext")) {
       long expirationTime = claim.get("ext").asLong();
       if (nowSec > expirationTime) {
-        throw new MagicAuthException("DID token has expired (ext: " + expirationTime + ", now: " + nowSec + ")");
+        throw new MagicAuthException(
+            "DID token has expired (ext: " + expirationTime + ", now: " + nowSec + ")");
       }
     }
   }
@@ -152,15 +159,17 @@ public class MagicDIDValidator {
     }
 
     if (!issuer.startsWith("did:ethr:")) {
-      throw new MagicAuthException("Invalid issuer format: must start with 'did:ethr:', got: " + issuer);
+      throw new MagicAuthException(
+          "Invalid issuer format: must start with 'did:ethr:', got: " + issuer);
     }
 
-    return new String[]{issuer, userId};
+    return new String[] {issuer, userId};
   }
 
   /**
-   * Extract the Ethereum public address from Magic issuer DID
-   * DID format: did:ethr:0x1234567890abcdef...
+   * Extract the Ethereum public address from Magic issuer DID DID format:
+   * did:ethr:0x1234567890abcdef...
+   *
    * @param issuer The DID issuer string
    * @return The Ethereum public address (0x...)
    */
@@ -179,8 +188,6 @@ public class MagicDIDValidator {
 
     return address;
   }
-
-
 
   /** DTO for Magic user info extracted from DID token */
   public static class MagicUserInfo {

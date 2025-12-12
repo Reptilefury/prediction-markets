@@ -14,19 +14,15 @@ import reactor.core.publisher.Mono;
 /**
  * Service for managing proxy wallets (smart accounts) for users
  *
- * <p>Now uses Biconomy Account Abstraction (AA) for smart account creation
- * via the crypto-service microservice.
+ * <p>Now uses Biconomy Account Abstraction (AA) for smart account creation via the crypto-service
+ * microservice.
  *
- * <p>Key Architecture:
- * - Biconomy Smart Accounts (v2) for gasless transactions
- * - Account Abstraction (ERC-4337) for improved UX
- * - Deterministic address generation
- * - Sponsored transactions via Biconomy Paymaster
+ * <p>Key Architecture: - Biconomy Smart Accounts (v2) for gasless transactions - Account
+ * Abstraction (ERC-4337) for improved UX - Deterministic address generation - Sponsored
+ * transactions via Biconomy Paymaster
  *
- * <p>Flow:
- * 1. User registers -> call crypto-service to create smart account
- * 2. Store smart account address and metadata in database
- * 3. Smart account deploys on first transaction (lazy deployment)
+ * <p>Flow: 1. User registers -> call crypto-service to create smart account 2. Store smart account
+ * address and metadata in database 3. Smart account deploys on first transaction (lazy deployment)
  * 4. All transactions are gasless via Biconomy bundler
  */
 @Service
@@ -76,7 +72,9 @@ public class ProxyWalletOnboardingService {
             ? userEOA.toLowerCase()
             : "0x" + userEOA.toLowerCase();
 
-    log.info("[PROXY-WALLET] Normalized EOA address: {}", DataMaskingUtil.maskWalletAddress(normalizedEOA));
+    log.info(
+        "[PROXY-WALLET] Normalized EOA address: {}",
+        DataMaskingUtil.maskWalletAddress(normalizedEOA));
     log.info("[PROXY-WALLET] Calling crypto-service to create smart account...");
 
     return cryptoServiceClient
@@ -86,16 +84,19 @@ public class ProxyWalletOnboardingService {
               log.info("[PROXY-WALLET] ✓ Smart account creation successful");
               log.info(
                   "[PROXY-WALLET] Smart Account Address: {}",
-                  DataMaskingUtil.maskWalletAddress(response.getSmartAccount().getSmartAccountAddress()));
-              log.debug(
-                  "[PROXY-WALLET] User EOA mapped to Smart Account successfully");
+                  DataMaskingUtil.maskWalletAddress(
+                      response.getSmartAccount().getSmartAccountAddress()));
+              log.debug("[PROXY-WALLET] User EOA mapped to Smart Account successfully");
               log.info(
                   "[PROXY-WALLET] Deployment status: {} (will deploy on first transaction)",
-                  response.getSmartAccount().getDeployed() ? "Already deployed" : "Lazy deployment");
+                  response.getSmartAccount().getDeployed()
+                      ? "Already deployed"
+                      : "Lazy deployment");
             })
         .doOnError(
             error -> {
-              log.error("[PROXY-WALLET] ✗ Smart account creation failed for user EOA: {}",
+              log.error(
+                  "[PROXY-WALLET] ✗ Smart account creation failed for user EOA: {}",
                   DataMaskingUtil.maskWalletAddress(userEOA));
               log.error("[PROXY-WALLET] Error type: {}", error.getClass().getSimpleName());
               log.error("[PROXY-WALLET] Error message: {}", error.getMessage());
@@ -120,8 +121,7 @@ public class ProxyWalletOnboardingService {
   }
 
   /**
-   * Overloaded method for backward compatibility with existing code
-   * that doesn't pass didToken
+   * Overloaded method for backward compatibility with existing code that doesn't pass didToken
    *
    * @deprecated Use {@link #createUserProxyWallet(String, String)} instead
    */

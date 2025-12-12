@@ -49,7 +49,8 @@ class MagicDIDValidatorTest {
 
   @Test
   void validateDIDToken_SingleElement_ThrowsException() {
-    String singleElement = java.util.Base64.getEncoder().encodeToString("[\"only-one-element\"]".getBytes());
+    String singleElement =
+        java.util.Base64.getEncoder().encodeToString("[\"only-one-element\"]".getBytes());
     StepVerifier.create(validator.validateDIDToken(singleElement))
         .expectError(MagicAuthException.class)
         .verify();
@@ -57,7 +58,9 @@ class MagicDIDValidatorTest {
 
   @Test
   void validateDIDToken_MissingClaims_ThrowsException() {
-    String missingClaims = java.util.Base64.getEncoder().encodeToString("[\"proof\",\"{\\\"sub\\\":\\\"user123\\\"}\"]".getBytes());
+    String missingClaims =
+        java.util.Base64.getEncoder()
+            .encodeToString("[\"proof\",\"{\\\"sub\\\":\\\"user123\\\"}\"]".getBytes());
     StepVerifier.create(validator.validateDIDToken(missingClaims))
         .expectError(MagicAuthException.class)
         .verify();

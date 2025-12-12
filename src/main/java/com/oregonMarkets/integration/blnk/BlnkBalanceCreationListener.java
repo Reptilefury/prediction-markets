@@ -111,7 +111,9 @@ public class BlnkBalanceCreationListener {
                         .build();
 
                 eventPublisher.publishEvent(blnkEvent);
-                log.info("Published BlnkBalanceCreatedEvent for user: {} with deposit addresses", event.getUserId());
+                log.info(
+                    "Published BlnkBalanceCreatedEvent for user: {} with deposit addresses",
+                    event.getUserId());
               }
             },
             error -> {

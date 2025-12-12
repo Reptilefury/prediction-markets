@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oregonMarkets.domain.user.model.User;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.event.ProxyWalletCreatedEvent;
-import com.oregonMarkets.service.AvatarGenerationService;
-import com.oregonMarkets.service.QRCodeGenerationService;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -37,11 +35,7 @@ class EnclaveUdaCreationListenerTest {
   @BeforeEach
   void setUp() {
     listener =
-        new EnclaveUdaCreationListener(
-            enclaveClient,
-            eventPublisher,
-            userRepository,
-            objectMapper);
+        new EnclaveUdaCreationListener(enclaveClient, eventPublisher, userRepository, objectMapper);
     ReflectionTestUtils.setField(listener, "destinationTokenAddress", "0x456");
   }
 
