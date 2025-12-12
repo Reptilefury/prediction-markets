@@ -49,28 +49,19 @@ public class UserRegistrationService {
     return checkUserExists(magicUser, request)
         .then(createUser(magicUser, request))
         .flatMap(userRepository::save)
-        .flatMap(
-            user ->
+        .flatMap(user ->
                 setupExternalIntegrationsAsyncViawEvents(user, magicUser.getUserId(), didToken)
-                    .flatMap(
-                        savedUser ->
-                            publishUserRegisteredEvent(savedUser)
+                    .flatMap(savedUser -> publishUserRegisteredEvent(savedUser)
                                 .then(cacheUserData(savedUser))
-                                .thenReturn(
-                                    buildResponse(
-                                        savedUser)) // Return immediately, rest happens async
-                        ))
+                                .thenReturn(buildResponse(savedUser)) // Return immediately, rest happens async
+                             ))
         .doOnSuccess(response -> log.info("Successfully registered user: {}", response.getUserId()))
         .doOnError(error -> log.error("Failed to register user: {}", error.getMessage()));
   }
 
-  private Mono<User> createUser(
-      MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+  private Mono<User> createUser(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
     log.info("Creating user ");
-
-    // Build user first to get UUID
-    User user =
-        User.builder()
+    User user = User.builder()
             .email(request.getEmail())
             .magicUserId(magicUser.getUserId()) // Use getUserId() for the actual Magic User ID
             .magicWalletAddress(magicUser.getPublicAddress())
@@ -86,50 +77,36 @@ public class UserRegistrationService {
             .utmMedium(request.getUtmMedium())
             .utmCampaign(request.getUtmCampaign())
             .build();
-
     // Generate username and display name using Datafaker with UUID uniqueness
     usernameGenerationService.applyUsernameAndDisplayName(user);
-
     Mono<User> userMono = Mono.just(user);
-
     if (request.getReferralCode() != null && !request.getReferralCode().isBlank()) {
-      userMono =
-          userRepository
-              .findByReferralCode(request.getReferralCode())
-              .map(
-                  referrer -> {
+      userMono = userRepository.findByReferralCode(request.getReferralCode())
+              .map(referrer -> {
                     user.setReferredByUserId(referrer.getId());
                     return user;
                   })
               .switchIfEmpty(Mono.just(user));
     }
-
     return userMono;
   }
 
-  private Mono<Void> checkUserExists(
-      MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
+  private Mono<Void> checkUserExists(MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
     String emailToCheck = request.getEmail(); // Use email from request, not magicUser
     log.info("Checking user exists : {}", emailToCheck);
     return userRepository
         .existsByEmail(emailToCheck)
-        .flatMap(
-            exists -> {
+        .flatMap(exists -> {
               log.info("Exists : {}", exists);
               return Boolean.TRUE.equals(exists)
                   ? Mono.error(new UserAlreadyExistsException(emailToCheck))
                   : Mono.empty();
             })
-        .then(
-            userRepository
-                .existsByMagicUserId(magicUser.getIssuer())
-                .flatMap(
-                    exists ->
-                        Boolean.TRUE.equals(exists)
-                            ? Mono.error(
-                                new UserAlreadyExistsException("Magic ID", magicUser.getIssuer()))
-                            : Mono.empty()));
-  }
+        .then(userRepository.existsByMagicUserId(magicUser.getIssuer())
+                .flatMap(exists -> Boolean.TRUE.equals(exists)
+                            ? Mono.error(new UserAlreadyExistsException("Magic ID", magicUser.getIssuer()))
+                        : Mono.empty()));
+  }                                                                                                                                                                                                         
 
   /**
    * New async-first approach: Create Biconomy smart account and publish event for async processing chain
