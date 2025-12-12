@@ -367,11 +367,21 @@ public class QRCodeGenerationService {
 
     if (cryptoSymbol != null) {
       // Use logo.dev crypto API format: https://img.logo.dev/crypto/{symbol}?token=PUBLISHABLE_KEY
+      log.debug(
+          "[LOGO-DEV] logoDevPublishableKey = '{}' (null={}, blank={})",
+          logoDevPublishableKey,
+          logoDevPublishableKey == null,
+          logoDevPublishableKey != null && logoDevPublishableKey.isBlank());
+
       if (logoDevPublishableKey != null && !logoDevPublishableKey.isBlank()) {
-        return String.format(
-            "https://img.logo.dev/crypto/%s?token=%s", cryptoSymbol, logoDevPublishableKey);
+        String url =
+            String.format(
+                "https://img.logo.dev/crypto/%s?token=%s", cryptoSymbol, logoDevPublishableKey);
+        log.debug("[LOGO-DEV] Generated URL with token: {}", url);
+        return url;
       } else {
-        // If no publishable key configured, use URL without token (may have rate limits)
+        log.warn(
+            "[LOGO-DEV] No publishable key configured, using URL without token (will get 401)");
         return String.format("https://img.logo.dev/crypto/%s", cryptoSymbol);
       }
     }
