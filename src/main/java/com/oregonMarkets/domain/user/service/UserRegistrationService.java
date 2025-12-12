@@ -28,6 +28,7 @@ public class UserRegistrationService {
   private final ProxyWalletOnboardingService proxyWalletService;
   private final CacheService cacheService;
   private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+  private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
 
   /**
    * Deprecated path: registration should no longer receive DID token in body. Kept for tests/mocks
@@ -66,13 +67,11 @@ public class UserRegistrationService {
   private Mono<User> createUser(
       MagicDIDValidator.MagicUserInfo magicUser, UserRegistrationRequest request) {
     log.info("Creating user ");
-    // Generate username from email prefix
-    String username = request.getEmail().split("@")[0];
 
+    // Build user first to get UUID
     User user =
         User.builder()
             .email(request.getEmail())
-            .username(username) // Set username from email
             .magicUserId(magicUser.getUserId()) // Use getUserId() for the actual Magic User ID
             .magicWalletAddress(magicUser.getPublicAddress())
             .magicIssuer(magicUser.getIssuer())
@@ -87,6 +86,13 @@ public class UserRegistrationService {
             .utmMedium(request.getUtmMedium())
             .utmCampaign(request.getUtmCampaign())
             .build();
+
+    // Generate username and display name using Datafaker with UUID uniqueness
+    String username = usernameGenerationService.generateMarketThemedUsername(user.getId());
+    String displayName = usernameGenerationService.generateDisplayName(username);
+
+    user.setUsername(username);
+    user.setDisplayName(displayName);
 
     Mono<User> userMono = Mono.just(user);
 

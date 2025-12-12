@@ -41,13 +41,19 @@ class UserRegistrationServiceTest {
 
   @Mock private ApplicationEventPublisher eventPublisher;
 
+  @Mock private com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
+
   private UserRegistrationService userRegistrationService;
 
   @BeforeEach
   void setUp() {
     userRegistrationService =
         new UserRegistrationService(
-            userRepository, proxyWalletOnboardingService, cacheService, eventPublisher);
+            userRepository,
+            proxyWalletOnboardingService,
+            cacheService,
+            eventPublisher,
+            usernameGenerationService);
   }
 
   @Test
