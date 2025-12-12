@@ -132,14 +132,22 @@ public class UserRegistrationService {
    * New async-first approach: Create Biconomy smart account and publish event for async processing chain
    * ProxyWalletCreatedEvent → EnclaveUdaCreationListener → EnclaveUdaCreatedEvent →
    * BlnkBalanceCreationListener → BlnkBalanceCreatedEvent → KeycloakProvisionListener
+   *
+   * IMPORTANT: This method will fail user registration if smart account creation fails
    */
   private Mono<User> setupExternalIntegrationsAsyncViawEvents(
       User user, String magicUserId, String didToken) {
-    // Create Biconomy smart account via crypto-service
+
+    log.info("[USER-REGISTRATION] Setting up external integrations for user: {}", user.getId());
+    log.info("[USER-REGISTRATION] Magic wallet address: {}", user.getMagicWalletAddress());
+
+    // Create Biconomy smart account via crypto-service - CRITICAL OPERATION
     return proxyWalletService
         .createUserProxyWallet(user.getMagicWalletAddress(), didToken)
         .map(
             walletData -> {
+              log.info("[USER-REGISTRATION] Processing smart account creation response");
+
               // Set Polymarket proxy wallet (for backward compatibility)
               user.setProxyWalletAddress(walletData.getSmartAccount().getSmartAccountAddress());
               user.setProxyWalletStatus(User.ProxyWalletStatus.ACTIVE);
@@ -153,40 +161,52 @@ public class UserRegistrationService {
               user.setBiconomyPaymasterUrl(walletData.getSmartAccount().getPaymasterUrl());
               user.setBiconomyCreatedAt(Instant.now());
 
-              log.info("Smart account created: {} (deployed: {})",
-                  walletData.getSmartAccount().getSmartAccountAddress(),
+              log.info("[USER-REGISTRATION] ✓ Smart account data saved to user entity");
+              log.info("[USER-REGISTRATION] Smart Account: {}",
+                  walletData.getSmartAccount().getSmartAccountAddress());
+              log.info("[USER-REGISTRATION] Deployed: {}",
                   walletData.getSmartAccount().getDeployed());
 
               return user;
             })
-        .onErrorResume(
-            error -> {
-              log.warn(
-                  "Failed to create smart account, continuing without it: {}", error.getMessage());
-              return Mono.just(user);
-            })
-        .flatMap(u -> userRepository.save(u)) // Save updated user with smart account
+        .doOnError(error -> {
+          log.error("[USER-REGISTRATION] ✗ CRITICAL: Smart account creation failed - user registration will be aborted");
+          log.error("[USER-REGISTRATION] User ID: {}", user.getId());
+          log.error("[USER-REGISTRATION] Email: {}", user.getEmail());
+          log.error("[USER-REGISTRATION] Magic Wallet: {}", user.getMagicWalletAddress());
+          log.error("[USER-REGISTRATION] Error: {}", error.getMessage(), error);
+        })
+        // NO onErrorResume - let the error propagate to fail user registration
+        .flatMap(u -> {
+          log.info("[USER-REGISTRATION] Saving user with smart account data to database");
+          return userRepository.save(u);
+        })
         .doOnSuccess(
             u -> {
-              // Publish ProxyWalletCreatedEvent to kickoff the async event chain
-              ProxyWalletCreatedEvent event =
-                  ProxyWalletCreatedEvent.builder()
-                      .userId(u.getId())
-                      .magicWalletAddress(u.getMagicWalletAddress())
-                      .proxyWalletAddress(u.getProxyWalletAddress())
-                      .email(u.getEmail())
-                      .magicUserId(magicUserId)
-                      .didToken(didToken)
-                      .timestamp(Instant.now())
-                      .build();
-              eventPublisher.publishEvent(event);
-              log.info(
-                  "Published ProxyWalletCreatedEvent for user: {}, starting async chain",
-                  u.getId());
-            })
-        .doOnError(
-            error ->
-                log.error("Error setting up external integrations async: {}", error.getMessage()));
+              log.info("[USER-REGISTRATION] User saved successfully with smart account");
+
+              // Only publish event if we have a proxy wallet address
+              if (u.getProxyWalletAddress() != null) {
+                // Publish ProxyWalletCreatedEvent to kickoff the async event chain
+                ProxyWalletCreatedEvent event =
+                    ProxyWalletCreatedEvent.builder()
+                        .userId(u.getId())
+                        .magicWalletAddress(u.getMagicWalletAddress())
+                        .proxyWalletAddress(u.getProxyWalletAddress())
+                        .email(u.getEmail())
+                        .magicUserId(magicUserId)
+                        .didToken(didToken)
+                        .timestamp(Instant.now())
+                        .build();
+                eventPublisher.publishEvent(event);
+                log.info(
+                    "[USER-REGISTRATION] ✓ Published ProxyWalletCreatedEvent for user: {}, starting async chain",
+                    u.getId());
+              } else {
+                log.warn(
+                    "[USER-REGISTRATION] No proxy wallet address - skipping event publication");
+              }
+            });
   }
 
   private UserRegistrationResponse buildResponse(User user) {

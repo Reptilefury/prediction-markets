@@ -38,9 +38,14 @@ public class CryptoServiceClient {
    */
   public Mono<WalletCreateResponseData> createSmartAccount(
       String walletAddress, String didToken) {
-    log.info(
-        "Creating smart account via crypto-service for wallet: {}",
-        walletAddress);
+
+    WalletCreateRequest request = new WalletCreateRequest(walletAddress);
+    String endpoint = cryptoServiceBaseUrl + "/wallets/create";
+
+    log.info("[CRYPTO-SERVICE] Initiating smart account creation request");
+    log.info("[CRYPTO-SERVICE] Endpoint: {}", endpoint);
+    log.info("[CRYPTO-SERVICE] Request payload: walletAddress={}", walletAddress);
+    log.info("[CRYPTO-SERVICE] Authorization: Bearer token present={}", didToken != null && !didToken.isEmpty());
 
     WebClient webClient =
         webClientBuilder
@@ -52,40 +57,78 @@ public class CryptoServiceClient {
         .post()
         .uri("/wallets/create")
         .header(HttpHeaders.AUTHORIZATION, "Bearer " + didToken)
-        .bodyValue(new WalletCreateRequest(walletAddress))
+        .bodyValue(request)
         .retrieve()
+        .onStatus(
+            status -> status.is4xxClientError(),
+            response -> {
+              log.error("[CRYPTO-SERVICE] Client error response: status={}", response.statusCode());
+              return response.bodyToMono(String.class)
+                  .flatMap(body -> {
+                    log.error("[CRYPTO-SERVICE] Error response body: {}", body);
+                    return Mono.error(
+                        new ExternalServiceException(
+                            ResponseCode.EXTERNAL_SERVICE_ERROR,
+                            "Crypto Service",
+                            "Client error creating smart account: " + body));
+                  });
+            })
+        .onStatus(
+            status -> status.is5xxServerError(),
+            response -> {
+              log.error("[CRYPTO-SERVICE] Server error response: status={}", response.statusCode());
+              return response.bodyToMono(String.class)
+                  .flatMap(body -> {
+                    log.error("[CRYPTO-SERVICE] Error response body: {}", body);
+                    return Mono.error(
+                        new ExternalServiceException(
+                            ResponseCode.EXTERNAL_SERVICE_ERROR,
+                            "Crypto Service",
+                            "Server error creating smart account: " + body));
+                  });
+            })
         .bodyToMono(
             new org.springframework.core.ParameterizedTypeReference<
                 CryptoServiceApiResponse<WalletCreateResponseData>>() {})
+        .doOnNext(response -> {
+          log.info("[CRYPTO-SERVICE] Received response from crypto-service");
+          log.debug("[CRYPTO-SERVICE] Response data: {}", response);
+        })
         .map(CryptoServiceApiResponse::getData)
         .timeout(Duration.ofSeconds(30))
         .retryWhen(
             Retry.backoff(2, Duration.ofSeconds(1))
-                .filter(
-                    throwable ->
-                        !(throwable instanceof ExternalServiceException)))
-        .doOnSuccess(
-            response ->
-                log.info(
-                    "Successfully created smart account: {}",
-                    response.getSmartAccount().getSmartAccountAddress()))
-        .doOnError(
-            error ->
-                log.error(
-                    "Failed to create smart account for wallet {}: {}",
-                    walletAddress,
-                    error.getMessage()))
-        .onErrorMap(
-            throwable -> {
-              if (throwable instanceof ExternalServiceException) {
-                return throwable;
-              }
-              return new ExternalServiceException(
-                  ResponseCode.EXTERNAL_SERVICE_ERROR,
-                  "Crypto Service",
-                  "Failed to create smart account: " + throwable.getMessage(),
-                  throwable);
-            });
+                .filter(throwable -> !(throwable instanceof ExternalServiceException))
+                .doBeforeRetry(retrySignal ->
+                    log.warn("[CRYPTO-SERVICE] Retrying smart account creation (attempt {}/2): {}",
+                        retrySignal.totalRetries() + 1,
+                        retrySignal.failure().getMessage())))
+        .doOnSuccess(response -> {
+          log.info("[CRYPTO-SERVICE] ✓ Successfully created smart account");
+          log.info("[CRYPTO-SERVICE] Smart Account Address: {}",
+              response.getSmartAccount().getSmartAccountAddress());
+          log.info("[CRYPTO-SERVICE] Deployed: {}", response.getSmartAccount().getDeployed());
+          log.info("[CRYPTO-SERVICE] Chain ID: {}", response.getSmartAccount().getChainId());
+          log.info("[CRYPTO-SERVICE] Bundler URL: {}", response.getSmartAccount().getBundlerUrl());
+          log.info("[CRYPTO-SERVICE] Paymaster URL: {}", response.getSmartAccount().getPaymasterUrl());
+        })
+        .doOnError(error ->
+            log.error("[CRYPTO-SERVICE] ✗ Failed to create smart account for wallet {}: {}",
+                walletAddress,
+                error.getMessage(),
+                error))
+        .onErrorMap(throwable -> {
+          if (throwable instanceof ExternalServiceException) {
+            return throwable;
+          }
+          log.error("[CRYPTO-SERVICE] Mapping error to ExternalServiceException: {}",
+              throwable.getClass().getSimpleName());
+          return new ExternalServiceException(
+              ResponseCode.EXTERNAL_SERVICE_ERROR,
+              "Crypto Service",
+              "Failed to create smart account: " + throwable.getMessage(),
+              throwable);
+        });
   }
 
   // Request DTO
