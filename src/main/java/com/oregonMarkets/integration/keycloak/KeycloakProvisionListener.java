@@ -30,8 +30,7 @@ public class KeycloakProvisionListener {
     String email = event.getEmail();
     adminClient
         .createUserIfAbsent(username, password, email)
-        .subscribeOn(Schedulers.boundedElastic())
-        .subscribe(
+        .doOnSuccess(
             v -> {
               log.info(
                   "Successfully provisioned Keycloak user {} for userId {}",
@@ -51,12 +50,15 @@ public class KeycloakProvisionListener {
               log.info(
                   "Triggered assets generation for user: {} with deposit addresses",
                   event.getUserId());
-            },
+            })
+        .doOnError(
             e ->
                 log.error(
                     "Failed to provision Keycloak user {} for userId {}: {}",
                     username,
                     event.getUserId(),
-                    e.getMessage()));
+                    e.getMessage()))
+        .subscribeOn(Schedulers.boundedElastic())
+        .subscribe();
   }
 }
