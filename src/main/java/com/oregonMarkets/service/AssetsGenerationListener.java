@@ -111,42 +111,56 @@ public class AssetsGenerationListener {
 
     Map<String, String> evmAddresses = new java.util.HashMap<>();
 
-    // Extract Ethereum addresses (chainId 1)
-    Object ethData = depositAddresses.get("1");
-    if (ethData instanceof Map) {
-      Object ethAddress = ((Map<String, Object>) ethData).get(ADDRESS_KEY);
-      if (ethAddress != null) {
-        evmAddresses.put("ethereum", ethAddress.toString());
-      }
-    }
+    // Extract from evm_deposit_address array
+    Object evmData = depositAddresses.get("evm_deposit_address");
+    if (evmData instanceof java.util.List) {
+      java.util.List<?> evmList = (java.util.List<?>) evmData;
+      for (Object item : evmList) {
+        if (item instanceof Map) {
+          Map<String, Object> evmItem = (Map<String, Object>) item;
+          Object chainIdObj = evmItem.get("chainId");
+          Object contractAddress = evmItem.get("contractAddress");
 
-    // Extract Polygon addresses (chainId 137)
-    Object polygonData = depositAddresses.get("137");
-    if (polygonData instanceof Map) {
-      Object polygonAddress = ((Map<String, Object>) polygonData).get(ADDRESS_KEY);
-      if (polygonAddress != null) {
-        evmAddresses.put("polygon", polygonAddress.toString());
-      }
-    }
+          if (chainIdObj != null && contractAddress != null) {
+            int chainId = chainIdObj instanceof Number ?
+                ((Number) chainIdObj).intValue() :
+                Integer.parseInt(chainIdObj.toString());
 
-    // Extract Base addresses (chainId 8453)
-    Object baseData = depositAddresses.get("8453");
-    if (baseData instanceof Map) {
-      Object baseAddress = ((Map<String, Object>) baseData).get(ADDRESS_KEY);
-      if (baseAddress != null) {
-        evmAddresses.put("base", baseAddress.toString());
+            // Map chainId to network name
+            String networkName = getNetworkName(chainId);
+            if (networkName != null) {
+              evmAddresses.put(networkName, contractAddress.toString());
+            }
+          }
+        }
       }
     }
 
     return evmAddresses.isEmpty() ? null : evmAddresses;
   }
 
+  private String getNetworkName(int chainId) {
+    return switch (chainId) {
+      case 1 -> "ethereum";
+      case 137 -> "polygon";
+      case 8453 -> "base";
+      case 42161 -> "arbitrum";
+      case 10 -> "optimism";
+      case 56 -> "bsc";
+      case 43114 -> "avalanche";
+      case 130 -> "worldchain";
+      case 146 -> "sonic";
+      case 480 -> "worldchain-sepolia";
+      default -> null;
+    };
+  }
+
   @SuppressWarnings("unchecked")
   private String extractSolanaAddress(Map<String, Object> depositAddresses) {
     if (depositAddresses == null) return null;
 
-    // Solana typically uses a different key format
-    Object solanaData = depositAddresses.get("solana");
+    // Extract from solana_deposit_address object
+    Object solanaData = depositAddresses.get("solana_deposit_address");
     if (solanaData instanceof Map) {
       Object address = ((Map<String, Object>) solanaData).get(ADDRESS_KEY);
       return address != null ? address.toString() : null;
@@ -160,12 +174,30 @@ public class AssetsGenerationListener {
 
     Map<String, String> btcAddresses = new java.util.HashMap<>();
 
-    // Bitcoin mainnet
-    Object btcData = depositAddresses.get("bitcoin");
+    // Extract from bitcoin_deposit_address object
+    Object btcData = depositAddresses.get("bitcoin_deposit_address");
     if (btcData instanceof Map) {
-      Object btcAddress = ((Map<String, Object>) btcData).get(ADDRESS_KEY);
-      if (btcAddress != null) {
-        btcAddresses.put("bitcoin", btcAddress.toString());
+      Map<String, Object> btcMap = (Map<String, Object>) btcData;
+
+      // Extract all Bitcoin address formats
+      Object legacyAddress = btcMap.get("legacy_address");
+      if (legacyAddress != null) {
+        btcAddresses.put("legacy", legacyAddress.toString());
+      }
+
+      Object segwitAddress = btcMap.get("segwit_address");
+      if (segwitAddress != null) {
+        btcAddresses.put("segwit", segwitAddress.toString());
+      }
+
+      Object nativeSegwitAddress = btcMap.get("native_segwit_address");
+      if (nativeSegwitAddress != null) {
+        btcAddresses.put("native_segwit", nativeSegwitAddress.toString());
+      }
+
+      Object taprootAddress = btcMap.get("taproot_address");
+      if (taprootAddress != null) {
+        btcAddresses.put("taproot", taprootAddress.toString());
       }
     }
 
