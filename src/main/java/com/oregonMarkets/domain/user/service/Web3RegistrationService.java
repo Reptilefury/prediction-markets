@@ -95,11 +95,7 @@ public class Web3RegistrationService {
             .build();
 
     // Generate username and display name using Datafaker with UUID uniqueness
-    String username = usernameGenerationService.generateMarketThemedUsername(user.getId());
-    String displayName = usernameGenerationService.generateDisplayName(username);
-
-    user.setUsername(username);
-    user.setDisplayName(displayName);
+    usernameGenerationService.applyUsernameAndDisplayName(user);
 
     if (request.getReferralCode() != null && !request.getReferralCode().isBlank()) {
       return userRepository

@@ -103,4 +103,17 @@ public class UsernameGenerationService {
     log.debug("Generated market-themed username: {} for userId: {}", username, userId);
     return username;
   }
+
+  /**
+   * Apply username and display name to a User entity
+   * This is a helper to avoid code duplication across registration services
+   *
+   * @param user User entity to update
+   */
+  public void applyUsernameAndDisplayName(com.oregonMarkets.domain.user.model.User user) {
+    String username = generateMarketThemedUsername(user.getId());
+    String displayName = generateDisplayName(username);
+    user.setUsername(username);
+    user.setDisplayName(displayName);
+  }
 }
