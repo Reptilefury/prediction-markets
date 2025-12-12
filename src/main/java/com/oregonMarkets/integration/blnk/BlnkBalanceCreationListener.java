@@ -106,11 +106,12 @@ public class BlnkBalanceCreationListener {
                         .email(event.getEmail())
                         .magicUserId(event.getMagicUserId())
                         .didToken(event.getDidToken())
+                        .depositAddresses(event.getDepositAddresses())
                         .timestamp(java.time.Instant.now())
                         .build();
 
                 eventPublisher.publishEvent(blnkEvent);
-                log.info("Published BlnkBalanceCreatedEvent for user: {}", event.getUserId());
+                log.info("Published BlnkBalanceCreatedEvent for user: {} with deposit addresses", event.getUserId());
               }
             },
             error -> {

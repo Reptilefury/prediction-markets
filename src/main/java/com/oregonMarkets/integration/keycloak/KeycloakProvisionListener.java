@@ -50,10 +50,11 @@ public class KeycloakProvisionListener {
                       .proxyWalletAddress(event.getProxyWalletAddress())
                       .enclaveUdaAddress(event.getEnclaveUdaAddress())
                       .magicWalletAddress(event.getMagicWalletAddress())
+                      .depositAddresses(event.getDepositAddresses())
                       .timestamp(java.time.Instant.now())
                       .build();
               eventPublisher.publishEvent(assetsEvent);
-              log.info("Triggered assets generation for user: {}", event.getUserId());
+              log.info("Triggered assets generation for user: {} with deposit addresses", event.getUserId());
             },
             e ->
                 log.error(
