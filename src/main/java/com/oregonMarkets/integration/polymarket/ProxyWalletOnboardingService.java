@@ -44,16 +44,29 @@ public class ProxyWalletOnboardingService {
    * @param userEOA the user's Ethereum address (from Magic DID token)
    * @param didToken the user's Magic DID token for authentication
    * @return Mono containing the smart account data including address
+   * @throws ExternalServiceException if smart account creation fails
    */
   public Mono<WalletCreateResponseData> createUserProxyWallet(String userEOA, String didToken) {
-    log.info("Creating Biconomy smart account for user EOA: {}", userEOA);
+    log.info("[PROXY-WALLET] Initiating Biconomy smart account creation");
+    log.info("[PROXY-WALLET] User EOA: {}", userEOA);
 
+    // Validate inputs
     if (userEOA == null || userEOA.trim().isEmpty()) {
-      return Mono.error(new IllegalArgumentException("User EOA address cannot be null or empty"));
+      log.error("[PROXY-WALLET] Validation failed: User EOA address is null or empty");
+      return Mono.error(
+          new ExternalServiceException(
+              ResponseCode.VALIDATION_ERROR,
+              "Proxy Wallet Service",
+              "User EOA address cannot be null or empty"));
     }
 
     if (didToken == null || didToken.trim().isEmpty()) {
-      return Mono.error(new IllegalArgumentException("DID token cannot be null or empty"));
+      log.error("[PROXY-WALLET] Validation failed: DID token is null or empty");
+      return Mono.error(
+          new ExternalServiceException(
+              ResponseCode.VALIDATION_ERROR,
+              "Proxy Wallet Service",
+              "DID token cannot be null or empty"));
     }
 
     // Normalize the address
@@ -62,20 +75,48 @@ public class ProxyWalletOnboardingService {
             ? userEOA.toLowerCase()
             : "0x" + userEOA.toLowerCase();
 
+    log.info("[PROXY-WALLET] Normalized EOA address: {}", normalizedEOA);
+    log.info("[PROXY-WALLET] Calling crypto-service to create smart account...");
+
     return cryptoServiceClient
         .createSmartAccount(normalizedEOA, didToken)
         .doOnSuccess(
-            response ->
-                log.info(
-                    "Successfully created smart account {} for user EOA {} - will deploy on first transaction",
-                    response.getSmartAccount().getSmartAccountAddress(),
-                    normalizedEOA))
+            response -> {
+              log.info("[PROXY-WALLET] ✓ Smart account creation successful");
+              log.info(
+                  "[PROXY-WALLET] Smart Account Address: {}",
+                  response.getSmartAccount().getSmartAccountAddress());
+              log.info(
+                  "[PROXY-WALLET] User EOA: {} -> Smart Account: {}",
+                  normalizedEOA,
+                  response.getSmartAccount().getSmartAccountAddress());
+              log.info(
+                  "[PROXY-WALLET] Deployment status: {} (will deploy on first transaction)",
+                  response.getSmartAccount().getDeployed() ? "Already deployed" : "Lazy deployment");
+            })
         .doOnError(
-            error ->
-                log.error(
-                    "Failed to create smart account for user EOA {}: {}",
-                    userEOA,
-                    error.getMessage()));
+            error -> {
+              log.error("[PROXY-WALLET] ✗ Smart account creation failed for user EOA: {}", userEOA);
+              log.error("[PROXY-WALLET] Error type: {}", error.getClass().getSimpleName());
+              log.error("[PROXY-WALLET] Error message: {}", error.getMessage());
+              if (error.getCause() != null) {
+                log.error("[PROXY-WALLET] Root cause: {}", error.getCause().getMessage());
+              }
+            })
+        .onErrorMap(
+            throwable -> {
+              // If already an ExternalServiceException, return as-is
+              if (throwable instanceof ExternalServiceException) {
+                return throwable;
+              }
+              // Wrap other exceptions
+              log.error("[PROXY-WALLET] Wrapping unexpected error as ExternalServiceException");
+              return new ExternalServiceException(
+                  ResponseCode.EXTERNAL_SERVICE_ERROR,
+                  "Proxy Wallet Service",
+                  "Failed to create smart account for user: " + throwable.getMessage(),
+                  throwable);
+            });
   }
 
   /**
