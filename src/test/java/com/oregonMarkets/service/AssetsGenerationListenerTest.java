@@ -130,12 +130,20 @@ class AssetsGenerationListenerTest {
         User user = new User();
         user.setId(userId);
 
+        // Use the actual Enclave deposit address format
         Map<String, Object> depositAddresses = Map.of(
-                "1", Map.of("address", "0xeth"),
-                "137", Map.of("address", "0xpolygon"),
-                "8453", Map.of("address", "0xbase"),
-                "solana", Map.of("address", "solana123"),
-                "bitcoin", Map.of("address", "bc1bitcoin")
+                "evm_deposit_address", java.util.List.of(
+                        Map.of("chainId", 1, "contractAddress", "0xeth"),
+                        Map.of("chainId", 137, "contractAddress", "0xpolygon"),
+                        Map.of("chainId", 8453, "contractAddress", "0xbase")
+                ),
+                "solana_deposit_address", Map.of("address", "solana123"),
+                "bitcoin_deposit_address", Map.of(
+                        "legacy_address", "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+                        "segwit_address", "3J98t1WpEZ73CNmYviecrnyiWrnqRhWNLy",
+                        "native_segwit_address", "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+                        "taproot_address", "bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297"
+                )
         );
 
         AssetsGenerationEvent event = AssetsGenerationEvent.builder()
@@ -158,6 +166,179 @@ class AssetsGenerationListenerTest {
                         "solanaDepositQrCode", "https://solana.qr",
                         "bitcoinDepositQrCodes", "https://btc.qr"
                 )));
+        when(userRepository.findById(userId)).thenReturn(Mono.just(user));
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(user));
+
+        listener.onAssetsGenerationRequested(event);
+
+        Thread.sleep(500);
+
+        verify(userRepository, timeout(2000)).save(any(User.class));
+    }
+
+    @Test
+    void onAssetsGenerationRequested_WithNullDepositAddresses() throws InterruptedException {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        AssetsGenerationEvent event = AssetsGenerationEvent.builder()
+                .userId(userId)
+                .email("test@example.com")
+                .proxyWalletAddress("0xproxy")
+                .enclaveUdaAddress("0xenclave")
+                .magicWalletAddress("0xmagic")
+                .depositAddresses(null)
+                .timestamp(Instant.now())
+                .build();
+
+        when(avatarService.generateAndUploadAvatar(userId))
+                .thenReturn(Mono.just("https://avatar.url"));
+        when(qrCodeService.generateAndUploadQRCodes(any(), any(), any(), any(), any(), any()))
+                .thenReturn(Mono.just(Map.of("proxyWalletQrCode", "https://qr.url")));
+        when(userRepository.findById(userId)).thenReturn(Mono.just(user));
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(user));
+
+        listener.onAssetsGenerationRequested(event);
+
+        Thread.sleep(500);
+
+        verify(userRepository, timeout(2000)).save(any(User.class));
+    }
+
+    @Test
+    void onAssetsGenerationRequested_WithMalformedEVMAddresses() throws InterruptedException {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        // Test with malformed EVM address structure
+        Map<String, Object> depositAddresses = Map.of(
+                "evm_deposit_address", "not-a-list", // Wrong type
+                "solana_deposit_address", Map.of("address", "solana123")
+        );
+
+        AssetsGenerationEvent event = AssetsGenerationEvent.builder()
+                .userId(userId)
+                .email("test@example.com")
+                .proxyWalletAddress("0xproxy")
+                .enclaveUdaAddress("0xenclave")
+                .magicWalletAddress("0xmagic")
+                .depositAddresses(depositAddresses)
+                .timestamp(Instant.now())
+                .build();
+
+        when(avatarService.generateAndUploadAvatar(userId))
+                .thenReturn(Mono.just("https://avatar.url"));
+        when(qrCodeService.generateAndUploadQRCodes(any(), any(), any(), any(), any(), any()))
+                .thenReturn(Mono.just(Map.of("proxyWalletQrCode", "https://qr.url")));
+        when(userRepository.findById(userId)).thenReturn(Mono.just(user));
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(user));
+
+        listener.onAssetsGenerationRequested(event);
+
+        Thread.sleep(500);
+
+        verify(userRepository, timeout(2000)).save(any(User.class));
+    }
+
+    @Test
+    void onAssetsGenerationRequested_WithUnknownChainId() throws InterruptedException {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        // Test with unknown chainId
+        Map<String, Object> depositAddresses = Map.of(
+                "evm_deposit_address", java.util.List.of(
+                        Map.of("chainId", 999999, "contractAddress", "0xunknown")
+                )
+        );
+
+        AssetsGenerationEvent event = AssetsGenerationEvent.builder()
+                .userId(userId)
+                .email("test@example.com")
+                .proxyWalletAddress("0xproxy")
+                .enclaveUdaAddress("0xenclave")
+                .magicWalletAddress("0xmagic")
+                .depositAddresses(depositAddresses)
+                .timestamp(Instant.now())
+                .build();
+
+        when(avatarService.generateAndUploadAvatar(userId))
+                .thenReturn(Mono.just("https://avatar.url"));
+        when(qrCodeService.generateAndUploadQRCodes(any(), any(), any(), any(), any(), any()))
+                .thenReturn(Mono.just(Map.of("proxyWalletQrCode", "https://qr.url")));
+        when(userRepository.findById(userId)).thenReturn(Mono.just(user));
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(user));
+
+        listener.onAssetsGenerationRequested(event);
+
+        Thread.sleep(500);
+
+        verify(userRepository, timeout(2000)).save(any(User.class));
+    }
+
+    @Test
+    void onAssetsGenerationRequested_WithMissingSolanaAddress() throws InterruptedException {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        // Solana data without 'address' key
+        Map<String, Object> depositAddresses = Map.of(
+                "solana_deposit_address", Map.of("wrong_key", "solana123")
+        );
+
+        AssetsGenerationEvent event = AssetsGenerationEvent.builder()
+                .userId(userId)
+                .email("test@example.com")
+                .proxyWalletAddress("0xproxy")
+                .enclaveUdaAddress("0xenclave")
+                .magicWalletAddress("0xmagic")
+                .depositAddresses(depositAddresses)
+                .timestamp(Instant.now())
+                .build();
+
+        when(avatarService.generateAndUploadAvatar(userId))
+                .thenReturn(Mono.just("https://avatar.url"));
+        when(qrCodeService.generateAndUploadQRCodes(any(), any(), any(), any(), any(), any()))
+                .thenReturn(Mono.just(Map.of("proxyWalletQrCode", "https://qr.url")));
+        when(userRepository.findById(userId)).thenReturn(Mono.just(user));
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(user));
+
+        listener.onAssetsGenerationRequested(event);
+
+        Thread.sleep(500);
+
+        verify(userRepository, timeout(2000)).save(any(User.class));
+    }
+
+    @Test
+    void onAssetsGenerationRequested_WithEmptyBitcoinAddresses() throws InterruptedException {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        // Bitcoin data without any address keys
+        Map<String, Object> depositAddresses = Map.of(
+                "bitcoin_deposit_address", Map.of("unrelated_key", "value")
+        );
+
+        AssetsGenerationEvent event = AssetsGenerationEvent.builder()
+                .userId(userId)
+                .email("test@example.com")
+                .proxyWalletAddress("0xproxy")
+                .enclaveUdaAddress("0xenclave")
+                .magicWalletAddress("0xmagic")
+                .depositAddresses(depositAddresses)
+                .timestamp(Instant.now())
+                .build();
+
+        when(avatarService.generateAndUploadAvatar(userId))
+                .thenReturn(Mono.just("https://avatar.url"));
+        when(qrCodeService.generateAndUploadQRCodes(any(), any(), any(), any(), any(), any()))
+                .thenReturn(Mono.just(Map.of("proxyWalletQrCode", "https://qr.url")));
         when(userRepository.findById(userId)).thenReturn(Mono.just(user));
         when(userRepository.save(any(User.class))).thenReturn(Mono.just(user));
 
