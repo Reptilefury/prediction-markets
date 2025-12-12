@@ -34,8 +34,8 @@ public class QRCodeGenerationService {
   @Value("${spring.cloud.gcp.storage.bucket-name:prediction-markets-storage}")
   private String bucketName;
 
-  @Value("${app.logodev.api-key:}")
-  private String logoDevApiKey;
+  @Value("${app.logodev.publishable-key:}")
+  private String logoDevPublishableKey;
 
   // Removed unused secret key to avoid accidental exposure
 
@@ -261,8 +261,9 @@ public class QRCodeGenerationService {
         return null;
       }
 
-      // Validate URL is from trusted domain
-      if (!logoUrl.startsWith("https://logo.dev/")) {
+      // Validate URL is from trusted domain (logo.dev or img.logo.dev)
+      if (!logoUrl.startsWith("https://logo.dev/")
+          && !logoUrl.startsWith("https://img.logo.dev/")) {
         log.warn("Untrusted logo URL rejected: {}", logoUrl);
         return null;
       }
@@ -272,17 +273,12 @@ public class QRCodeGenerationService {
 
       // Security headers and timeouts
       connection.setRequestProperty("User-Agent", "PredictionMarkets/1.0");
-      connection.setRequestProperty("Accept", "image/png,image/jpeg,image/webp");
-
-      // Only set Authorization if explicitly required and available
-      if (logoDevApiKey != null && !logoDevApiKey.isBlank()) {
-        connection.setRequestProperty("Authorization", "Bearer " + logoDevApiKey);
-      }
+      connection.setRequestProperty("Accept", "image/png,image/jpeg,image/webp,image/*");
 
       connection.setRequestMethod("GET");
       connection.setConnectTimeout(5000);
       connection.setReadTimeout(10000);
-      connection.setInstanceFollowRedirects(false); // Prevent redirect attacks
+      connection.setInstanceFollowRedirects(true); // Follow redirects from CDN
 
       // Check response
       int responseCode = connection.getResponseCode();
@@ -356,20 +352,28 @@ public class QRCodeGenerationService {
   }
 
   private String getLogoDevUrl(String tokenType) {
-    String logoName =
+    // Map token type to crypto symbol for logo.dev API
+    String cryptoSymbol =
         switch (tokenType.toLowerCase()) {
-          case ETHEREUM_TYPE -> ETHEREUM_TYPE;
-          case POLYGON_TYPE -> POLYGON_TYPE;
+          case ETHEREUM_TYPE -> "eth";
+          case POLYGON_TYPE -> "matic";
           case "base" -> "base";
-          case SOLANA_TYPE -> SOLANA_TYPE;
-          case BITCOIN_TYPE -> BITCOIN_TYPE;
+          case SOLANA_TYPE -> "sol";
+          case BITCOIN_TYPE -> "btc";
           case "uda" -> null; // Custom token, use fallback
           case WALLET_TYPE -> null; // Generic wallet, use fallback
           default -> null;
         };
 
-    if (logoName != null) {
-      return String.format("https://logo.dev/api/crypto/%s/png/128", logoName);
+    if (cryptoSymbol != null) {
+      // Use logo.dev crypto API format: https://img.logo.dev/crypto/{symbol}?token=PUBLISHABLE_KEY
+      if (logoDevPublishableKey != null && !logoDevPublishableKey.isBlank()) {
+        return String.format(
+            "https://img.logo.dev/crypto/%s?token=%s", cryptoSymbol, logoDevPublishableKey);
+      } else {
+        // If no publishable key configured, use URL without token (may have rate limits)
+        return String.format("https://img.logo.dev/crypto/%s", cryptoSymbol);
+      }
     }
     return null;
   }

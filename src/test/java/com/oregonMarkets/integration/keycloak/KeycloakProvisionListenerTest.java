@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import com.oregonMarkets.event.AssetsGenerationEvent;
 import com.oregonMarkets.event.BlnkBalanceCreatedEvent;
-import com.oregonMarkets.event.KeycloakProvisionEvent;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
