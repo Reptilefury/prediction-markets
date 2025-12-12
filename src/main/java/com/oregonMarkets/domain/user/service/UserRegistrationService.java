@@ -1,6 +1,7 @@
 package com.oregonMarkets.domain.user.service;
 
 import com.oregonMarkets.common.exception.UserAlreadyExistsException;
+import com.oregonMarkets.common.util.DataMaskingUtil;
 import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
 import com.oregonMarkets.domain.user.model.User;
@@ -138,8 +139,8 @@ public class UserRegistrationService {
   private Mono<User> setupExternalIntegrationsAsyncViawEvents(
       User user, String magicUserId, String didToken) {
 
-    log.info("[USER-REGISTRATION] Setting up external integrations for user: {}", user.getId());
-    log.info("[USER-REGISTRATION] Magic wallet address: {}", user.getMagicWalletAddress());
+    log.info("[USER-REGISTRATION] Setting up external integrations for user: {}", DataMaskingUtil.maskUserId(user.getId().toString()));
+    log.info("[USER-REGISTRATION] Magic wallet address: {}", DataMaskingUtil.maskWalletAddress(user.getMagicWalletAddress()));
 
     // Create Biconomy smart account via crypto-service - CRITICAL OPERATION
     return proxyWalletService
@@ -163,7 +164,7 @@ public class UserRegistrationService {
 
               log.info("[USER-REGISTRATION] ✓ Smart account data saved to user entity");
               log.info("[USER-REGISTRATION] Smart Account: {}",
-                  walletData.getSmartAccount().getSmartAccountAddress());
+                  DataMaskingUtil.maskWalletAddress(walletData.getSmartAccount().getSmartAccountAddress()));
               log.info("[USER-REGISTRATION] Deployed: {}",
                   walletData.getSmartAccount().getDeployed());
 
@@ -171,9 +172,9 @@ public class UserRegistrationService {
             })
         .doOnError(error -> {
           log.error("[USER-REGISTRATION] ✗ CRITICAL: Smart account creation failed - user registration will be aborted");
-          log.error("[USER-REGISTRATION] User ID: {}", user.getId());
-          log.error("[USER-REGISTRATION] Email: {}", user.getEmail());
-          log.error("[USER-REGISTRATION] Magic Wallet: {}", user.getMagicWalletAddress());
+          log.error("[USER-REGISTRATION] User ID: {}", DataMaskingUtil.maskUserId(user.getId().toString()));
+          log.error("[USER-REGISTRATION] Email: {}", DataMaskingUtil.maskEmail(user.getEmail()));
+          log.error("[USER-REGISTRATION] Magic Wallet: {}", DataMaskingUtil.maskWalletAddress(user.getMagicWalletAddress()));
           log.error("[USER-REGISTRATION] Error: {}", error.getMessage(), error);
         })
         // NO onErrorResume - let the error propagate to fail user registration
@@ -201,7 +202,7 @@ public class UserRegistrationService {
                 eventPublisher.publishEvent(event);
                 log.info(
                     "[USER-REGISTRATION] ✓ Published ProxyWalletCreatedEvent for user: {}, starting async chain",
-                    u.getId());
+                    DataMaskingUtil.maskUserId(u.getId().toString()));
               } else {
                 log.warn(
                     "[USER-REGISTRATION] No proxy wallet address - skipping event publication");
