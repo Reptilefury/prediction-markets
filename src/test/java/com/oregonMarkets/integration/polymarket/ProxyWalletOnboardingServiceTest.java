@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import com.oregonMarkets.common.exception.ExternalServiceException;
 import com.oregonMarkets.integration.crypto.CryptoServiceClient;
 import com.oregonMarkets.integration.crypto.dto.SmartAccountResponse;
 import com.oregonMarkets.integration.crypto.dto.WalletCreateResponseData;
@@ -72,7 +73,7 @@ class ProxyWalletOnboardingServiceTest {
     String didToken = "mock-did-token";
 
     StepVerifier.create(service.createUserProxyWallet(null, didToken))
-        .expectError(IllegalArgumentException.class)
+        .expectError(ExternalServiceException.class)
         .verify();
   }
 
@@ -81,7 +82,7 @@ class ProxyWalletOnboardingServiceTest {
     String didToken = "mock-did-token";
 
     StepVerifier.create(service.createUserProxyWallet("", didToken))
-        .expectError(IllegalArgumentException.class)
+        .expectError(ExternalServiceException.class)
         .verify();
   }
 
@@ -90,7 +91,7 @@ class ProxyWalletOnboardingServiceTest {
     String userEOA = "0x742d35Cc6634C0532925a3b8D400E4C0532925a3";
 
     StepVerifier.create(service.createUserProxyWallet(userEOA, null))
-        .expectError(IllegalArgumentException.class)
+        .expectError(ExternalServiceException.class)
         .verify();
   }
 
@@ -99,7 +100,7 @@ class ProxyWalletOnboardingServiceTest {
     String userEOA = "0x742d35Cc6634C0532925a3b8D400E4C0532925a3";
 
     StepVerifier.create(service.createUserProxyWallet(userEOA, ""))
-        .expectError(IllegalArgumentException.class)
+        .expectError(ExternalServiceException.class)
         .verify();
   }
 
