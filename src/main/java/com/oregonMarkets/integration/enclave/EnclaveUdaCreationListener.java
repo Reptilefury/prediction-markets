@@ -49,7 +49,10 @@ public class EnclaveUdaCreationListener {
                   .flatMap(
                       user -> {
                         try {
+                          // Set Enclave UDA fields
+                          user.setEnclaveUserId(udaResponse.getUserId());
                           user.setEnclaveUdaAddress(udaResponse.getUdaAddress());
+                          user.setEnclaveUdaTag(udaResponse.getTag());
                           user.setEnclaveUdaStatus(
                               com.oregonMarkets.domain.user.model.User.EnclaveUdaStatus.ACTIVE);
                           user.setEnclaveUdaCreatedAt(Instant.now());
