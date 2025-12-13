@@ -36,6 +36,10 @@ class Web3RegistrationServiceTest {
 
   @Mock private com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
 
+  @Mock private com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService proxyWalletService;
+
+  @Mock private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
   private Web3RegistrationService service;
 
   @BeforeEach
@@ -46,7 +50,9 @@ class Web3RegistrationServiceTest {
             web3AuthService,
             enclaveClient,
             cacheService,
-            usernameGenerationService);
+            usernameGenerationService,
+            proxyWalletService,
+            eventPublisher);
     ReflectionTestUtils.setField(
         service, "destinationTokenAddress", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
   }
@@ -59,17 +65,11 @@ class Web3RegistrationServiceTest {
     request.setSignature("test signature");
     request.setCountryCode("US");
 
-    EnclaveClient.EnclaveUDAResponse udaResponse = new EnclaveClient.EnclaveUDAResponse();
-    udaResponse.setUserId("enclave-user-id");
-    udaResponse.setUdaAddress("uda-address");
-    udaResponse.setTag("tag");
-    udaResponse.setCreatedAt(System.currentTimeMillis());
-
     when(web3AuthService.verifySignature(anyString(), anyString(), anyString()))
         .thenReturn(Mono.just(true));
     when(userRepository.existsByWeb3WalletAddress("0x123")).thenReturn(Mono.just(false));
-    when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(Mono.just(udaResponse));
+    when(proxyWalletService.createUserProxyWallet(anyString()))
+        .thenReturn(Mono.just("proxy-wallet-address"));
     when(userRepository.save(any(User.class)))
         .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
     when(cacheService.set(anyString(), any(), any(Duration.class))).thenReturn(Mono.empty());
@@ -79,7 +79,7 @@ class Web3RegistrationServiceTest {
             response ->
                 response.getUserId() != null
                     && response.getMagicWalletAddress().equals("0x123")
-                    && response.getEnclaveUdaAddress().equals("uda-address"))
+                    && response.getEnclaveUdaAddress() == null) // Will be null initially, populated async
         .verifyComplete();
   }
 
@@ -125,15 +125,12 @@ class Web3RegistrationServiceTest {
     User referrer = new User();
     referrer.setId(UUID.randomUUID());
 
-    EnclaveClient.EnclaveUDAResponse udaResponse = new EnclaveClient.EnclaveUDAResponse();
-    udaResponse.setUserId("enclave-user-id");
-
     when(web3AuthService.verifySignature(anyString(), anyString(), anyString()))
         .thenReturn(Mono.just(true));
     when(userRepository.existsByWeb3WalletAddress("0x123")).thenReturn(Mono.just(false));
     when(userRepository.findByReferralCode("REF123")).thenReturn(Mono.just(referrer));
-    when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(Mono.just(udaResponse));
+    when(proxyWalletService.createUserProxyWallet(anyString()))
+        .thenReturn(Mono.just("proxy-wallet-address"));
     when(userRepository.save(any(User.class)))
         .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
     when(cacheService.set(anyString(), any(), any(Duration.class))).thenReturn(Mono.empty());
@@ -144,7 +141,7 @@ class Web3RegistrationServiceTest {
   }
 
   @Test
-  void registerUser_EnclaveUDACreationFails() {
+  void registerUser_ProxyWalletCreationFails() {
     Web3RegistrationRequest request = new Web3RegistrationRequest();
     request.setWalletAddress("0x123");
     request.setMessage("test message");
@@ -153,9 +150,14 @@ class Web3RegistrationServiceTest {
     when(web3AuthService.verifySignature(anyString(), anyString(), anyString()))
         .thenReturn(Mono.just(true));
     when(userRepository.existsByWeb3WalletAddress("0x123")).thenReturn(Mono.just(false));
-    when(enclaveClient.createUDA(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(Mono.error(new RuntimeException("Enclave error")));
+    when(proxyWalletService.createUserProxyWallet(anyString()))
+        .thenReturn(Mono.error(new RuntimeException("Proxy wallet error")));
+    when(userRepository.save(any(User.class)))
+        .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+    when(cacheService.set(anyString(), any(), any(Duration.class))).thenReturn(Mono.empty());
 
-    StepVerifier.create(service.registerUser(request)).expectError(RuntimeException.class).verify();
+    StepVerifier.create(service.registerUser(request))
+        .expectNextMatches(response -> response.getUserId() != null) // Should still succeed, just without proxy wallet
+        .verifyComplete();
   }
 }
