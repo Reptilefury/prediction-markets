@@ -12,12 +12,9 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.resources.ConnectionProvider;
 
 @Configuration
 public class WebClientConfig {
-
-
 
   @Bean("magicWebClient")
   public WebClient magicWebClient(@Value("${app.magic.api-url}") String baseUrl) {
@@ -56,8 +53,6 @@ public class WebClientConfig {
                 .build())
         .build();
   }
-
-
 
   private HttpClient createBlnkHttpClient() {
     // Optimized for Cloud Run: HTTP/1.1 + no pooling to prevent premature close

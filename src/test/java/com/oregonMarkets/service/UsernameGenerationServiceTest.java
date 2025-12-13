@@ -83,8 +83,10 @@ class UsernameGenerationServiceTest {
 
     // Base name should be one of the market-themed combinations
     String baseName = parts[0];
-    assertThat(baseName).matches("(Quantum|Oracle|Cyber|Neon|Dark|Silent|Epic|Alpha|Prime|Nova)" +
-        "(Trader|Seer|Prophet|Analyst|Wizard|Sage|Strategist|Visionary|Maven|Guru)");
+    assertThat(baseName)
+        .matches(
+            "(Quantum|Oracle|Cyber|Neon|Dark|Silent|Epic|Alpha|Prime|Nova)"
+                + "(Trader|Seer|Prophet|Analyst|Wizard|Sage|Strategist|Visionary|Maven|Guru)");
   }
 
   @Test
@@ -120,8 +122,10 @@ class UsernameGenerationServiceTest {
 
     service.applyUsernameAndDisplayName(user);
 
-    assertThat(user.getUsername()).matches("(Quantum|Oracle|Cyber|Neon|Dark|Silent|Epic|Alpha|Prime|Nova)" +
-        "(Trader|Seer|Prophet|Analyst|Wizard|Sage|Strategist|Visionary|Maven|Guru)-[a-f0-9]{4}");
+    assertThat(user.getUsername())
+        .matches(
+            "(Quantum|Oracle|Cyber|Neon|Dark|Silent|Epic|Alpha|Prime|Nova)"
+                + "(Trader|Seer|Prophet|Analyst|Wizard|Sage|Strategist|Visionary|Maven|Guru)-[a-f0-9]{4}");
   }
 
   @Test
@@ -131,7 +135,8 @@ class UsernameGenerationServiceTest {
 
     service.applyUsernameAndDisplayName(user);
 
-    String expectedDisplayName = user.getUsername().substring(0, user.getUsername().lastIndexOf('-'));
+    String expectedDisplayName =
+        user.getUsername().substring(0, user.getUsername().lastIndexOf('-'));
     assertThat(user.getDisplayName()).isEqualTo(expectedDisplayName);
   }
 

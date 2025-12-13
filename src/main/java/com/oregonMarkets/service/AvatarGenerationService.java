@@ -3,7 +3,6 @@ package com.oregonMarkets.service;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -52,10 +51,9 @@ public class AvatarGenerationService {
     try {
       // Use DiceBear API to generate sophisticated avatars
       // DiceBear provides various avatar styles (Adventurer, Avataaars, Bottts, etc.)
-      String diceBearUrl = String.format(
-          "https://api.dicebear.com/7.x/adventurer/png?seed=%s&size=256",
-          userId.toString()
-      );
+      String diceBearUrl =
+          String.format(
+              "https://api.dicebear.com/7.x/adventurer/png?seed=%s&size=256", userId.toString());
 
       log.info("Downloading avatar from DiceBear API for user: {}", userId);
 
@@ -75,7 +73,7 @@ public class AvatarGenerationService {
 
       // Read response into byte array
       try (java.io.InputStream is = connection.getInputStream();
-           java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+          java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
         byte[] buffer = new byte[1024];
         int bytesRead;
         while ((bytesRead = is.read(buffer)) != -1) {
@@ -85,7 +83,9 @@ public class AvatarGenerationService {
         return baos.toByteArray();
       }
     } catch (Exception e) {
-      log.warn("Failed to generate avatar from DiceBear API: {}, falling back to simple avatar", e.getMessage());
+      log.warn(
+          "Failed to generate avatar from DiceBear API: {}, falling back to simple avatar",
+          e.getMessage());
       return generateSimpleAvatarFallback(userId);
     }
   }

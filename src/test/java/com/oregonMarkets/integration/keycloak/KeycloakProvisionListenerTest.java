@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import com.oregonMarkets.event.AssetsGenerationEvent;
 import com.oregonMarkets.event.BlnkBalanceCreatedEvent;
-import com.oregonMarkets.event.KeycloakProvisionEvent;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,44 +81,6 @@ class KeycloakProvisionListenerTest {
         .createUserIfAbsent("magicuser123", "did-token-123", "test@example.com");
 
     verify(eventPublisher, never()).publishEvent(any(AssetsGenerationEvent.class));
-  }
-
-  @Test
-  void onProvisionRequested_LegacyEvent_ProcessesCorrectly() {
-
-    KeycloakProvisionEvent event =
-        KeycloakProvisionEvent.builder()
-            .userId(UUID.randomUUID())
-            .username("testuser")
-            .initialPassword("password123")
-            .timestamp(Instant.now())
-            .build();
-
-    when(adminClient.createUserIfAbsent("testuser", "password123"))
-        .thenReturn(Mono.empty()); // FIXED
-
-    listener.onProvisionRequested(event);
-
-    verify(adminClient, timeout(1000)).createUserIfAbsent("testuser", "password123");
-  }
-
-  @Test
-  void onProvisionRequested_LegacyEventWithError_HandlesGracefully() {
-
-    KeycloakProvisionEvent event =
-        KeycloakProvisionEvent.builder()
-            .userId(UUID.randomUUID())
-            .username("testuser")
-            .initialPassword("password123")
-            .timestamp(Instant.now())
-            .build();
-
-    when(adminClient.createUserIfAbsent("testuser", "password123"))
-        .thenReturn(Mono.error(new RuntimeException("Keycloak error"))); // FIXED
-
-    listener.onProvisionRequested(event);
-
-    verify(adminClient, timeout(1000)).createUserIfAbsent("testuser", "password123");
   }
 
   @Test

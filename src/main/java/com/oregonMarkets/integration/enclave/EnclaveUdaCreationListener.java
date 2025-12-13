@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.event.EnclaveUdaCreatedEvent;
 import com.oregonMarkets.event.ProxyWalletCreatedEvent;
-import com.oregonMarkets.service.AvatarGenerationService;
-import com.oregonMarkets.service.QRCodeGenerationService;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +32,6 @@ public class EnclaveUdaCreationListener {
 
   @EventListener
   public void onProxyWalletCreated(ProxyWalletCreatedEvent event) {
-    // Fire-and-forget pattern using async scheduling
     enclaveClient
         .createUDA(
             event.getUserId().toString(),
@@ -42,39 +39,35 @@ public class EnclaveUdaCreationListener {
             event.getProxyWalletAddress(),
             destinationTokenAddress)
         .flatMap(
-            udaResponse -> {
-              // Update user with Enclave data
-              return userRepository
-                  .findById(event.getUserId())
-                  .flatMap(
-                      user -> {
-                        try {
-                          // Set Enclave UDA fields
-                          user.setEnclaveUserId(udaResponse.getUserId());
-                          user.setEnclaveUdaAddress(udaResponse.getUdaAddress());
-                          user.setEnclaveUdaTag(udaResponse.getTag());
-                          user.setEnclaveUdaStatus(
-                              com.oregonMarkets.domain.user.model.User.EnclaveUdaStatus.ACTIVE);
-                          user.setEnclaveUdaCreatedAt(Instant.now());
+            udaResponse ->
+                userRepository
+                    .findById(event.getUserId())
+                    .flatMap(
+                        user -> {
+                          try {
+                            user.setEnclaveUserId(udaResponse.getUserId());
+                            user.setEnclaveUdaAddress(udaResponse.getUdaAddress());
+                            user.setEnclaveUdaTag(udaResponse.getTag());
+                            user.setEnclaveUdaStatus(
+                                com.oregonMarkets.domain.user.model.User.EnclaveUdaStatus.ACTIVE);
+                            user.setEnclaveUdaCreatedAt(Instant.now());
+                            if (udaResponse.getDepositAddresses() != null) {
+                              String depositAddressesJson =
+                                  objectMapper.writeValueAsString(
+                                      udaResponse.getDepositAddresses());
+                              user.setEnclaveDepositAddresses(depositAddressesJson);
+                            }
 
-                          // Save deposit addresses as JSON
-                          if (udaResponse.getDepositAddresses() != null) {
-                            String depositAddressesJson =
-                                objectMapper.writeValueAsString(udaResponse.getDepositAddresses());
-                            user.setEnclaveDepositAddresses(depositAddressesJson);
+                            return userRepository.save(user);
+                          } catch (Exception e) {
+                            log.error(
+                                "Failed to serialize deposit addresses for user {}: {}",
+                                event.getUserId(),
+                                e.getMessage());
+                            return userRepository.save(user);
                           }
-
-                          return userRepository.save(user);
-                        } catch (Exception e) {
-                          log.error(
-                              "Failed to serialize deposit addresses for user {}: {}",
-                              event.getUserId(),
-                              e.getMessage());
-                          return userRepository.save(user);
-                        }
-                      })
-                  .thenReturn(udaResponse);
-            })
+                        })
+                    .thenReturn(udaResponse))
         .subscribeOn(Schedulers.boundedElastic())
         .subscribe(
             udaResponse -> {
@@ -98,7 +91,9 @@ public class EnclaveUdaCreationListener {
                       .build();
 
               eventPublisher.publishEvent(udaCreatedEvent);
-              log.info("Published EnclaveUdaCreatedEvent for user: {} with deposit addresses", event.getUserId());
+              log.info(
+                  "Published EnclaveUdaCreatedEvent for user: {} with deposit addresses",
+                  event.getUserId());
             },
             error -> {
               log.error(
@@ -109,5 +104,4 @@ public class EnclaveUdaCreationListener {
               // In production, you might want to publish a failure event or send alerts
             });
   }
-
 }
