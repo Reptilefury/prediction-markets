@@ -5,11 +5,6 @@ spring:
   application:
     name: prediction-markets
   
-  security:
-    user:
-      password: # Disable default password generation
-
-  
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -63,6 +58,8 @@ spring:
     exclude:
       - org.apache.camel.component.reactive.streams.springboot.ReactiveStreamsServiceAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration
   main:
     allow-circular-references: true
 
