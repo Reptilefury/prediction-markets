@@ -7,8 +7,8 @@ spring:
   
   security:
     user:
-      name: # Disable default user
-      password: # Disable default password generation
+      name: ''
+      password: ''
 
   
   flyway:
