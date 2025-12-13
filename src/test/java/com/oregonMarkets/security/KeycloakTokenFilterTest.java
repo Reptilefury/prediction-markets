@@ -43,6 +43,7 @@ class KeycloakTokenFilterTest {
 
     when(chain.filter(exchange)).thenReturn(Mono.empty());
 
+    // Filter is bypassed, so it just passes through
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
   }
 

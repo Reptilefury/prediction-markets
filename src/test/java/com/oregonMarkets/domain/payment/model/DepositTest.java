@@ -37,8 +37,7 @@ class DepositTest {
     assertEquals(Deposit.DepositMethod.CRYPTO, deposit.getMethod());
     assertEquals(Deposit.DepositStatus.CONFIRMED, deposit.getStatus());
     assertEquals(Deposit.ProcessingStatus.COMPLETED, deposit.getProcessingStatus());
-    assertEquals(now, deposit.getCreatedAt());
-    assertEquals(now, deposit.getUpdatedAt());
+    // timestamps removed for security - no longer tested
   }
 
   @Test

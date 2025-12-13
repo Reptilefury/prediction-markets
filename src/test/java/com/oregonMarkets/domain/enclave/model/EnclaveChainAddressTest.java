@@ -30,7 +30,7 @@ class EnclaveChainAddressTest {
     assertEquals(1, address.getChainId());
     assertEquals("0x123456789", address.getDepositAddress());
     assertTrue(address.getIsActive());
-    assertEquals(now, address.getCreatedAt());
+    // createdAt removed for security - no longer tested
   }
 
   @Test

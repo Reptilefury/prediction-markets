@@ -44,6 +44,8 @@ class UserRegistrationServiceTest {
 
   @Mock private com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
 
+  @Mock private UserProfileMapper userProfileMapper;
+
   private UserRegistrationService userRegistrationService;
 
   @BeforeEach
@@ -55,7 +57,7 @@ class UserRegistrationServiceTest {
             cacheService,
             eventPublisher,
             usernameGenerationService,
-            org.mockito.Mockito.mock(UserProfileMapper.class));
+            userProfileMapper);
   }
 
   @Test

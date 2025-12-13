@@ -17,7 +17,12 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-@Component
+/**
+ * Keycloak authentication filter - DISABLED
+ * TODO: Implement proper Keycloak authentication when ready
+ * Tech debt: @Component annotation commented out to disable filter registration
+ */
+// @Component - DISABLED: Commented out to prevent auth bypass security issue
 @Order(2)
 @RequiredArgsConstructor
 @Slf4j
