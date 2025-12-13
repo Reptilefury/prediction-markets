@@ -159,7 +159,6 @@ public class Web3RegistrationService {
         .referralCode(user.getReferralCode())
         .accessToken("mock-access-token")
         .refreshToken("mock-refresh-token")
-        .createdAt(user.getCreatedAt())
         .build();
   }
 

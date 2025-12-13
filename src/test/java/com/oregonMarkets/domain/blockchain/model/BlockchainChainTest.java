@@ -21,7 +21,6 @@ class BlockchainChainTest {
             .requiredConfirmations(12)
             .isActive(true)
             .lastScannedBlock(100L)
-            .createdAt(Instant.now())
             .build();
     assertNotNull(chain);
     assertEquals("polygon", chain.getChainName());

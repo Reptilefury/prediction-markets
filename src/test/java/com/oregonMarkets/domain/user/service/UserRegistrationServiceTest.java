@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.oregonMarkets.common.exception.UserAlreadyExistsException;
 import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
+import com.oregonMarkets.domain.user.dto.response.UserProfileMapper;
 import com.oregonMarkets.domain.user.model.User;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.integration.blnk.BlnkClient;
@@ -53,7 +54,8 @@ class UserRegistrationServiceTest {
             proxyWalletOnboardingService,
             cacheService,
             eventPublisher,
-            usernameGenerationService);
+            usernameGenerationService,
+            org.mockito.Mockito.mock(UserProfileMapper.class));
   }
 
   @Test
@@ -146,7 +148,6 @@ class UserRegistrationServiceTest {
         .magicWalletAddress("0x123")
         .enclaveUdaAddress("0xuda123")
         .referralCode("REF12345678")
-        .createdAt(Instant.now())
         .build();
   }
 }

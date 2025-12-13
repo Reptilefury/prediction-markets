@@ -22,7 +22,6 @@ class EnclaveChainAddressTest {
             .chainId(1)
             .depositAddress("0x123456789")
             .isActive(true)
-            .createdAt(now)
             .build();
 
     assertEquals(id, address.getId());

@@ -26,8 +26,6 @@ class DepositTest {
             .method(Deposit.DepositMethod.CRYPTO)
             .status(Deposit.DepositStatus.CONFIRMED)
             .processingStatus(Deposit.ProcessingStatus.COMPLETED)
-            .createdAt(now)
-            .updatedAt(now)
             .build();
 
     assertEquals(id, deposit.getId());

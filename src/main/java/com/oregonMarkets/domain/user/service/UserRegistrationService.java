@@ -1,9 +1,11 @@
 package com.oregonMarkets.domain.user.service;
 
 import com.oregonMarkets.common.exception.UserAlreadyExistsException;
+import com.oregonMarkets.common.exception.UserNotFoundException;
 import com.oregonMarkets.common.util.DataMaskingUtil;
 import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
+import com.oregonMarkets.domain.user.dto.response.UserProfileMapper;
 import com.oregonMarkets.domain.user.model.User;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.event.ProxyWalletCreatedEvent;
@@ -29,6 +31,7 @@ public class UserRegistrationService implements IUserRegistrationService {
   private final CacheService cacheService;
   private final org.springframework.context.ApplicationEventPublisher eventPublisher;
   private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
+  private final UserProfileMapper userProfileMapper;
 
   @Override
   public Mono<UserRegistrationResponse> registerUser(
@@ -51,9 +54,20 @@ public class UserRegistrationService implements IUserRegistrationService {
                         savedUser ->
                             publishUserRegisteredEvent(savedUser)
                                 .then(cacheUserData(savedUser))
-                                .thenReturn(buildResponse(savedUser))))
+                                .thenReturn(userProfileMapper.toResponse(savedUser))))
         .doOnSuccess(response -> log.info("Successfully registered user: {}", response.getUserId()))
         .doOnError(error -> log.error("Failed to register user: {}", error.getMessage()));
+  }
+
+  @Override
+  public Mono<UserRegistrationResponse> getUserProfile(MagicDIDValidator.MagicUserInfo magicUser) {
+    log.info("Getting user profile for Magic user: {}", DataMaskingUtil.maskEmail(magicUser.getEmail()));
+    
+    return userRepository.findByMagicUserId(magicUser.getUserId())
+        .switchIfEmpty(Mono.error(new UserNotFoundException("User profile not found. Please register first to create your account.")))
+        .map(userProfileMapper::toResponse)
+        .doOnSuccess(response -> log.info("Successfully retrieved user profile: {}", response.getUserId()))
+        .doOnError(error -> log.error("Failed to get user profile: {}", error.getMessage()));
   }
 
   private Mono<User> createUser(
@@ -221,7 +235,6 @@ public class UserRegistrationService implements IUserRegistrationService {
         .bitcoinDepositQrCodes(user.getBitcoinDepositQrCodes())
         .accessToken("mock-access-token")
         .refreshToken("mock-refresh-token")
-        .createdAt(user.getCreatedAt())
         .build();
   }
 

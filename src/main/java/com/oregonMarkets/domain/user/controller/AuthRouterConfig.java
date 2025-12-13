@@ -1,6 +1,7 @@
 package com.oregonMarkets.domain.user.controller;
 
 import com.oregonMarkets.common.exception.MagicAuthException;
+import com.oregonMarkets.common.exception.UserNotFoundException;
 import com.oregonMarkets.common.response.ApiResponse;
 import com.oregonMarkets.common.response.ResponseCode;
 import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
@@ -29,6 +30,7 @@ public class AuthRouterConfig {
     return RouterFunctions.route()
         .POST("/api/auth/register", this::register)
         .POST("/api/auth/register/web3", this::registerWeb3)
+        .GET("/api/user/profile", this::getUserProfile)
         .build();
   }
 
@@ -67,5 +69,32 @@ public class AuthRouterConfig {
         .flatMap(
             apiResponse ->
                 ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(apiResponse));
+  }
+
+  private Mono<ServerResponse> getUserProfile(ServerRequest request) {
+    log.info("Received user profile request");
+    var exchange = request.exchange();
+    MagicDIDValidator.MagicUserInfo magicUser = exchange.getAttribute("magicUser");
+    
+    if (magicUser == null) {
+      return ServerResponse.status(401)
+          .contentType(MediaType.APPLICATION_JSON)
+          .bodyValue(ApiResponse.error(ResponseCode.UNAUTHORIZED, "Authentication required"));
+    }
+    
+    return userRegistrationService.getUserProfile(magicUser)
+        .map(userProfile -> ApiResponse.success(ResponseCode.USER_PROFILE_RETRIEVED, userProfile))
+        .flatMap(apiResponse -> 
+            ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(apiResponse))
+        .onErrorResume(UserNotFoundException.class, e -> 
+            ServerResponse.status(404)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(ApiResponse.error(ResponseCode.USER_NOT_FOUND, e.getMessage())))
+        .onErrorResume(Exception.class, e -> {
+            log.error("Error retrieving user profile", e);
+            return ServerResponse.status(500)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(ApiResponse.error(ResponseCode.INTERNAL_SERVER_ERROR, "Failed to retrieve user profile"));
+        });
   }
 }
