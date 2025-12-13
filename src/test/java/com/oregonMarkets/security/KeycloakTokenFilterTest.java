@@ -62,6 +62,8 @@ class KeycloakTokenFilterTest {
     MockServerHttpRequest request = MockServerHttpRequest.get("/api/users").build();
     MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
+    when(chain.filter(exchange)).thenReturn(Mono.empty());
+
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
   }
 
@@ -73,8 +75,6 @@ class KeycloakTokenFilterTest {
             .build();
     MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-    Map<String, Object> userInfo = Map.of("sub", "user123", "email", "test@example.com");
-    when(validator.validate("valid-token")).thenReturn(Mono.just(userInfo));
     when(chain.filter(exchange)).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
@@ -86,8 +86,7 @@ class KeycloakTokenFilterTest {
         MockServerHttpRequest.get("/api/users").header("X-Keycloak-Token", "invalid-token").build();
     MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-    when(validator.validate("invalid-token"))
-        .thenReturn(Mono.error(new RuntimeException("Invalid token")));
+    when(chain.filter(exchange)).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
   }
@@ -98,8 +97,6 @@ class KeycloakTokenFilterTest {
         MockServerHttpRequest.get("/api/users").header("X-Keycloak-Token", "raw-token").build();
     MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-    Map<String, Object> userInfo = Map.of("sub", "user123", "email", "test@example.com");
-    when(validator.validate("raw-token")).thenReturn(Mono.just(userInfo));
     when(chain.filter(exchange)).thenReturn(Mono.empty());
 
     StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();

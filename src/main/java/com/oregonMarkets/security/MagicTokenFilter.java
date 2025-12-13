@@ -1,6 +1,8 @@
 package com.oregonMarkets.security;
 
 import com.oregonMarkets.common.exception.MagicAuthException;
+import com.oregonMarkets.common.exception.ResponseSerializationException;
+import com.oregonMarkets.common.response.ResponseCode;
 import com.oregonMarkets.dto.ErrorType;
 import com.oregonMarkets.integration.magic.MagicDIDValidator;
 import lombok.RequiredArgsConstructor;
@@ -107,6 +109,9 @@ public class MagicTokenFilter implements WebFilter {
     exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
     byte[] body = errorResponseBuilder.buildErrorResponse(ErrorType.MAGIC_AUTH_FAILED, message);
+    if (body == null) {
+      throw new ResponseSerializationException(ResponseCode.MAGIC_AUTH_FAILED.getMessage());
+    }
 
     return exchange
         .getResponse()

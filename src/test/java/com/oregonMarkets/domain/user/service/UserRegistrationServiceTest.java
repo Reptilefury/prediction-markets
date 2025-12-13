@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.oregonMarkets.common.exception.UserAlreadyExistsException;
 import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.response.UserProfileMapper;
+import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
 import com.oregonMarkets.domain.user.model.User;
 import com.oregonMarkets.domain.user.repository.UserRepository;
 import com.oregonMarkets.integration.blnk.BlnkClient;
@@ -95,6 +96,13 @@ class UserRegistrationServiceTest {
         .thenReturn(Mono.just(walletResponse));
     when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
     when(cacheService.set(anyString(), any(), any())).thenReturn(Mono.empty());
+    when(userProfileMapper.toResponse(any(User.class))).thenReturn(
+        UserRegistrationResponse.builder()
+            .userId(savedUser.getId())
+            .email(savedUser.getEmail())
+            .magicWalletAddress(savedUser.getMagicWalletAddress())
+            .enclaveUdaAddress(savedUser.getEnclaveUdaAddress())
+            .build());
 
     // Then
     StepVerifier.create(userRegistrationService.registerUser(request, magicUser, didToken))
