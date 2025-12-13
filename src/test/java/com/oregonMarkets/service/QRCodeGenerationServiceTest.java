@@ -1,17 +1,28 @@
 package com.oregonMarkets.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import com.google.cloud.storage.Storage;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
 class QRCodeGenerationServiceTest {
 
+  private Storage mockStorage;
+  private QRCodeGenerationService service;
+
+  @BeforeEach
+  void setUp() {
+    mockStorage = mock(Storage.class);
+    service = new QRCodeGenerationService(mockStorage);
+  }
+
   @Test
   void generateAndUploadQRCodes_WithProxyWallet() {
-    QRCodeGenerationService service = new QRCodeGenerationService();
     UUID userId = UUID.randomUUID();
 
     StepVerifier.create(service.generateAndUploadQRCodes(userId, "0xproxy", null, null, null, null))
@@ -21,7 +32,6 @@ class QRCodeGenerationServiceTest {
 
   @Test
   void generateAndUploadQRCodes_WithEnclaveUda() {
-    QRCodeGenerationService service = new QRCodeGenerationService();
     UUID userId = UUID.randomUUID();
 
     StepVerifier.create(
@@ -32,7 +42,6 @@ class QRCodeGenerationServiceTest {
 
   @Test
   void generateAndUploadQRCodes_WithEvmAddresses() {
-    QRCodeGenerationService service = new QRCodeGenerationService();
     UUID userId = UUID.randomUUID();
     Map<String, String> evmAddresses = Map.of("ethereum", "0xeth", "polygon", "0xpoly");
 
@@ -44,7 +53,6 @@ class QRCodeGenerationServiceTest {
 
   @Test
   void generateAndUploadQRCodes_WithSolana() {
-    QRCodeGenerationService service = new QRCodeGenerationService();
     UUID userId = UUID.randomUUID();
 
     StepVerifier.create(
@@ -55,7 +63,6 @@ class QRCodeGenerationServiceTest {
 
   @Test
   void generateAndUploadQRCodes_WithBitcoin() {
-    QRCodeGenerationService service = new QRCodeGenerationService();
     UUID userId = UUID.randomUUID();
     Map<String, String> btcAddresses = Map.of("bitcoin", "bc1btc");
 
@@ -67,7 +74,6 @@ class QRCodeGenerationServiceTest {
 
   @Test
   void generateAndUploadQRCodes_AllAddresses() {
-    QRCodeGenerationService service = new QRCodeGenerationService();
     UUID userId = UUID.randomUUID();
     Map<String, String> evmAddresses = Map.of("ethereum", "0xeth");
     Map<String, String> btcAddresses = Map.of("bitcoin", "bc1btc");
@@ -81,7 +87,6 @@ class QRCodeGenerationServiceTest {
 
   @Test
   void generateAndUploadQRCodes_EmptyAddresses() {
-    QRCodeGenerationService service = new QRCodeGenerationService();
     UUID userId = UUID.randomUUID();
 
     StepVerifier.create(service.generateAndUploadQRCodes(userId, "", "", Map.of(), "", Map.of()))
