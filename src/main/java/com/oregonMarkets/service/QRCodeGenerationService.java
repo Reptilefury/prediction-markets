@@ -1,8 +1,6 @@
 package com.oregonMarkets.service;
 
-import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -27,6 +25,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Slf4j
 public class QRCodeGenerationService {
+
+  private final Storage storage;  // Injected singleton Storage bean
 
   @Value("${spring.cloud.gcp.storage.project-id:${gcp.project-id}}")
   private String gcpProjectId;
@@ -552,31 +552,25 @@ public class QRCodeGenerationService {
 
   private String uploadQRCodeToGCP(UUID userId, String addressType, byte[] qrCodeBytes) {
     try {
-      Storage storage =
-          (gcpProjectId != null && !gcpProjectId.isBlank())
-              ? StorageOptions.newBuilder().setProjectId(gcpProjectId).build().getService()
-              : StorageOptions.getDefaultInstance().getService();
-      Bucket bucket = storage.get(bucketName);
-
-      if (bucket == null) {
-        log.warn(
-            "GCP bucket '{}' not found in project '{}', returning mock URL",
-            bucketName,
-            gcpProjectId);
-        return String.format(
-            "https://storage.googleapis.com/%s/qrcodes/%s/%s.png", bucketName, userId, addressType);
-      }
-
       String blobName = String.format("qrcodes/%s/%s.png", userId, addressType);
-      bucket.create(blobName, qrCodeBytes);
+
+      // Upload directly without checking bucket existence (bucket must exist)
+      // BlobInfo for the new object
+      com.google.cloud.storage.BlobInfo blobInfo =
+          com.google.cloud.storage.BlobInfo.newBuilder(bucketName, blobName)
+              .setContentType("image/png")
+              .build();
+
+      // Upload the QR code
+      storage.create(blobInfo, qrCodeBytes);
 
       String uploadedUrl =
           String.format("https://storage.googleapis.com/%s/%s", bucketName, blobName);
 
-      log.info("QR code uploaded to GCP: {}", uploadedUrl);
+      log.info("[QR-UPLOAD] ✓ QR code uploaded successfully: {}", uploadedUrl);
       return uploadedUrl;
     } catch (Exception e) {
-      log.error("Failed to upload QR code to GCP: {}", e.getMessage(), e);
+      log.error("[QR-UPLOAD] ✗ Failed to upload QR code to GCP: {}", e.getMessage(), e);
       // Return a default URL even if upload fails
       return String.format(
           "https://storage.googleapis.com/%s/qrcodes/%s/%s.png", bucketName, userId, addressType);
