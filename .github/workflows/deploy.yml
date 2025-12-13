@@ -85,7 +85,24 @@ jobs:
         
     - name: Setup Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
-      
+
+    - name: Validate Required Secrets
+      run: |
+        MISSING_SECRETS=""
+
+        # Check critical secrets
+        if [ -z "${{ secrets.DATABASE_URL }}" ]; then MISSING_SECRETS="${MISSING_SECRETS}DATABASE_URL "; fi
+        if [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then MISSING_SECRETS="${MISSING_SECRETS}DATABASE_PASSWORD "; fi
+        if [ -z "${{ secrets.MAGIC_API_KEY }}" ]; then MISSING_SECRETS="${MISSING_SECRETS}MAGIC_API_KEY "; fi
+        if [ -z "${{ secrets.LOGODEV_PUBLISHABLE_KEY }}" ]; then MISSING_SECRETS="${MISSING_SECRETS}LOGODEV_PUBLISHABLE_KEY "; fi
+
+        if [ -n "$MISSING_SECRETS" ]; then
+          echo "Error: The following required secrets are not set: $MISSING_SECRETS"
+          exit 1
+        fi
+
+        echo "All required secrets are configured"
+
     - name: Deploy to Cloud Run
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
