@@ -29,7 +29,6 @@ class AllBuildersTest {
             .requiredConfirmations(12)
             .isActive(true)
             .lastScannedBlock(0L)
-            .createdAt(Instant.now())
             .build();
     assertNotNull(c);
   }
@@ -42,7 +41,6 @@ class AllBuildersTest {
             .userId(UUID.randomUUID())
             .chainType(EnclaveChainAddress.ChainType.ETHEREUM)
             .depositAddress("a")
-            .createdAt(Instant.now())
             .build();
     assertNotNull(a);
   }
@@ -66,7 +64,6 @@ class AllBuildersTest {
             .blockNumber(1L)
             .confirmations(0)
             .requiredConfirmations(12)
-            .createdAt(Instant.now())
             .build();
     assertNotNull(d);
   }
@@ -116,8 +113,6 @@ class AllBuildersTest {
             .evmDepositQrCodes("e")
             .solanaDepositQrCodeUrl("s")
             .bitcoinDepositQrCodes("b")
-            .createdAt(Instant.now())
-            .updatedAt(Instant.now())
             .build();
     assertNotNull(u);
   }
@@ -224,7 +219,6 @@ class AllBuildersTest {
             .referralCode("r")
             .accessToken("a")
             .refreshToken("r")
-            .createdAt(Instant.now())
             .avatarUrl("a")
             .proxyWalletQrCodeUrl("p")
             .enclaveUdaQrCodeUrl("e")

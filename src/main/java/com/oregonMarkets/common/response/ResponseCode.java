@@ -42,8 +42,9 @@ public enum ResponseCode {
   USER_REGISTERED(2400, "User registered successfully", HttpStatus.CREATED),
   USER_AUTHENTICATED(2401, "User authenticated successfully", HttpStatus.OK),
   USER_PROFILE_UPDATED(2402, "User profile updated successfully", HttpStatus.OK),
-  TOKEN_REFRESHED(2403, "Authentication token refreshed", HttpStatus.OK),
-  PASSWORD_RESET(2404, "Password reset successfully", HttpStatus.OK),
+  USER_PROFILE_RETRIEVED(2403, "User profile retrieved successfully", HttpStatus.OK),
+  TOKEN_REFRESHED(2404, "Authentication token refreshed", HttpStatus.OK),
+  PASSWORD_RESET(2405, "Password reset successfully", HttpStatus.OK),
 
   // ============================================
   // CLIENT ERRORS (3000-3999) - HTTP 4xx

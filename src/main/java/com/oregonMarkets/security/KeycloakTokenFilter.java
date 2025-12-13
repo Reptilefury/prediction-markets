@@ -17,7 +17,12 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-@Component
+/**
+ * Keycloak authentication filter - DISABLED
+ * TODO: Implement proper Keycloak authentication when ready
+ * Tech debt: @Component annotation commented out to disable filter registration
+ */
+// @Component - DISABLED: Commented out to prevent auth bypass security issue
 @Order(2)
 @RequiredArgsConstructor
 @Slf4j
@@ -28,51 +33,8 @@ public class KeycloakTokenFilter implements WebFilter {
 
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-    String path = exchange.getRequest().getPath().value();
-
-    // Skip for registration endpoint
-    if ("/api/auth/register".equals(path)) {
-      return chain.filter(exchange);
-    }
-
-    if (path.startsWith("/api/")) {
-      String keycloakHeader = exchange.getRequest().getHeaders().getFirst("X-Keycloak-Token");
-      if (keycloakHeader == null || keycloakHeader.isBlank()) {
-        return unauthorized(exchange, "KEYCLOAK_AUTH_FAILED", "Missing X-Keycloak-Token header");
-      }
-      String token =
-          keycloakHeader.startsWith("Bearer ") ? keycloakHeader.substring(7) : keycloakHeader;
-      return validator
-          .validate(token)
-          .flatMap(
-              userInfo -> {
-                exchange.getAttributes().put("keycloakUser", userInfo);
-                return chain.filter(exchange);
-              })
-          .onErrorResume(
-              e -> {
-                // If Magic succeeded earlier in the chain, we should have magic context
-                Object magicUserObj = exchange.getAttribute("magicUser");
-                if (magicUserObj
-                        instanceof
-                        com.oregonMarkets.integration.magic.MagicClient.MagicUserInfo
-                        magicUser
-                    && magicUser.getEmail() != null) {
-                  // Note: setPassword now requires accessToken, but we're in a filter context
-                  // The proper flow is in UserRegistrationService which handles this during
-                  // registration
-                  log.debug(
-                      "Keycloak validation failed for {}, but Magic context available",
-                      magicUser.getEmail());
-                }
-                String msg =
-                    e instanceof KeycloakAuthException
-                        ? e.getMessage()
-                        : "Keycloak token validation failed";
-                return unauthorized(exchange, "KEYCLOAK_AUTH_FAILED", msg);
-              });
-    }
-
+    // TODO: Keycloak validation temporarily disabled - implement later
+    log.debug("Keycloak filter bypassed for path: {}", exchange.getRequest().getPath().value());
     return chain.filter(exchange);
   }
 

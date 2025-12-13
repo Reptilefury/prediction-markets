@@ -38,7 +38,6 @@ class UserTest {
             .proxyWalletStatus(User.ProxyWalletStatus.ACTIVE)
             .referralCode("REF123")
             .avatarUrl("http://avatar")
-            .createdAt(Instant.now())
             .build();
     assertNotNull(user);
     assertEquals("test@test.com", user.getEmail());

@@ -21,4 +21,12 @@ public interface IUserRegistrationService {
       @Valid UserRegistrationRequest request,
       MagicDIDValidator.MagicUserInfo magicUser,
       String didToken);
+
+  /**
+   * Get user profile by Magic user information
+   *
+   * @param magicUser Validated Magic user information from DID token
+   * @return UserRegistrationResponse with current user profile data
+   */
+  Mono<UserRegistrationResponse> getUserProfile(MagicDIDValidator.MagicUserInfo magicUser);
 }

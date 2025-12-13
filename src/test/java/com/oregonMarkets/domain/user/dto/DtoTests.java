@@ -49,7 +49,6 @@ class DtoTests {
             .referralCode("ref")
             .accessToken("token")
             .refreshToken("refresh")
-            .createdAt(Instant.now())
             .avatarUrl("http://avatar")
             .build();
     assertNotNull(res.getUserId());
