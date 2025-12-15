@@ -1,6 +1,8 @@
 package com.oregonMarkets.domain.user.service;
 
+import com.oregonMarkets.common.exception.UserAlreadyExistsException;
 import com.oregonMarkets.common.exception.UserNotFoundException;
+import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
 import com.oregonMarkets.domain.user.dto.response.UserProfileMapper;
 import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
 import com.oregonMarkets.domain.user.model.User;
@@ -93,5 +95,24 @@ class UserRegistrationServiceTest {
         StepVerifier.create(service.getUserProfile(magicUser))
                 .expectNext(response)
                 .verifyComplete();
+    }
+
+    @Test
+    void shouldThrowUserAlreadyExistsWhenEmailExists() {
+        UserRegistrationRequest request = new UserRegistrationRequest();
+        request.setEmail("existing@example.com");
+        request.setCountryCode("US");
+        
+        MagicDIDValidator.MagicUserInfo magicUser = mock(MagicDIDValidator.MagicUserInfo.class);
+        when(magicUser.getEmail()).thenReturn("existing@example.com");
+        when(magicUser.getUserId()).thenReturn("magic-id");
+        when(magicUser.getIssuer()).thenReturn("issuer");
+        
+        when(userRepository.existsByEmail("existing@example.com")).thenReturn(Mono.just(true));
+        when(userRepository.existsByMagicUserId("issuer")).thenReturn(Mono.just(false));
+
+        StepVerifier.create(service.registerUser(request, magicUser, "token"))
+                .expectError(UserAlreadyExistsException.class)
+                .verify();
     }
 }
