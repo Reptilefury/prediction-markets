@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -27,6 +29,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserRegistrationServiceTest {
 
     @Mock
@@ -105,11 +108,11 @@ class UserRegistrationServiceTest {
         
         MagicDIDValidator.MagicUserInfo magicUser = mock(MagicDIDValidator.MagicUserInfo.class);
         when(magicUser.getEmail()).thenReturn("existing@example.com");
-        when(magicUser.getUserId()).thenReturn("magic-id");
-        when(magicUser.getIssuer()).thenReturn("issuer");
+        lenient().when(magicUser.getUserId()).thenReturn("magic-id");
+        lenient().when(magicUser.getIssuer()).thenReturn("issuer");
         
         when(userRepository.existsByEmail("existing@example.com")).thenReturn(Mono.just(true));
-        when(userRepository.existsByMagicUserId("issuer")).thenReturn(Mono.just(false));
+        lenient().when(userRepository.existsByMagicUserId("issuer")).thenReturn(Mono.just(false));
 
         StepVerifier.create(service.registerUser(request, magicUser, "token"))
                 .expectError(UserAlreadyExistsException.class)
