@@ -138,7 +138,7 @@ jobs:
           --platform managed \
           --region $REGION \
           --allow-unauthenticated \
-          --ingress=internal-and-cloud-load-balancing \
+          --ingress=all \
           --timeout=600 \
           --port=8080 \
           --memory=2Gi \
