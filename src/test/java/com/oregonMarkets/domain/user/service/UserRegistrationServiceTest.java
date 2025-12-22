@@ -34,19 +34,19 @@ class UserRegistrationServiceTest {
 
     @Mock
     private UserRepository userRepository;
-    
+
     @Mock
     private ProxyWalletOnboardingService proxyWalletService;
-    
+
     @Mock
     private CacheService cacheService;
-    
+
     @Mock
     private ApplicationEventPublisher eventPublisher;
-    
+
     @Mock
     private UsernameGenerationService usernameGenerationService;
-    
+
     @Mock
     private UserProfileMapper userProfileMapper;
 
@@ -81,12 +81,12 @@ class UserRegistrationServiceTest {
         MagicDIDValidator.MagicUserInfo magicUser = mock(MagicDIDValidator.MagicUserInfo.class);
         when(magicUser.getUserId()).thenReturn("magic-user-id");
         when(magicUser.getEmail()).thenReturn("test@example.com");
-        
+
         User user = User.builder()
                 .id(UUID.randomUUID())
                 .email("test@example.com")
                 .build();
-        
+
         UserRegistrationResponse response = UserRegistrationResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
@@ -94,6 +94,14 @@ class UserRegistrationServiceTest {
 
         when(userRepository.findByMagicUserId("magic-user-id")).thenReturn(Mono.just(user));
         when(userProfileMapper.toResponse(user)).thenReturn(response);
+        when(userProfileMapper.toResponse(any(User.class))).thenReturn(
+            UserRegistrationResponse.builder()
+                .userId(user.getId())
+                .email("test@example.com")
+                .magicWalletAddress("0x123")
+                .enclaveUdaAddress("0xuda123")
+                .build()
+        );
 
         StepVerifier.create(service.getUserProfile(magicUser))
                 .expectNext(response)
@@ -105,12 +113,12 @@ class UserRegistrationServiceTest {
         UserRegistrationRequest request = new UserRegistrationRequest();
         request.setEmail("existing@example.com");
         request.setCountryCode("US");
-        
+
         MagicDIDValidator.MagicUserInfo magicUser = mock(MagicDIDValidator.MagicUserInfo.class);
         when(magicUser.getEmail()).thenReturn("existing@example.com");
         lenient().when(magicUser.getUserId()).thenReturn("magic-id");
         lenient().when(magicUser.getIssuer()).thenReturn("issuer");
-        
+
         when(userRepository.existsByEmail("existing@example.com")).thenReturn(Mono.just(true));
         lenient().when(userRepository.existsByMagicUserId("issuer")).thenReturn(Mono.just(false));
 
