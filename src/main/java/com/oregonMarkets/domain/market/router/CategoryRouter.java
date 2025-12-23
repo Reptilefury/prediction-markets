@@ -49,7 +49,6 @@ public class CategoryRouter {
                 .route(POST("/categories"), handler::createCategory)
                 .andRoute(PUT("/categories/{categoryId}"), handler::updateCategory)
                 .andRoute(DELETE("/categories/{categoryId}"), handler::deleteCategory)
-
                 // Subcategory management
                 .andRoute(POST("/subcategories"), handler::createSubcategory)
                 .andRoute(PUT("/categories/{categoryId}/subcategories/{subcategoryId}"),
