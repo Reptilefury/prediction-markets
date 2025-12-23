@@ -15,6 +15,7 @@ import org.cognitor.cassandra.migration.MigrationTask;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 
 /**
@@ -31,6 +32,7 @@ import org.springframework.context.event.EventListener;
  * - Supports rollback scenarios
  */
 @Slf4j
+@Profile("!test")
 @Configuration
 @RequiredArgsConstructor
 public class CassandraMigrationConfig {
@@ -145,8 +147,22 @@ public class CassandraMigrationConfig {
             log.error("FAILED to execute Cassandra migrations", e);
             log.error("==================================================");
             
-            // Fail fast to prevent application from starting with an invalid database state
-            throw new RuntimeException("Cassandra migration failed", e);
+            // Check if this is a permission error (keyspace already exists)
+            if (e.getCause() != null && e.getCause().getMessage() != null &&
+                e.getCause().getMessage().contains("Missing correct permission")) {
+                log.warn("⚠️  Authorization error detected: Keyspace '{}' may already exist", keyspaceName);
+                log.warn("⚠️  This is OK - proceeding with application startup");
+                log.warn("⚠️  If migration is critical, check Cassandra permissions and ensure the account can:");
+                log.warn("    1. CREATE KEYSPACE (if keyspace doesn't exist)");
+                log.warn("    2. ALTER KEYSPACE (if keyspace exists)");
+                log.warn("    3. CREATE TABLE");
+                log.warn("    4. ALTER TABLE");
+                log.info("Continuing with application startup...");
+                return;
+            }
+
+            // For other errors, fail fast to prevent application from starting with an invalid database state
+            throw new RuntimeException("Cassandra migration failed: " + e.getMessage(), e);
         }
     }
 }

@@ -76,17 +76,7 @@ public class MarketServiceImpl implements MarketService {
                         ResponseCode.MARKET_NOT_FOUND,
                         "Market not found with ID: " + marketId
                 )))
-                .flatMap(market ->
-                    outcomeRepository.findByMarketId(marketId)
-                            .collectList()
-                            .map(outcomes -> {
-                                MarketResponse response = marketMapper.toResponse(market);
-                                response.setOutcomes(outcomes.stream()
-                                        .map(marketMapper::toOutcomeResponse)
-                                        .collect(Collectors.toList()));
-                                return response;
-                            })
-                );
+                .flatMap(this::enrichMarketWithOutcomes);
     }
 
     @Override
@@ -377,6 +367,36 @@ public class MarketServiceImpl implements MarketService {
     }
 
     // ==================== Private Helper Methods ====================
+
+    /**
+     * Helper method to enrich market with outcomes and convert to response DTO.
+     * Eliminates duplication of outcome-fetching logic across multiple methods.
+     *
+     * @param market The market entity to enrich
+     * @return Mono containing the enriched MarketResponse with all outcomes
+     */
+    private Mono<MarketResponse> enrichMarketWithOutcomes(Market market) {
+        return outcomeRepository.findByMarketId(market.getMarketId())
+                .collectList()
+                .map(outcomes -> {
+                    MarketResponse response = marketMapper.toResponse(market);
+                    response.setOutcomes(outcomes.stream()
+                            .map(marketMapper::toOutcomeResponse)
+                            .collect(Collectors.toList()));
+                    return response;
+                });
+    }
+
+    /**
+     * Helper method to enrich multiple markets with outcomes and convert to response DTOs.
+     * Used in Flux-based methods.
+     *
+     * @param market The market entity to enrich
+     * @return Mono containing the enriched MarketResponse with all outcomes
+     */
+    private Mono<MarketResponse> flatMapWithOutcomes(Market market) {
+        return enrichMarketWithOutcomes(market);
+    }
 
     private Mono<Category> validateMarketCreation(CreateMarketRequest request) {
         return categoryRepository.findById(request.getCategoryId())

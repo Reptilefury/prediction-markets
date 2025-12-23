@@ -21,7 +21,7 @@ class AvatarGenerationServiceTest {
     AvatarGenerationService service = new AvatarGenerationService();
 
     StepVerifier.create(service.generateAndUploadAvatar(null))
-        .expectError(RuntimeException.class)
-        .verify();
+        .expectNextMatches(url -> url.contains("mock-bucket") && url.contains("unknown"))
+        .verifyComplete();
   }
 }

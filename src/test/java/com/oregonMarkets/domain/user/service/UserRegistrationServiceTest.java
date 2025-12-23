@@ -94,14 +94,6 @@ class UserRegistrationServiceTest {
 
         when(userRepository.findByMagicUserId("magic-user-id")).thenReturn(Mono.just(user));
         when(userProfileMapper.toResponse(user)).thenReturn(response);
-        when(userProfileMapper.toResponse(any(User.class))).thenReturn(
-            UserRegistrationResponse.builder()
-                .userId(user.getId())
-                .email("test@example.com")
-                .magicWalletAddress("0x123")
-                .enclaveUdaAddress("0xuda123")
-                .build()
-        );
 
         StepVerifier.create(service.getUserProfile(magicUser))
                 .expectNext(response)

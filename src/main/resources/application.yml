@@ -77,15 +77,15 @@ app:
     keyspace-name: oregon_markets
     username: token
     password: ${ASTRA_DB_TOKEN}
-    secure-connect-bundle: ${ASTRA_SECURE_CONNECT_BUNDLE:/home/user/Downloads/secure-connect-cassandra.zip}
+    secure-connect-bundle: ${ASTRA_SECURE_CONNECT_BUNDLE}
     schema-action: none
   
   questdb:
-    host: ${QUESTDB_HOST:34.63.22.56}
-    port: ${QUESTDB_PORT:8812}
-    database: ${QUESTDB_DATABASE:qdb}
-    username: ${QUESTDB_USERNAME:admin}
-    password: ${QUESTDB_PASSWORD:quest}
+    host: ${QUESTDB_HOST}
+    port: ${QUESTDB_PORT}
+    database: ${QUESTDB_DATABASE}
+    username: ${QUESTDB_USERNAME}
+    password: ${QUESTDB_PASSWORD}
     migration:
       enabled: true
       scripts-location: questdb/migrations

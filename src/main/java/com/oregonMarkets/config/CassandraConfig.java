@@ -1,6 +1,5 @@
 package com.oregonMarkets.config;
 
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import java.nio.file.Path;
@@ -10,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.cassandra.config.AbstractReactiveCassandraConfiguration;
 import org.springframework.data.cassandra.config.CqlSessionFactoryBean;
 import org.springframework.data.cassandra.config.SchemaAction;
@@ -20,8 +20,12 @@ import org.springframework.data.cassandra.repository.config.EnableReactiveCassan
  * Uses secure connect bundle for authentication
  */
 @Slf4j
+@Profile("!test")
 @Configuration
-@EnableReactiveCassandraRepositories(basePackages = "com.oregonMarkets.domain.market.repository")
+@EnableReactiveCassandraRepositories(
+    basePackages = {
+        "com.oregonMarkets.domain.market.repository"
+    })
 public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
 
     @Value("${app.cassandra.keyspace-name}")
@@ -33,8 +37,6 @@ public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
     @Value("${app.cassandra.password}")
     private String password;
 
-    @Value("${app.cassandra.schema-action:none}")
-    private String schemaAction;
 
     @Value("${app.cassandra.secure-connect-bundle:/home/user/Downloads/secure-connect-cassandra.zip}")
     private String secureConnectBundlePath;
@@ -60,7 +62,10 @@ public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
 
     @Override
     public String[] getEntityBasePackages() {
-        return new String[]{"com.oregonMarkets.domain.market.model"};
+        return new String[]{
+            "com.oregonMarkets.domain.market.model",
+            "com.oregonMarkets.domain.enclave.model"
+        };
     }
 
     @Bean
@@ -70,7 +75,18 @@ public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
         Path bundlePath = Paths.get(secureConnectBundlePath);
 
         if (!bundlePath.toFile().exists()) {
-            throw new IllegalArgumentException("Secure connect bundle not found at: " + secureConnectBundlePath);
+            log.warn("⚠️  Secure connect bundle NOT found at: {}", secureConnectBundlePath);
+            log.warn("⚠️  Please set the ASTRA_SECURE_CONNECT_BUNDLE environment variable");
+            log.warn("⚠️  Example: export ASTRA_SECURE_CONNECT_BUNDLE=/path/to/secure-connect-cassandra.zip");
+            log.warn("⚠️  If you don't have Cassandra/Astra DB set up, you can disable it temporarily");
+            throw new IllegalArgumentException(
+                "Secure connect bundle not found at: " + secureConnectBundlePath +
+                "\n\nTo fix this issue:" +
+                "\n1. Download your secure-connect-cassandra.zip from DataStax Astra DB" +
+                "\n2. Set environment variable: export ASTRA_SECURE_CONNECT_BUNDLE=/path/to/bundle.zip" +
+                "\n3. Restart the application" +
+                "\n\nOr to temporarily disable Cassandra, set: export SPRING_PROFILES_ACTIVE=test"
+            );
         }
 
         // Programmatic driver configuration as a safety net in IDE/dev environments

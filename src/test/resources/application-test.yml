@@ -1,4 +1,15 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraRepositoriesAutoConfiguration
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/testdb
     username: test
@@ -12,6 +23,11 @@ spring:
     host: localhost
     port: 6379
     password: ""
+
+# Disable Cassandra migrations for tests
+cassandra:
+  migration:
+    enabled: false
   cloud:
     gcp:
       storage:
@@ -80,6 +96,12 @@ LOGODEV_API_KEY: test-logodev-key
 LOGODEV_PUBLISHABLE_KEY: test-publishable-key
 KEYCLOAK_BASE_URL: http://localhost:8080
 CRYPTO_SERVICE_URL: http://localhost:3002
+ASTRA_DB_TOKEN: test-astra-token
+QUESTDB_HOST: localhost
+QUESTDB_PORT: 8812
+QUESTDB_DATABASE: qdb
+QUESTDB_USERNAME: admin
+QUESTDB_PASSWORD: quest
 
 logging:
   level:
