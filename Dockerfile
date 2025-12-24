@@ -7,9 +7,9 @@ RUN ./mvnw clean package -DskipTests
 # Runtime stage
 FROM eclipse-temurin:21-jre
 
-# Install curl and gcloud SDK for downloading secure connect bundle
+# Install curl, python3 and gcloud SDK for downloading secure connect bundle
 RUN apt-get update && \
-    apt-get install -y curl ca-certificates && \
+    apt-get install -y curl ca-certificates python3 python3-pip && \
     curl -sSL https://sdk.cloud.google.com | bash && \
     rm -rf /var/lib/apt/lists/*
 
