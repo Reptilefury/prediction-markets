@@ -11,14 +11,16 @@ FROM eclipse-temurin:21-jre
 RUN apt-get update && \
     apt-get install --no-install-recommends -y curl ca-certificates python3 python3-pip && \
     curl -sSL https://sdk.cloud.google.com | bash && \
-    /root/google-cloud-sdk/bin/gcloud components update --quiet && \
+    mv /root/google-cloud-sdk /opt/google-cloud-sdk && \
+    /opt/google-cloud-sdk/bin/gcloud components update --quiet && \
+    chmod -R 755 /opt/google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/* && \
-    rm -rf /root/google-cloud-sdk/platform/gsutil/third_party/urllib3/dummyserver/certs && \
-    rm -rf /root/google-cloud-sdk/platform/bq/third_party && \
-    rm -rf /root/google-cloud-sdk/.install && \
-    rm -rf /root/google-cloud-sdk/.git
+    rm -rf /opt/google-cloud-sdk/platform/gsutil/third_party/urllib3/dummyserver/certs && \
+    rm -rf /opt/google-cloud-sdk/platform/bq/third_party && \
+    rm -rf /opt/google-cloud-sdk/.install && \
+    rm -rf /opt/google-cloud-sdk/.git
 
-ENV PATH=$PATH:/root/google-cloud-sdk/bin
+ENV PATH=$PATH:/opt/google-cloud-sdk/bin
 
 COPY --from=builder /app/target/*.jar app.jar
 
