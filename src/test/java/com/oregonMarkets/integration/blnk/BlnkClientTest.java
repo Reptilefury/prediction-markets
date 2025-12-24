@@ -1,18 +1,14 @@
 package com.oregonMarkets.integration.blnk;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import com.oregonMarkets.config.BlnkProperties;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 class BlnkClientTest {
@@ -25,8 +21,9 @@ class BlnkClientTest {
     server = new MockWebServer();
     server.start();
     String baseUrl = server.url("/").toString();
-    BlnkProperties properties = new BlnkProperties(baseUrl, "ledger-1");
-    blnkClient = new BlnkClient(WebClient.builder().baseUrl(baseUrl).build(), properties);
+    blnkClient =
+        new BlnkClient(
+            WebClient.builder().baseUrl(baseUrl).build(), new BlnkProperties(baseUrl, "ledger-1"));
   }
 
   @AfterEach
@@ -39,12 +36,12 @@ class BlnkClientTest {
     server.enqueue(
         new MockResponse()
             .setBody("{\"identity_id\":\"identity-123\"}")
-            .addHeader("Content-Type", "application/json"));
+            .setHeader("Content-Type", "application/json"));
 
-    Mono<String> result =
-        blnkClient.createIdentity("user-1", "user@example.com", Map.of("key", "value"));
-
-    StepVerifier.create(result).expectNext("identity-123").verifyComplete();
+    StepVerifier.create(
+            blnkClient.createIdentity("user-1", "user@example.com", Map.of("key", "value")))
+        .expectNext("identity-123")
+        .verifyComplete();
   }
 
   @Test
@@ -52,7 +49,7 @@ class BlnkClientTest {
     server.enqueue(
         new MockResponse()
             .setBody("{\"balance_id\":\"balance-456\"}")
-            .addHeader("Content-Type", "application/json"));
+            .setHeader("Content-Type", "application/json"));
 
     StepVerifier.create(blnkClient.createBalance("USDC"))
         .expectNext("balance-456")
@@ -64,10 +61,11 @@ class BlnkClientTest {
     server.enqueue(
         new MockResponse()
             .setBody("{\"data\":[{\"currency\":\"USDC\"}]}")
-            .addHeader("Content-Type", "application/json"));
+            .setHeader("Content-Type", "application/json"));
 
     StepVerifier.create(blnkClient.getBalancesByIdentity("identity-1"))
-        .expectNextMatches(list -> !list.isEmpty() && "USDC".equals(list.get(0).get("currency")))
+        .expectNextMatches(
+            list -> !list.isEmpty() && "USDC".equals(list.get(0).get("currency")))
         .verifyComplete();
   }
 }
