@@ -12,7 +12,14 @@ severity:
 vex:
   - vex.json
 
+# Ignore file for acceptable vulnerabilities and secrets
+ignorefile: .trivyignore
+
 # Ignore unfixed vulnerabilities that are mitigated via other means
 skip-db-update: false
 skip-java-db-update: false
+
+# Secret scanning configuration
+secret:
+  severity: HIGH
 

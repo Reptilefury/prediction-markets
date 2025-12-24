@@ -1,0 +1,23 @@
+# Trivy Ignore File
+# This file lists vulnerabilities and secrets that are acceptable in specific contexts
+
+# Test certificates in gcloud SDK (urllib3 dummyserver)
+# These are test/dummy certificates that come with the Google Cloud SDK
+# and are not used in production. They are removed from the Docker image
+# but may appear in scans of the SDK installation source.
+# Type: Secret - Private Key
+# Justification: Test certificate, not used in production
+/root/google-cloud-sdk/platform/gsutil/third_party/urllib3/dummyserver/certs/cacert.key
+
+# Server test certificate key
+# Type: Secret - Private Key
+# Justification: Test certificate, not used in production
+/root/google-cloud-sdk/platform/gsutil/third_party/urllib3/dummyserver/certs/server.key
+
+# CVE-2025-61729 - Go stdlib vulnerability
+# This is handled via VEX (Vulnerability Exploitability eXchange) statement
+# The vulnerability is patched via gcloud components update in Dockerfile
+# Type: Vulnerability - HIGH
+# Status: Fixed via gcloud components update
+CVE-2025-61729
+
