@@ -21,7 +21,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.*;
 import reactor.core.publisher.Mono;
@@ -82,17 +81,13 @@ class DepositScannerServiceTest {
         .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
   }
 
-  @SuppressWarnings("unchecked")
-  private void mockBlockNumberResponse() throws Exception {
+  private void mockBlockNumberResponse() {
     EthBlockNumber blockNumber = new EthBlockNumber();
     blockNumber.setResult("0x64");
-    Request<?, EthBlockNumber> request = mock(Request.class);
-    when(request.send()).thenReturn(blockNumber);
-    when(web3j.ethBlockNumber()).thenReturn(request);
+    when(web3j.ethBlockNumber()).thenReturn(new DummyRequest<>(blockNumber));
   }
 
-  @SuppressWarnings("unchecked")
-  private void mockLogResponse() throws Exception {
+  private void mockLogResponse() {
     EthLog.LogObject logObject = new EthLog.LogObject();
     logObject.setData("0x00000000000000000000000000000000000000000000000000000000000f4240");
     logObject.setBlockNumber("0x10");
@@ -106,19 +101,15 @@ class DepositScannerServiceTest {
     EthLog logResponse = new EthLog();
     logResponse.setResult(List.of(logObject));
 
-    Request<?, EthLog> logRequest = mock(Request.class);
-    when(logRequest.send()).thenReturn(logResponse);
-    when(web3j.ethGetLogs(any(EthFilter.class))).thenReturn(logRequest);
+    when(web3j.ethGetLogs(any(EthFilter.class))).thenReturn(new DummyRequest<>(logResponse));
   }
 
-  @SuppressWarnings("unchecked")
-  private void mockTransactionResponse() throws Exception {
+  private void mockTransactionResponse() {
     EthTransaction transactionResponse = new EthTransaction();
     transactionResponse.setResult(new Transaction());
 
-    Request<?, EthTransaction> txRequest = mock(Request.class);
-    when(txRequest.send()).thenReturn(transactionResponse);
-    when(web3j.ethGetTransactionByHash("0xdeadbeef")).thenReturn(txRequest);
+    when(web3j.ethGetTransactionByHash("0xdeadbeef"))
+        .thenReturn(new DummyRequest<>(transactionResponse));
   }
 
   @Test
@@ -130,5 +121,18 @@ class DepositScannerServiceTest {
     Deposit saved = depositCaptor.getValue();
     assertEquals("USDC", saved.getCurrency());
     verify(chainRepository).save(chain);
+  }
+  private static class DummyRequest<T extends Response<?>>
+      extends org.web3j.protocol.core.Request<Object, T> {
+    private final T response;
+
+    DummyRequest(T response) {
+      this.response = response;
+    }
+
+    @Override
+    public T send() {
+      return response;
+    }
   }
 }
