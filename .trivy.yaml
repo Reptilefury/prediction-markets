@@ -1,0 +1,18 @@
+# Trivy Configuration
+# This configuration file enables VEX (Vulnerability Exploitability eXchange) support
+# to communicate the actual status of vulnerabilities in this project
+
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+  - LOW
+
+# VEX configuration - tells Trivy to consider VEX documents when evaluating vulnerabilities
+vex:
+  - vex.json
+
+# Ignore unfixed vulnerabilities that are mitigated via other means
+skip-db-update: false
+skip-java-db-update: false
+
