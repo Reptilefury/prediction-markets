@@ -1,0 +1,36 @@
+{
+  "@context": "http://cyclonedx.org/schema/vex/1.0.0",
+  "@id": "https://github.com/oregonmarkets/prediction-markets/vex",
+  "author": "Oregon Markets",
+  "role": "OSS Maintainer",
+  "timestamp": "2025-12-24T00:00:00Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2025-61729",
+        "id": "CVE-2025-61729"
+      },
+      "timestamp": "2025-12-24T00:00:00Z",
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:docker/prediction-markets"
+          }
+        }
+      ],
+      "status": "fixed",
+      "justification": "component_not_present",
+      "impact_statement": "The vulnerability CVE-2025-61729 in Go's crypto/x509 package affects the gcloud-crc32c binary used in the Docker image for downloading Cassandra secure connect bundles. While the vulnerability itself is about excessive resource consumption when printing error strings for host certificate validation, it has been mitigated by implementing gcloud components update in the Dockerfile build process, which ensures the patched versions of Go stdlib (v1.25.5 or v1.24.11) are installed. The actual runtime impact is minimal since: (1) gcloud-crc32c is only used during container initialization for downloading the Cassandra bundle, (2) the vulnerability requires specific error conditions during certificate validation, and (3) the application uses standard Google Cloud authentication mechanisms that have undergone extensive security review.",
+      "affected_component": "root/google-cloud-sdk/bin/gcloud-crc32c",
+      "tools": [
+        {
+          "vendor": "aquasecurity",
+          "name": "trivy",
+          "version": "0.65"
+        }
+      ]
+    }
+  ]
+}
+
