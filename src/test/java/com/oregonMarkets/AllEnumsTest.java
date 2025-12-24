@@ -3,6 +3,10 @@ package com.oregonMarkets;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.oregonMarkets.domain.enclave.model.EnclaveChainAddress;
+import com.oregonMarkets.domain.market.model.MarketType;
+import com.oregonMarkets.domain.market.model.OrderSide;
+import com.oregonMarkets.domain.market.model.OrderStatus;
+import com.oregonMarkets.domain.market.model.ResolutionSource;
 import com.oregonMarkets.domain.payment.model.Deposit;
 import com.oregonMarkets.domain.user.model.User;
 import org.junit.jupiter.api.Test;
@@ -70,6 +74,38 @@ class AllEnumsTest {
     for (User.ProxyWalletStatus s : User.ProxyWalletStatus.values()) {
       assertNotNull(s.name());
       assertNotNull(User.ProxyWalletStatus.valueOf(s.name()));
+    }
+  }
+
+  @Test
+  void marketTypeEnum() {
+    for (MarketType type : MarketType.values()) {
+      assertNotNull(type.name());
+      assertNotNull(MarketType.valueOf(type.name()));
+    }
+  }
+
+  @Test
+  void orderSideEnum() {
+    for (OrderSide side : OrderSide.values()) {
+      assertNotNull(side.name());
+      assertNotNull(OrderSide.valueOf(side.name()));
+    }
+  }
+
+  @Test
+  void orderStatusEnum() {
+    for (OrderStatus status : OrderStatus.values()) {
+      assertNotNull(status.name());
+      assertNotNull(OrderStatus.valueOf(status.name()));
+    }
+  }
+
+  @Test
+  void resolutionSourceEnum() {
+    for (ResolutionSource source : ResolutionSource.values()) {
+      assertNotNull(source.name());
+      assertNotNull(ResolutionSource.valueOf(source.name()));
     }
   }
 }

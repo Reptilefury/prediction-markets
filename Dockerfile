@@ -23,17 +23,24 @@ RUN apt-get update && \
 ENV PATH=$PATH:/opt/google-cloud-sdk/bin
 
 COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/src/main/resources/secure-connect-cassandra.zip /app/secure-connect/secure-connect-cassandra.zip
 
 # Create Cassandra bundle directory with proper permissions
 RUN mkdir -p /tmp/cassandra && chmod 777 /tmp/cassandra
 
-# Create startup script to download Cassandra secure connect bundle
+# Create startup script to manage Cassandra secure connect bundle
 RUN echo '#!/bin/sh\n\
 set -e\n\
 \n\
 # Ensure gcloud can write to the directory\n\
 mkdir -p /tmp/cassandra\n\
 chmod 777 /tmp/cassandra\n\
+\n\
+# Prefer embedded secure connect bundle unless overridden\n\
+EMBEDDED_BUNDLE="/app/secure-connect/secure-connect-cassandra.zip"\n\
+if [ -z "$ASTRA_SECURE_CONNECT_BUNDLE" ] && [ -f "$EMBEDDED_BUNDLE" ]; then\n\
+  export ASTRA_SECURE_CONNECT_BUNDLE="$EMBEDDED_BUNDLE"\n\
+fi\n\
 \n\
 # Initialize gcloud with Application Default Credentials\n\
 # Cloud Run automatically provides credentials via GOOGLE_APPLICATION_CREDENTIALS\n\
@@ -81,8 +88,12 @@ exec java -jar /app.jar --server.port=${PORT:-$SERVER_PORT}' > /start.sh && \
 # Create app user (non-root) for security best practices
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
+# Create gcloud config directory with proper permissions for appuser
+RUN mkdir -p /home/appuser/.config/gcloud && \
+    chown -R appuser:appuser /home/appuser/.config
+
 # Set proper permissions for the app user
-RUN chown appuser:appuser /app.jar /start.sh /tmp/cassandra
+RUN chown appuser:appuser /app.jar /start.sh /tmp/cassandra /app/secure-connect/secure-connect-cassandra.zip
 
 # Switch to non-root user
 USER appuser

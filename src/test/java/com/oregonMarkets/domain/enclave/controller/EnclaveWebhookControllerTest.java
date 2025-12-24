@@ -1,41 +1,55 @@
 package com.oregonMarkets.domain.enclave.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 class EnclaveWebhookControllerTest {
 
-  private final EnclaveWebhookController controller = new EnclaveWebhookController();
+  private WebTestClient client;
 
-  @Test
-  void enclaveWebhookRoutes() {
-    RouterFunction<ServerResponse> routes = controller.enclaveWebhookRoutes();
-    assertNotNull(routes);
+  @BeforeEach
+  void setUp() {
+    EnclaveWebhookController controller = new EnclaveWebhookController();
+    client =
+        WebTestClient.bindToRouterFunction(controller.enclaveWebhookRoutes())
+            .configureClient()
+            .baseUrl("/")
+            .build();
   }
 
   @Test
-  void handleEnclaveWebhook_DepositDetected() {
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("event_type", "deposit.detected");
-    assertDoesNotThrow(() -> controller.enclaveWebhookRoutes());
+  void depositDetectedEvent_ReturnsOk() {
+    client
+        .post()
+        .uri("/api/webhooks/enclave")
+        .bodyValue(Map.of("event_type", "deposit.detected", "payload", Map.of("amount", "10")))
+        .exchange()
+        .expectStatus()
+        .isOk();
   }
 
   @Test
-  void handleEnclaveWebhook_DepositConfirmed() {
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("event_type", "deposit.confirmed");
-    assertDoesNotThrow(() -> controller.enclaveWebhookRoutes());
+  void depositConfirmedEvent_ReturnsOk() {
+    client
+        .post()
+        .uri("/api/webhooks/enclave")
+        .bodyValue(
+            Map.of("event_type", "deposit.confirmed", "payload", Map.of("status", "confirmed")))
+        .exchange()
+        .expectStatus()
+        .isOk();
   }
 
   @Test
-  void handleEnclaveWebhook_Unknown() {
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("event_type", "unknown");
-    assertDoesNotThrow(() -> controller.enclaveWebhookRoutes());
+  void unknownEventType_ReturnsOk() {
+    client
+        .post()
+        .uri("/api/webhooks/enclave")
+        .bodyValue(Map.of("event_type", "random.event"))
+        .exchange()
+        .expectStatus()
+        .isOk();
   }
 }
