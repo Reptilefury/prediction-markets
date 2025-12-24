@@ -99,7 +99,8 @@ jobs:
         severity: 'CRITICAL,HIGH,MEDIUM'
       env:
         TRIVY_DISABLE_VEX_NOTICE: 'true'
-        
+        TRIVY_CONFIG: .trivy.yaml
+
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
       if: always()

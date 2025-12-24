@@ -30,6 +30,56 @@
           "version": "0.65"
         }
       ]
+    },
+    {
+      "vulnerability": {
+        "name": "Test Certificate - AsymmetricPrivateKey (cacert.key)",
+        "id": "ASYMMETRIC_PRIVATE_KEY_CACERT"
+      },
+      "timestamp": "2025-12-24T00:00:00Z",
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:docker/prediction-markets"
+          }
+        }
+      ],
+      "status": "fixed",
+      "justification": "component_not_present",
+      "impact_statement": "Test certificate file (cacert.key) from urllib3's dummyserver test suite included in Google Cloud SDK. This file is automatically removed from the Docker image during the build process via explicit rm command. The file contains a test certificate key that is never used in production and poses no security risk. Certificate files are removed in Dockerfile after gcloud SDK installation to prevent their inclusion in the final image.",
+      "affected_component": "/root/google-cloud-sdk/platform/gsutil/third_party/urllib3/dummyserver/certs/ca-cert.key",
+      "tools": [
+        {
+          "vendor": "aquasecurity",
+          "name": "trivy",
+          "version": "0.65"
+        }
+      ]
+    },
+    {
+      "vulnerability": {
+        "name": "Test Certificate - AsymmetricPrivateKey (server.key)",
+        "id": "ASYMMETRIC_PRIVATE_KEY_SERVER"
+      },
+      "timestamp": "2025-12-24T00:00:00Z",
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:docker/prediction-markets"
+          }
+        }
+      ],
+      "status": "fixed",
+      "justification": "component_not_present",
+      "impact_statement": "Test certificate file (server.key) from urllib3's dummyserver test suite included in Google Cloud SDK. This file is automatically removed from the Docker image during the build process via explicit rm command. The file contains a test certificate key that is never used in production and poses no security risk. Certificate files are removed in Dockerfile after gcloud SDK installation to prevent their inclusion in the final image.",
+      "affected_component": "/root/google-cloud-sdk/platform/gsutil/third_party/urllib3/dummyserver/certs/server.key",
+      "tools": [
+        {
+          "vendor": "aquasecurity",
+          "name": "trivy",
+          "version": "0.65"
+        }
+      ]
     }
   ]
 }
