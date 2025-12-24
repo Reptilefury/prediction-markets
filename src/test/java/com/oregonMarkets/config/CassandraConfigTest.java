@@ -36,7 +36,8 @@ class CassandraConfigTest {
     CqlSessionFactoryBean factoryBean = cassandraConfig.cassandraSession();
 
     assertNotNull(factoryBean);
-    assertEquals("test_keyspace", factoryBean.getKeyspaceName());
+    String keyspaceName = (String) ReflectionTestUtils.getField(factoryBean, "keyspaceName");
+    assertEquals("test_keyspace", keyspaceName);
   }
 
   @Test

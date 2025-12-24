@@ -10,7 +10,6 @@ import com.oregonMarkets.domain.enclave.model.EnclaveChainAddress;
 import com.oregonMarkets.domain.enclave.repository.EnclaveChainAddressRepository;
 import com.oregonMarkets.domain.payment.model.Deposit;
 import com.oregonMarkets.domain.payment.repository.DepositRepository;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,57 +36,66 @@ class DepositScannerServiceTest {
 
   @BeforeEach
   @SuppressWarnings("unchecked")
-  void setUp() throws Exception {
-    MockitoAnnotations.openMocks(this);
-    service = new DepositScannerService(chainRepository, addressRepository, depositRepository);
+  void setUp() {
+    try (var ignored = MockitoAnnotations.openMocks(this)) {
+      service = new DepositScannerService(chainRepository, addressRepository, depositRepository);
 
-    chain =
-        BlockchainChain.builder()
-            .id(UUID.randomUUID())
-            .chainName("polygon")
-            .rpcUrl("http://localhost:8545")
-            .usdcTokenAddress("0xToken")
-            .usdcDecimals(6)
-            .requiredConfirmations(12)
-            .lastScannedBlock(0L)
-            .build();
+      chain =
+          BlockchainChain.builder()
+              .id(UUID.randomUUID())
+              .chainName("polygon")
+              .rpcUrl("http://localhost:8545")
+              .usdcTokenAddress("0xToken")
+              .usdcDecimals(6)
+              .requiredConfirmations(12)
+              .lastScannedBlock(0L)
+              .isActive(true)
+              .build();
 
-    ReflectionTestUtils.setField(
-        service, "web3jClients", new java.util.concurrent.ConcurrentHashMap<>());
-    @SuppressWarnings("unchecked")
-    Map<UUID, Web3j> web3Map =
-        (Map<UUID, Web3j>) ReflectionTestUtils.getField(service, "web3jClients");
-    web3Map.put(chain.getId(), web3j);
+      ReflectionTestUtils.setField(
+          service, "web3jClients", new java.util.concurrent.ConcurrentHashMap<>());
+      @SuppressWarnings("unchecked")
+      Map<UUID, Web3j> web3Map =
+          (Map<UUID, Web3j>) ReflectionTestUtils.getField(service, "web3jClients");
+      web3Map.put(chain.getId(), web3j);
 
-    when(chainRepository.findById(chain.getId())).thenReturn(Mono.just(chain));
-    when(chainRepository.save(chain)).thenReturn(Mono.just(chain));
+      when(chainRepository.findById(chain.getId())).thenReturn(Mono.just(chain));
+      when(chainRepository.save(chain)).thenReturn(Mono.just(chain));
 
-    mockBlockNumberResponse();
-    mockLogResponse();
-    mockTransactionResponse();
+      mockBlockNumberResponse();
+      mockLogResponse();
+      mockTransactionResponse();
 
-    when(addressRepository.findByDepositAddress("0xabc0000000000000000000000000000000000000"))
-        .thenReturn(
-            Mono.just(
-                EnclaveChainAddress.builder()
-                    .id(UUID.randomUUID())
-                    .userId(UUID.randomUUID())
-                    .chainType(EnclaveChainAddress.ChainType.BASE)
-                    .depositAddress("0xabc0000000000000000000000000000000000000")
-                    .build()));
+      when(addressRepository.findByDepositAddress("0xabc0000000000000000000000000000000000000"))
+          .thenReturn(
+              Mono.just(
+                  EnclaveChainAddress.builder()
+                      .id(UUID.randomUUID())
+                      .userId(UUID.randomUUID())
+                      .chainType(EnclaveChainAddress.ChainType.POLYGON)
+                      .depositAddress("0xabc0000000000000000000000000000000000000")
+                      .build()));
 
-    when(depositRepository.findByTxHash("0xdeadbeef")).thenReturn(Mono.empty());
-    when(depositRepository.save(any(Deposit.class)))
-        .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+      when(depositRepository.findByTxHash("0xdeadbeef")).thenReturn(Mono.empty());
+      when(depositRepository.save(any(Deposit.class)))
+          .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  private void mockBlockNumberResponse() {
+  @SuppressWarnings("unchecked")
+  private void mockBlockNumberResponse() throws java.io.IOException {
     EthBlockNumber blockNumber = new EthBlockNumber();
     blockNumber.setResult("0x64");
-    when(web3j.ethBlockNumber()).thenReturn(new DummyRequest<>(blockNumber));
+
+    org.web3j.protocol.core.Request<?, EthBlockNumber> mockRequest = mock(org.web3j.protocol.core.Request.class);
+    doReturn(blockNumber).when(mockRequest).send();
+    doReturn(mockRequest).when(web3j).ethBlockNumber();
   }
 
-  private void mockLogResponse() {
+  @SuppressWarnings("unchecked")
+  private void mockLogResponse() throws java.io.IOException {
     EthLog.LogObject logObject = new EthLog.LogObject();
     logObject.setData("0x00000000000000000000000000000000000000000000000000000000000f4240");
     logObject.setBlockNumber("0x10");
@@ -101,20 +109,27 @@ class DepositScannerServiceTest {
     EthLog logResponse = new EthLog();
     logResponse.setResult(List.of(logObject));
 
-    when(web3j.ethGetLogs(any(EthFilter.class))).thenReturn(new DummyRequest<>(logResponse));
+    org.web3j.protocol.core.Request<?, EthLog> mockRequest = mock(org.web3j.protocol.core.Request.class);
+    doReturn(logResponse).when(mockRequest).send();
+    doReturn(mockRequest).when(web3j).ethGetLogs(any(EthFilter.class));
   }
 
-  private void mockTransactionResponse() {
+  @SuppressWarnings("unchecked")
+  private void mockTransactionResponse() throws java.io.IOException {
     EthTransaction transactionResponse = new EthTransaction();
     transactionResponse.setResult(new Transaction());
 
-    when(web3j.ethGetTransactionByHash("0xdeadbeef"))
-        .thenReturn(new DummyRequest<>(transactionResponse));
+    org.web3j.protocol.core.Request<?, EthTransaction> mockRequest = mock(org.web3j.protocol.core.Request.class);
+    doReturn(transactionResponse).when(mockRequest).send();
+    doReturn(mockRequest).when(web3j).ethGetTransactionByHash("0xdeadbeef");
   }
 
   @Test
-  void scanChainForDeposits_SavesDetectedDeposit() {
+  void scanChainForDeposits_SavesDetectedDeposit() throws InterruptedException {
     service.scanChainForDeposits(chain.getId()).block();
+
+    // Wait for async subscribe() operations to complete
+    Thread.sleep(1000);
 
     ArgumentCaptor<Deposit> depositCaptor = ArgumentCaptor.forClass(Deposit.class);
     verify(depositRepository).save(depositCaptor.capture());
@@ -122,17 +137,5 @@ class DepositScannerServiceTest {
     assertEquals("USDC", saved.getCurrency());
     verify(chainRepository).save(chain);
   }
-  private static class DummyRequest<T extends Response<?>>
-      extends org.web3j.protocol.core.Request<Object, T> {
-    private final T response;
-
-    DummyRequest(T response) {
-      this.response = response;
-    }
-
-    @Override
-    public T send() {
-      return response;
-    }
-  }
 }
+
