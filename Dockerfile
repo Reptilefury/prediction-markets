@@ -22,22 +22,65 @@ ENV PATH=$PATH:/root/google-cloud-sdk/bin
 
 COPY --from=builder /app/target/*.jar app.jar
 
-# Create app user (non-root) for security best practices
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Create Cassandra bundle directory with proper permissions
+RUN mkdir -p /tmp/cassandra && chmod 777 /tmp/cassandra
 
 # Create startup script to download Cassandra secure connect bundle
 RUN echo '#!/bin/sh\n\
+set -e\n\
+\n\
+# Ensure gcloud can write to the directory\n\
+mkdir -p /tmp/cassandra\n\
+chmod 777 /tmp/cassandra\n\
+\n\
+# Initialize gcloud with Application Default Credentials\n\
+# Cloud Run automatically provides credentials via GOOGLE_APPLICATION_CREDENTIALS\n\
+if [ -z "$GOOGLE_APPLICATION_CREDENTIALS" ] && [ -f "$HOME/.config/gcloud/application_default_credentials.json" ]; then\n\
+  export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/application_default_credentials.json"\n\
+fi\n\
+\n\
+# Download bundle if GCS path is provided\n\
 if [ -n "$ASTRA_SECURE_CONNECT_BUNDLE" ]; then\n\
   if echo "$ASTRA_SECURE_CONNECT_BUNDLE" | grep -q "^gs://"; then\n\
-    echo "Downloading Cassandra secure connect bundle from GCS..."\n\
-    mkdir -p /tmp/cassandra\n\
-    gsutil cp "$ASTRA_SECURE_CONNECT_BUNDLE" /tmp/cassandra/secure-connect-cassandra.zip\n\
-    export ASTRA_SECURE_CONNECT_BUNDLE=/tmp/cassandra/secure-connect-cassandra.zip\n\
+    echo "Downloading Cassandra secure connect bundle from GCS: $ASTRA_SECURE_CONNECT_BUNDLE"\n\
+    LOCAL_BUNDLE="/tmp/cassandra/secure-connect-cassandra.zip"\n\
+    \n\
+    # Attempt download with retries\n\
+    RETRY_COUNT=0\n\
+    MAX_RETRIES=3\n\
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do\n\
+      if gsutil -m cp "$ASTRA_SECURE_CONNECT_BUNDLE" "$LOCAL_BUNDLE"; then\n\
+        export ASTRA_SECURE_CONNECT_BUNDLE="$LOCAL_BUNDLE"\n\
+        echo "✓ Successfully downloaded bundle to: $LOCAL_BUNDLE"\n\
+        break\n\
+      else\n\
+        RETRY_COUNT=$((RETRY_COUNT + 1))\n\
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then\n\
+          echo "Retry attempt $RETRY_COUNT/$MAX_RETRIES... sleeping 5 seconds"\n\
+          sleep 5\n\
+        fi\n\
+      fi\n\
+    done\n\
+    \n\
+    if [ ! -f "$LOCAL_BUNDLE" ]; then\n\
+      echo "✗ ERROR: Failed to download bundle after $MAX_RETRIES attempts"\n\
+      echo "  Ensure the GCS bucket is accessible and credentials are configured"\n\
+      echo "  Set ASTRA_SECURE_CONNECT_BUNDLE=gs://bucket/path/to/secure-connect-cassandra.zip"\n\
+      exit 1\n\
+    fi\n\
   fi\n\
 fi\n\
-java -jar /app.jar --server.port=${PORT:-$SERVER_PORT}' > /start.sh && \
-    chmod +x /start.sh && \
-    chown appuser:appuser /start.sh /app.jar
+\n\
+# Start the application with all environment variables\n\
+echo "Starting application on port ${PORT:-$SERVER_PORT}"\n\
+exec java -jar /app.jar --server.port=${PORT:-$SERVER_PORT}' > /start.sh && \
+    chmod +x /start.sh
+
+# Create app user (non-root) for security best practices
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Set proper permissions for the app user
+RUN chown appuser:appuser /app.jar /start.sh /tmp/cassandra
 
 # Switch to non-root user
 USER appuser
