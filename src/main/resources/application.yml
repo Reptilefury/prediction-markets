@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: prediction-markets
+  autoconfigure:
+    exclude:
+      - org.apache.camel.component.reactive.streams.springboot.ReactiveStreamsServiceAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration
   
   flyway:
     enabled: true
@@ -43,6 +49,13 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 0
+    cassandra:
+      # Deprecated Spring Boot Cassandra properties removed
+
+cassandra:
+  migration:
+    enabled: true
+    scripts-location: cassandra/migrations
   
   cloud:
     gcp:
@@ -54,18 +67,28 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-  autoconfigure:
-    exclude:
-      - org.apache.camel.component.reactive.streams.springboot.ReactiveStreamsServiceAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration
   main:
     allow-circular-references: true
 
 app:
   name: Oregon Markets
   base-url: ${BASE_URL}
+  cassandra:
+    keyspace-name: oregon_markets
+    username: token
+    password: ${ASTRA_DB_TOKEN}
+    secure-connect-bundle: ${ASTRA_SECURE_CONNECT_BUNDLE}
+    schema-action: none
+  
+  questdb:
+    host: ${QUESTDB_HOST}
+    port: ${QUESTDB_PORT}
+    database: ${QUESTDB_DATABASE}
+    username: ${QUESTDB_USERNAME}
+    password: ${QUESTDB_PASSWORD}
+    migration:
+      enabled: true
+      scripts-location: questdb/migrations
   
   magic:
     api-key: ${MAGIC_API_KEY}

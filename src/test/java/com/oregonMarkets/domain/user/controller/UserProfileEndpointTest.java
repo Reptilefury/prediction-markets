@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @TestPropertySource(properties = {
     "spring.r2dbc.url=r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
     "spring.redis.host=localhost",
@@ -52,7 +54,13 @@ import static org.mockito.Mockito.when;
     "KEYCLOAK_BASE_URL=http://localhost:8081",
     "KEYCLOAK_REALM=test-realm",
     "KEYCLOAK_CLIENT_ID=test-client",
-    "KEYCLOAK_CLIENT_SECRET=test-secret"
+    "KEYCLOAK_CLIENT_SECRET=test-secret",
+    "ASTRA_DB_TOKEN=mock-token",
+    "ASTRA_SECURE_CONNECT_BUNDLE=mock-bundle",
+    "cassandra.migration.enabled=false",
+    "spring.cassandra.contact-points=localhost:9042",
+    "spring.cassandra.local-datacenter=datacenter1",
+    "spring.cassandra.keyspace-name=test_keyspace"
 })
 class UserProfileEndpointTest {
 

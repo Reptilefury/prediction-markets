@@ -11,8 +11,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
-@ActiveProfiles("test")
 @Testcontainers
+@ActiveProfiles("test")
 class ApplicationIntegrationTest {
 
   @Container
@@ -53,6 +53,12 @@ class ApplicationIntegrationTest {
     registry.add("spring.data.redis.host", redis::getHost);
     registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     registry.add("spring.data.redis.password", () -> "");
+
+    // Disable Cassandra for integration tests
+    registry.add("cassandra.migration.enabled", () -> "false");
+    registry.add("spring.cassandra.contact-points", () -> "localhost:9042");
+    registry.add("spring.cassandra.local-datacenter", () -> "datacenter1");
+    registry.add("spring.cassandra.keyspace-name", () -> "test_keyspace");
   }
 
   @Test

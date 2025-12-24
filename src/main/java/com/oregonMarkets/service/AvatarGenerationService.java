@@ -48,6 +48,10 @@ public class AvatarGenerationService {
   }
 
   private byte[] generateAvatarImage(UUID userId) {
+    if (userId == null) {
+      log.warn("User ID is null, generating generic avatar");
+      return generateSimpleAvatarFallback(null);
+    }
     try {
       // Use DiceBear API to generate sophisticated avatars
       // DiceBear provides various avatar styles (Adventurer, Avataaars, Bottts, etc.)
@@ -96,8 +100,9 @@ public class AvatarGenerationService {
       BufferedImage avatar = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
       Graphics2D g2d = avatar.createGraphics();
 
-      // Generate deterministic colors based on user ID
-      int hash = userId.toString().hashCode();
+      // Generate deterministic colors based on user ID or a default if null
+      String seed = userId != null ? userId.toString() : "default-seed";
+      int hash = seed.hashCode();
       int red = ((hash >> 16) & 0xFF);
       int green = ((hash >> 8) & 0xFF);
       int blue = (hash & 0xFF);
@@ -110,7 +115,7 @@ public class AvatarGenerationService {
       g2d.setColor(Color.WHITE);
       java.awt.Font font = new java.awt.Font("Arial", java.awt.Font.BOLD, 80);
       g2d.setFont(font);
-      String initials = userId.toString().substring(0, 2).toUpperCase();
+      String initials = seed.substring(0, Math.min(seed.length(), 2)).toUpperCase();
       java.awt.FontMetrics fm = g2d.getFontMetrics();
       int textX = (size - fm.stringWidth(initials)) / 2;
       int textY = ((size - fm.getHeight()) / 2) + fm.getAscent();
@@ -129,6 +134,10 @@ public class AvatarGenerationService {
   }
 
   private String uploadAvatarToGCP(UUID userId, byte[] avatarBytes) {
+    if (bucketName == null || bucketName.isEmpty() || "null".equals(bucketName)) {
+      log.warn("GCP bucket name is not configured, returning mock URL");
+      return "https://storage.googleapis.com/mock-bucket/avatars/" + (userId != null ? userId : "unknown") + ".png";
+    }
     try {
       Storage storage = StorageOptions.getDefaultInstance().getService();
       Bucket bucket = storage.get(bucketName);
