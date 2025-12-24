@@ -64,6 +64,8 @@ jobs:
         format: 'table'
         severity: 'CRITICAL,HIGH'
         exit-code: '1'
+      env:
+        TRIVY_DISABLE_VEX_NOTICE: 'true'
         
     - name: Push Image to GCR
       run: |
