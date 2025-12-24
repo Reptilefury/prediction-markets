@@ -11,6 +11,7 @@ FROM eclipse-temurin:21-jre
 RUN apt-get update && \
     apt-get install -y curl ca-certificates python3 python3-pip && \
     curl -sSL https://sdk.cloud.google.com | bash && \
+    /root/google-cloud-sdk/bin/gcloud components update --quiet && \
     rm -rf /var/lib/apt/lists/*
 
 ENV PATH=$PATH:/root/google-cloud-sdk/bin
