@@ -1,4 +1,4 @@
-package com.oregonmarkets.config;
+package com.oregonMarkets.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,12 +13,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 class CassandraConfigTest {
 
-  private CassandraConfig cassandraConfig;
+  private com.oregonmarkets.config.CassandraConfig cassandraConfig;
   private Path tempBundle;
 
   @BeforeEach
   void setUp() throws IOException {
-    cassandraConfig = new CassandraConfig();
+    cassandraConfig = new com.oregonmarkets.config.CassandraConfig();
     ReflectionTestUtils.setField(cassandraConfig, "keyspaceName", "test_keyspace");
     ReflectionTestUtils.setField(cassandraConfig, "username", "token");
     ReflectionTestUtils.setField(cassandraConfig, "password", "secret");
