@@ -38,7 +38,7 @@ public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
     private String password;
 
 
-    @Value("${app.cassandra.secure-connect-bundle:/home/user/Downloads/secure-connect-cassandra.zip}")
+    @Value("${app.cassandra.secure-connect-bundle:/app/secure-connect/secure-connect-cassandra.zip}")
     private String secureConnectBundlePath;
 
     @Override
