@@ -1,4 +1,4 @@
-package com.oregonMarkets.common.exception;
+package com.oregonmarkets.common.exception;
 
 /**
  * Exception thrown when a user is not found in the system

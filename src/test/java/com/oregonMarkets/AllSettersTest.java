@@ -1,11 +1,11 @@
-package com.oregonMarkets;
+package com.oregonmarkets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.oregonMarkets.domain.blockchain.model.BlockchainChain;
-import com.oregonMarkets.domain.enclave.model.EnclaveChainAddress;
-import com.oregonMarkets.domain.payment.model.Deposit;
-import com.oregonMarkets.domain.user.model.User;
+import com.oregonmarkets.domain.blockchain.model.BlockchainChain;
+import com.oregonmarkets.domain.enclave.model.EnclaveChainAddress;
+import com.oregonmarkets.domain.payment.model.Deposit;
+import com.oregonmarkets.domain.user.model.User;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

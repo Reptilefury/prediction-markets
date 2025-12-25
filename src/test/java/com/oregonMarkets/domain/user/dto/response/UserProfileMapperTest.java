@@ -1,7 +1,7 @@
-package com.oregonMarkets.domain.user.dto.response;
+package com.oregonmarkets.domain.user.dto.response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oregonMarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

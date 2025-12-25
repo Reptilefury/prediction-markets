@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.enclave.model;
+package com.oregonmarkets.domain.enclave.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 

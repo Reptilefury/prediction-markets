@@ -1,6 +1,6 @@
-package com.oregonMarkets.integration.blnk;
+package com.oregonmarkets.integration.blnk;
 
-import com.oregonMarkets.config.BlnkProperties;
+import com.oregonmarkets.config.BlnkProperties;
 import java.io.IOException;
 import java.util.Map;
 import okhttp3.mockwebserver.MockResponse;

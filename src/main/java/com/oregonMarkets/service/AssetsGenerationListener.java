@@ -1,7 +1,7 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.AssetsGenerationEvent;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.AssetsGenerationEvent;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

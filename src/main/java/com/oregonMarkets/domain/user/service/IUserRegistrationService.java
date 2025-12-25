@@ -1,8 +1,8 @@
-package com.oregonMarkets.domain.user.service;
+package com.oregonmarkets.domain.user.service;
 
-import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
-import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
-import com.oregonMarkets.integration.magic.MagicDIDValidator;
+import com.oregonmarkets.domain.user.dto.request.UserRegistrationRequest;
+import com.oregonmarkets.domain.user.dto.response.UserRegistrationResponse;
+import com.oregonmarkets.integration.magic.MagicDIDValidator;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 

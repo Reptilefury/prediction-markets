@@ -1,4 +1,4 @@
-package com.oregonMarkets.config;
+package com.oregonmarkets.config;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;

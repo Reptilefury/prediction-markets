@@ -1,6 +1,6 @@
-package com.oregonMarkets.domain.enclave.repository;
+package com.oregonmarkets.domain.enclave.repository;
 
-import com.oregonMarkets.domain.enclave.model.EnclaveChainAddress;
+import com.oregonmarkets.domain.enclave.model.EnclaveChainAddress;
 import java.util.UUID;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;

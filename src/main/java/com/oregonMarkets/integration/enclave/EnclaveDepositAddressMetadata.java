@@ -1,4 +1,4 @@
-package com.oregonMarkets.integration.enclave;
+package com.oregonmarkets.integration.enclave;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;

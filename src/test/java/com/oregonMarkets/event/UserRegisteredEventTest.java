@@ -1,4 +1,4 @@
-package com.oregonMarkets.event;
+package com.oregonmarkets.event;
 
 import static org.junit.jupiter.api.Assertions.*;
 

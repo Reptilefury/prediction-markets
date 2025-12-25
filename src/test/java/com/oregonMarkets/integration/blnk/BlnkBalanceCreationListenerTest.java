@@ -1,14 +1,14 @@
-package com.oregonMarkets.integration.blnk;
+package com.oregonmarkets.integration.blnk;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.oregonMarkets.domain.user.model.User;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.BlnkBalanceCreatedEvent;
-import com.oregonMarkets.event.EnclaveUdaCreatedEvent;
+import com.oregonmarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.BlnkBalanceCreatedEvent;
+import com.oregonmarkets.event.EnclaveUdaCreatedEvent;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;

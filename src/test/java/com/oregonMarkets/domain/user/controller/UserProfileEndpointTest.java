@@ -1,11 +1,11 @@
-package com.oregonMarkets.domain.user.controller;
+package com.oregonmarkets.domain.user.controller;
 
-import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
-import com.oregonMarkets.domain.user.service.IUserRegistrationService;
-import com.oregonMarkets.domain.user.service.Web3RegistrationService;
-import com.oregonMarkets.dto.ErrorType;
-import com.oregonMarkets.integration.magic.MagicDIDValidator;
-import com.oregonMarkets.security.ErrorResponseBuilder;
+import com.oregonmarkets.domain.user.dto.response.UserRegistrationResponse;
+import com.oregonmarkets.domain.user.service.IUserRegistrationService;
+import com.oregonmarkets.domain.user.service.Web3RegistrationService;
+import com.oregonmarkets.dto.ErrorType;
+import com.oregonmarkets.integration.magic.MagicDIDValidator;
+import com.oregonmarkets.security.ErrorResponseBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

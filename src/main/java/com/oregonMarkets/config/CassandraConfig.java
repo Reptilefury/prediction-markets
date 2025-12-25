@@ -24,7 +24,7 @@ import org.springframework.data.cassandra.repository.config.EnableReactiveCassan
 @Configuration
 @EnableReactiveCassandraRepositories(
     basePackages = {
-        "com.oregonMarkets.domain.market.repository"
+        "com.oregonmarkets.domain.market.repository"
     })
 public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
 
@@ -63,8 +63,8 @@ public class CassandraConfig extends AbstractReactiveCassandraConfiguration {
     @Override
     public String[] getEntityBasePackages() {
         return new String[]{
-            "com.oregonMarkets.domain.market.model",
-            "com.oregonMarkets.domain.enclave.model"
+            "com.oregonmarkets.domain.market.model",
+            "com.oregonmarkets.domain.enclave.model"
         };
     }
 

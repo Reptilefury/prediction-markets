@@ -1,8 +1,8 @@
-package com.oregonMarkets.domain.market.dto.mapper;
+package com.oregonmarkets.domain.market.dto.mapper;
 
-import com.oregonMarkets.domain.market.dto.request.CreateSubcategoryRequest;
-import com.oregonMarkets.domain.market.dto.request.UpdateSubcategoryRequest;
-import com.oregonMarkets.domain.market.model.Subcategory;
+import com.oregonmarkets.domain.market.dto.request.CreateSubcategoryRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateSubcategoryRequest;
+import com.oregonmarkets.domain.market.model.Subcategory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

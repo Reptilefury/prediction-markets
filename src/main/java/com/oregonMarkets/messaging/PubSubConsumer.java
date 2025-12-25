@@ -1,6 +1,6 @@
-package com.oregonMarkets.messaging;
+package com.oregonmarkets.messaging;
 
-import com.oregonMarkets.config.GcpPubSubProperties;
+import com.oregonmarkets.config.GcpPubSubProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.builder.RouteBuilder;

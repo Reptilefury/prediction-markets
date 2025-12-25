@@ -1,4 +1,4 @@
-package com.oregonMarkets.event;
+package com.oregonmarkets.event;
 
 import java.time.Instant;
 import java.util.Map;

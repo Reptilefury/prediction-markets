@@ -1,8 +1,8 @@
-package com.oregonMarkets.domain.user.dto.response;
+package com.oregonmarkets.domain.user.dto.response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oregonMarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

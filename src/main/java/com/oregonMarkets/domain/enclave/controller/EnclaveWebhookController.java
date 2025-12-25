@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.enclave.controller;
+package com.oregonmarkets.domain.enclave.controller;
 
 import java.util.Map;
 import lombok.RequiredArgsConstructor;

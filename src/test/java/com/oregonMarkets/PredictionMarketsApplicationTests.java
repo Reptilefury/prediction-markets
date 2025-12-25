@@ -1,4 +1,4 @@
-package com.oregonMarkets;
+package com.oregonmarkets;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

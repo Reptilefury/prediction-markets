@@ -1,9 +1,9 @@
-package com.oregonMarkets.messaging;
+package com.oregonmarkets.messaging;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-import com.oregonMarkets.config.GcpPubSubProperties;
+import com.oregonmarkets.config.GcpPubSubProperties;
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,8 +1,8 @@
-package com.oregonMarkets.security;
+package com.oregonmarkets.security;
 
-import com.oregonMarkets.common.exception.MagicAuthException;
-import com.oregonMarkets.dto.ErrorType;
-import com.oregonMarkets.integration.magic.MagicDIDValidator;
+import com.oregonmarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.dto.ErrorType;
+import com.oregonmarkets.integration.magic.MagicDIDValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

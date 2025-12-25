@@ -1,4 +1,4 @@
-package com.oregonMarkets.config;
+package com.oregonmarkets.config;
 
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +19,10 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 @org.springframework.context.annotation.Profile("!test")
 @EnableR2dbcRepositories(
     basePackages = {
-        "com.oregonMarkets.domain.blockchain.repository",
-        "com.oregonMarkets.domain.user.repository",
-        "com.oregonMarkets.domain.enclave.repository",
-        "com.oregonMarkets.domain.payment.repository"
+        "com.oregonmarkets.domain.blockchain.repository",
+        "com.oregonmarkets.domain.user.repository",
+        "com.oregonmarkets.domain.enclave.repository",
+        "com.oregonmarkets.domain.payment.repository"
     }
 )
 public class DefaultR2dbcConfig {

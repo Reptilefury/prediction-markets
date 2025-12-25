@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.enclave.model;
+package com.oregonmarkets.domain.enclave.model;
 
 import java.time.Instant;
 import java.util.UUID;

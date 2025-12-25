@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.user.dto.request;
+package com.oregonmarkets.domain.user.dto.request;
 
 import static org.junit.jupiter.api.Assertions.*;
 

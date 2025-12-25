@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.blockchain.model;
+package com.oregonmarkets.domain.blockchain.model;
 
 import java.time.Instant;
 import java.util.UUID;

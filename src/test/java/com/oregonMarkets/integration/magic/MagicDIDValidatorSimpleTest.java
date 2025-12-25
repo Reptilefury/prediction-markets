@@ -1,4 +1,4 @@
-package com.oregonMarkets.integration.magic;
+package com.oregonmarkets.integration.magic;
 
 import static org.junit.jupiter.api.Assertions.*;
 

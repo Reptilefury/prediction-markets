@@ -1,4 +1,4 @@
-package com.oregonMarkets.config;
+package com.oregonmarkets.config;
 
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;

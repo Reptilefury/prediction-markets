@@ -1,4 +1,4 @@
-package com.oregonMarkets.common.exception;
+package com.oregonmarkets.common.exception;
 
 import static org.junit.jupiter.api.Assertions.*;
 

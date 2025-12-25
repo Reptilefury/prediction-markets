@@ -1,13 +1,13 @@
-package com.oregonMarkets.integration.polymarket;
+package com.oregonmarkets.integration.polymarket;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.oregonMarkets.common.exception.ExternalServiceException;
-import com.oregonMarkets.integration.crypto.CryptoServiceClient;
-import com.oregonMarkets.integration.crypto.dto.SmartAccountResponse;
-import com.oregonMarkets.integration.crypto.dto.WalletCreateResponseData;
+import com.oregonmarkets.common.exception.ExternalServiceException;
+import com.oregonmarkets.integration.crypto.CryptoServiceClient;
+import com.oregonmarkets.integration.crypto.dto.SmartAccountResponse;
+import com.oregonmarkets.integration.crypto.dto.WalletCreateResponseData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

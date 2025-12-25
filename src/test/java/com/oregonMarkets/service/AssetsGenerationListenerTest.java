@@ -1,11 +1,11 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.oregonMarkets.domain.user.model.User;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.AssetsGenerationEvent;
+import com.oregonmarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.AssetsGenerationEvent;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;

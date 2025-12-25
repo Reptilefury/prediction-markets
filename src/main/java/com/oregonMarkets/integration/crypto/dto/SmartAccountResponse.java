@@ -1,4 +1,4 @@
-package com.oregonMarkets.integration.crypto.dto;
+package com.oregonmarkets.integration.crypto.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

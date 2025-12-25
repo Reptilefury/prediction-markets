@@ -1,4 +1,4 @@
-package com.oregonMarkets.config;
+package com.oregonmarkets.config;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;

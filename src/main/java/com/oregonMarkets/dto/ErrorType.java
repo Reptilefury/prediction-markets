@@ -1,6 +1,6 @@
-package com.oregonMarkets.dto;
+package com.oregonmarkets.dto;
 
-import com.oregonMarkets.common.response.ResponseCode;
+import com.oregonmarkets.common.response.ResponseCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 

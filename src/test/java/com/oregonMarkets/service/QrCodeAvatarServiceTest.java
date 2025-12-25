@@ -1,4 +1,4 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 

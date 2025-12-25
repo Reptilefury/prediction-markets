@@ -1,4 +1,4 @@
-package com.oregonMarkets.config;
+package com.oregonmarkets.config;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;

@@ -1,6 +1,6 @@
-package com.oregonMarkets.domain.market.router;
+package com.oregonmarkets.domain.market.router;
 
-import com.oregonMarkets.domain.market.handler.CategoryHandler;
+import com.oregonmarkets.domain.market.handler.CategoryHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;

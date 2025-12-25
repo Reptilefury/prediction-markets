@@ -1,10 +1,10 @@
-package com.oregonMarkets.domain.market.dto.mapper;
+package com.oregonmarkets.domain.market.dto.mapper;
 
-import com.oregonMarkets.domain.market.dto.request.CreateMarketRequest;
-import com.oregonMarkets.domain.market.model.Category;
-import com.oregonMarkets.domain.market.model.Market;
-import com.oregonMarkets.domain.market.model.MarketStatus;
-import com.oregonMarkets.domain.market.model.Outcome;
+import com.oregonmarkets.domain.market.dto.request.CreateMarketRequest;
+import com.oregonmarkets.domain.market.model.Category;
+import com.oregonmarkets.domain.market.model.Market;
+import com.oregonmarkets.domain.market.model.MarketStatus;
+import com.oregonmarkets.domain.market.model.Outcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

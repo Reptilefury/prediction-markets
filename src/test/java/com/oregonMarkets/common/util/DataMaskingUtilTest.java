@@ -1,4 +1,4 @@
-package com.oregonMarkets.common.util;
+package com.oregonmarkets.common.util;
 
 import org.junit.jupiter.api.Test;
 

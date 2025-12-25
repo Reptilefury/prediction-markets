@@ -1,10 +1,10 @@
-package com.oregonMarkets.domain.user.dto;
+package com.oregonmarkets.domain.user.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
-import com.oregonMarkets.domain.user.dto.request.Web3RegistrationRequest;
-import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
+import com.oregonmarkets.domain.user.dto.request.UserRegistrationRequest;
+import com.oregonmarkets.domain.user.dto.request.Web3RegistrationRequest;
+import com.oregonmarkets.domain.user.dto.response.UserRegistrationResponse;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

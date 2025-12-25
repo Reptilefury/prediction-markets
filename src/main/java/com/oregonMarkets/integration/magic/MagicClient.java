@@ -1,6 +1,6 @@
-package com.oregonMarkets.integration.magic;
+package com.oregonmarkets.integration.magic;
 
-import com.oregonMarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.common.exception.MagicAuthException;
 import jakarta.annotation.PostConstruct;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

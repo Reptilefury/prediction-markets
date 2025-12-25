@@ -1,18 +1,18 @@
-package com.oregonMarkets.domain.user.service;
+package com.oregonmarkets.domain.user.service;
 
-import com.oregonMarkets.common.exception.UserAlreadyExistsException;
-import com.oregonMarkets.common.exception.UserNotFoundException;
-import com.oregonMarkets.common.util.DataMaskingUtil;
-import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
-import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
-import com.oregonMarkets.domain.user.dto.response.UserProfileMapper;
-import com.oregonMarkets.domain.user.model.User;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.ProxyWalletCreatedEvent;
-import com.oregonMarkets.event.UserRegisteredEvent;
-import com.oregonMarkets.integration.magic.MagicDIDValidator;
-import com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService;
-import com.oregonMarkets.service.CacheService;
+import com.oregonmarkets.common.exception.UserAlreadyExistsException;
+import com.oregonmarkets.common.exception.UserNotFoundException;
+import com.oregonmarkets.common.util.DataMaskingUtil;
+import com.oregonmarkets.domain.user.dto.request.UserRegistrationRequest;
+import com.oregonmarkets.domain.user.dto.response.UserRegistrationResponse;
+import com.oregonmarkets.domain.user.dto.response.UserProfileMapper;
+import com.oregonmarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.ProxyWalletCreatedEvent;
+import com.oregonmarkets.event.UserRegisteredEvent;
+import com.oregonmarkets.integration.magic.MagicDIDValidator;
+import com.oregonmarkets.integration.polymarket.ProxyWalletOnboardingService;
+import com.oregonmarkets.service.CacheService;
 import jakarta.validation.Valid;
 
 import java.time.Instant;
@@ -32,7 +32,7 @@ public class UserRegistrationService implements IUserRegistrationService {
     private final ProxyWalletOnboardingService proxyWalletService;
     private final CacheService cacheService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
-    private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
+    private final com.oregonmarkets.service.UsernameGenerationService usernameGenerationService;
     private final UserProfileMapper userProfileMapper;
 
     @Override

@@ -1,8 +1,8 @@
-package com.oregonMarkets.common.exception;
+package com.oregonmarkets.common.exception;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.oregonMarkets.common.response.ResponseCode;
+import com.oregonmarkets.common.response.ResponseCode;
 import org.junit.jupiter.api.Test;
 
 class BusinessExceptionTest {

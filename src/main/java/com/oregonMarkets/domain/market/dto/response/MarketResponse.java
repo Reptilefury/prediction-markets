@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.market.dto.response;
+package com.oregonmarkets.domain.market.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;

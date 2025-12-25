@@ -1,10 +1,10 @@
-package com.oregonMarkets.integration.keycloak;
+package com.oregonmarkets.integration.keycloak;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.oregonMarkets.event.AssetsGenerationEvent;
-import com.oregonMarkets.event.BlnkBalanceCreatedEvent;
+import com.oregonmarkets.event.AssetsGenerationEvent;
+import com.oregonmarkets.event.BlnkBalanceCreatedEvent;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

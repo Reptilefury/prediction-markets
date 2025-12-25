@@ -1,6 +1,6 @@
-package com.oregonMarkets.domain.payment.repository;
+package com.oregonmarkets.domain.payment.repository;
 
-import com.oregonMarkets.domain.payment.model.Deposit;
+import com.oregonmarkets.domain.payment.model.Deposit;
 import java.util.UUID;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;

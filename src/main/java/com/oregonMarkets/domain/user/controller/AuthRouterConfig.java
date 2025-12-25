@@ -1,14 +1,14 @@
-package com.oregonMarkets.domain.user.controller;
+package com.oregonmarkets.domain.user.controller;
 
-import com.oregonMarkets.common.exception.MagicAuthException;
-import com.oregonMarkets.common.exception.UserNotFoundException;
-import com.oregonMarkets.common.response.ApiResponse;
-import com.oregonMarkets.common.response.ResponseCode;
-import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
-import com.oregonMarkets.domain.user.dto.request.Web3RegistrationRequest;
-import com.oregonMarkets.domain.user.service.IUserRegistrationService;
-import com.oregonMarkets.domain.user.service.Web3RegistrationService;
-import com.oregonMarkets.integration.magic.MagicDIDValidator;
+import com.oregonmarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.common.exception.UserNotFoundException;
+import com.oregonmarkets.common.response.ApiResponse;
+import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.domain.user.dto.request.UserRegistrationRequest;
+import com.oregonmarkets.domain.user.dto.request.Web3RegistrationRequest;
+import com.oregonmarkets.domain.user.service.IUserRegistrationService;
+import com.oregonmarkets.domain.user.service.Web3RegistrationService;
+import com.oregonmarkets.integration.magic.MagicDIDValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;

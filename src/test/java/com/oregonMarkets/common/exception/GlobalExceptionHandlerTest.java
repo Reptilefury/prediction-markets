@@ -1,11 +1,11 @@
-package com.oregonMarkets.common.exception;
+package com.oregonmarkets.common.exception;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.oregonMarkets.common.response.ApiResponse;
-import com.oregonMarkets.common.response.ResponseCode;
+import com.oregonmarkets.common.response.ApiResponse;
+import com.oregonmarkets.common.response.ResponseCode;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

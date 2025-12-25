@@ -1,9 +1,9 @@
-package com.oregonMarkets.domain.user.controller;
+package com.oregonmarkets.domain.user.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.oregonMarkets.domain.user.service.UserRegistrationService;
-import com.oregonMarkets.domain.user.service.Web3RegistrationService;
+import com.oregonmarkets.domain.user.service.UserRegistrationService;
+import com.oregonmarkets.domain.user.service.Web3RegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,8 +1,8 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.oregonMarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.model.User;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

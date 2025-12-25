@@ -1,4 +1,4 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
 import com.google.cloud.storage.Storage;
 import com.google.zxing.BarcodeFormat;

@@ -1,8 +1,8 @@
-package com.oregonMarkets.messaging;
+package com.oregonmarkets.messaging;
 
 import static org.mockito.Mockito.*;
 
-import com.oregonMarkets.config.GcpPubSubProperties;
+import com.oregonmarkets.config.GcpPubSubProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

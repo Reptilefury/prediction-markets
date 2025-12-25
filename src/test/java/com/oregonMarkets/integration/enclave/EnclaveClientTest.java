@@ -1,6 +1,6 @@
-package com.oregonMarkets.integration.enclave;
+package com.oregonmarkets.integration.enclave;
 
-import com.oregonMarkets.common.exception.EnclaveApiException;
+import com.oregonmarkets.common.exception.EnclaveApiException;
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;

@@ -1,6 +1,6 @@
-package com.oregonMarkets.domain.market.repository;
+package com.oregonmarkets.domain.market.repository;
 
-import com.oregonMarkets.domain.market.model.Order;
+import com.oregonmarkets.domain.market.model.Order;
 import org.springframework.data.cassandra.repository.Query;
 import org.springframework.data.cassandra.repository.ReactiveCassandraRepository;
 import org.springframework.stereotype.Repository;

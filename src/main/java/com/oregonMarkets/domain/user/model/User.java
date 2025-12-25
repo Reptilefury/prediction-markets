@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.user.model;
+package com.oregonmarkets.domain.user.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;

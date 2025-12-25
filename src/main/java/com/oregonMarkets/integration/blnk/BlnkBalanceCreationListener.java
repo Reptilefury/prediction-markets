@@ -1,8 +1,8 @@
-package com.oregonMarkets.integration.blnk;
+package com.oregonmarkets.integration.blnk;
 
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.BlnkBalanceCreatedEvent;
-import com.oregonMarkets.event.EnclaveUdaCreatedEvent;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.BlnkBalanceCreatedEvent;
+import com.oregonmarkets.event.EnclaveUdaCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -126,7 +126,7 @@ public class BlnkBalanceCreationListener {
   }
 
   private Mono<BlnkBalanceDetails> createUsdcBalance(
-      String identityId, com.oregonMarkets.domain.user.model.User user) {
+      String identityId, com.oregonmarkets.domain.user.model.User user) {
     return blnkClient
         .createBalance("USDC")
         .flatMap(

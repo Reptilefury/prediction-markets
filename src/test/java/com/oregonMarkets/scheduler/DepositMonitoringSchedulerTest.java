@@ -1,12 +1,12 @@
-package com.oregonMarkets.scheduler;
+package com.oregonmarkets.scheduler;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.oregonMarkets.domain.blockchain.model.BlockchainChain;
-import com.oregonMarkets.domain.blockchain.repository.BlockchainChainRepository;
-import com.oregonMarkets.domain.blockchain.service.DepositScannerService;
+import com.oregonmarkets.domain.blockchain.model.BlockchainChain;
+import com.oregonmarkets.domain.blockchain.repository.BlockchainChainRepository;
+import com.oregonmarkets.domain.blockchain.service.DepositScannerService;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,17 +1,17 @@
-package com.oregonMarkets.domain.user.service;
+package com.oregonmarkets.domain.user.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.oregonMarkets.common.exception.UserAlreadyExistsException;
-import com.oregonMarkets.common.exception.Web3AuthException;
-import com.oregonMarkets.domain.user.dto.request.Web3RegistrationRequest;
-import com.oregonMarkets.domain.user.model.User;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.integration.enclave.EnclaveClient;
-import com.oregonMarkets.integration.web3.Web3AuthService;
-import com.oregonMarkets.service.CacheService;
+import com.oregonmarkets.common.exception.UserAlreadyExistsException;
+import com.oregonmarkets.common.exception.Web3AuthException;
+import com.oregonmarkets.domain.user.dto.request.Web3RegistrationRequest;
+import com.oregonmarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.integration.enclave.EnclaveClient;
+import com.oregonmarkets.integration.web3.Web3AuthService;
+import com.oregonmarkets.service.CacheService;
 import java.time.Duration;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,9 +34,9 @@ class Web3RegistrationServiceTest {
 
   @Mock private CacheService cacheService;
 
-  @Mock private com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
+  @Mock private com.oregonmarkets.service.UsernameGenerationService usernameGenerationService;
 
-  @Mock private com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService proxyWalletService;
+  @Mock private com.oregonmarkets.integration.polymarket.ProxyWalletOnboardingService proxyWalletService;
 
   @Mock private org.springframework.context.ApplicationEventPublisher eventPublisher;
 

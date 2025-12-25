@@ -1,9 +1,9 @@
-package com.oregonMarkets.integration.enclave;
+package com.oregonmarkets.integration.enclave;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.EnclaveUdaCreatedEvent;
-import com.oregonMarkets.event.ProxyWalletCreatedEvent;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.EnclaveUdaCreatedEvent;
+import com.oregonmarkets.event.ProxyWalletCreatedEvent;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,7 @@ public class EnclaveUdaCreationListener {
                             user.setEnclaveUdaAddress(udaResponse.getUdaAddress());
                             user.setEnclaveUdaTag(udaResponse.getTag());
                             user.setEnclaveUdaStatus(
-                                com.oregonMarkets.domain.user.model.User.EnclaveUdaStatus.ACTIVE);
+                                com.oregonmarkets.domain.user.model.User.EnclaveUdaStatus.ACTIVE);
                             user.setEnclaveUdaCreatedAt(Instant.now());
                             if (udaResponse.getDepositAddresses() != null) {
                               String depositAddressesJson =

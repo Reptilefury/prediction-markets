@@ -1,7 +1,7 @@
-package com.oregonMarkets.integration.blnk;
+package com.oregonmarkets.integration.blnk;
 
-import com.oregonMarkets.common.exception.BlnkApiException;
-import com.oregonMarkets.config.BlnkProperties;
+import com.oregonmarkets.common.exception.BlnkApiException;
+import com.oregonmarkets.config.BlnkProperties;
 import java.time.Duration;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

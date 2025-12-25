@@ -1,9 +1,9 @@
-package com.oregonMarkets.integration.blnk;
+package com.oregonmarkets.integration.blnk;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.oregonMarkets.common.exception.BlnkApiException;
-import com.oregonMarkets.config.BlnkProperties;
+import com.oregonmarkets.common.exception.BlnkApiException;
+import com.oregonmarkets.config.BlnkProperties;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

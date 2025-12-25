@@ -1,17 +1,17 @@
-package com.oregonMarkets.domain.user.controller;
+package com.oregonmarkets.domain.user.controller;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
-import com.oregonMarkets.common.exception.UserNotFoundException;
-import com.oregonMarkets.common.response.ApiResponse;
-import com.oregonMarkets.common.response.ResponseCode;
-import com.oregonMarkets.domain.user.dto.request.UserRegistrationRequest;
-import com.oregonMarkets.domain.user.dto.request.Web3RegistrationRequest;
-import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
-import com.oregonMarkets.domain.user.service.IUserRegistrationService;
-import com.oregonMarkets.domain.user.service.Web3RegistrationService;
-import com.oregonMarkets.integration.magic.MagicDIDValidator;
+import com.oregonmarkets.common.exception.UserNotFoundException;
+import com.oregonmarkets.common.response.ApiResponse;
+import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.domain.user.dto.request.UserRegistrationRequest;
+import com.oregonmarkets.domain.user.dto.request.Web3RegistrationRequest;
+import com.oregonmarkets.domain.user.dto.response.UserRegistrationResponse;
+import com.oregonmarkets.domain.user.service.IUserRegistrationService;
+import com.oregonmarkets.domain.user.service.Web3RegistrationService;
+import com.oregonmarkets.integration.magic.MagicDIDValidator;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

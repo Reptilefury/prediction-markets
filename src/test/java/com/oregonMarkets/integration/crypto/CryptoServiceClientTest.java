@@ -1,10 +1,10 @@
-package com.oregonMarkets.integration.crypto;
+package com.oregonmarkets.integration.crypto;
 
-import com.oregonMarkets.common.exception.ExternalServiceException;
-import com.oregonMarkets.common.response.ResponseCode;
-import com.oregonMarkets.integration.crypto.dto.CryptoServiceApiResponse;
-import com.oregonMarkets.integration.crypto.dto.SmartAccountResponse;
-import com.oregonMarkets.integration.crypto.dto.WalletCreateResponseData;
+import com.oregonmarkets.common.exception.ExternalServiceException;
+import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.integration.crypto.dto.CryptoServiceApiResponse;
+import com.oregonmarkets.integration.crypto.dto.SmartAccountResponse;
+import com.oregonmarkets.integration.crypto.dto.WalletCreateResponseData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

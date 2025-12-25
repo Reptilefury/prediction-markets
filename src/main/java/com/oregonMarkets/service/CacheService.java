@@ -1,4 +1,4 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;

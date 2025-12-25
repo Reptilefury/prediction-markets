@@ -1,6 +1,6 @@
-package com.oregonMarkets.domain.user.repository;
+package com.oregonmarkets.domain.user.repository;
 
-import com.oregonMarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.model.User;
 import java.util.UUID;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;

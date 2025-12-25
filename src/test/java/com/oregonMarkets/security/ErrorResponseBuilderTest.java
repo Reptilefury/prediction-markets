@@ -1,11 +1,11 @@
-package com.oregonMarkets.security;
+package com.oregonmarkets.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oregonMarkets.common.exception.ResponseSerializationException;
-import com.oregonMarkets.common.response.ApiResponse;
-import com.oregonMarkets.common.response.ResponseCode;
-import com.oregonMarkets.dto.ErrorResponse;
-import com.oregonMarkets.dto.ErrorType;
+import com.oregonmarkets.common.exception.ResponseSerializationException;
+import com.oregonmarkets.common.response.ApiResponse;
+import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.dto.ErrorResponse;
+import com.oregonmarkets.dto.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

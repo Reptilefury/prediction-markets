@@ -1,8 +1,8 @@
-package com.oregonMarkets.integration.magic;
+package com.oregonmarkets.integration.magic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oregonMarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.common.exception.MagicAuthException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import lombok.extern.slf4j.Slf4j;

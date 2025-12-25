@@ -1,10 +1,10 @@
-package com.oregonMarkets.security;
+package com.oregonmarkets.security;
 
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.oregonMarkets.integration.keycloak.KeycloakAdminClient;
+import com.oregonmarkets.integration.keycloak.KeycloakAdminClient;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

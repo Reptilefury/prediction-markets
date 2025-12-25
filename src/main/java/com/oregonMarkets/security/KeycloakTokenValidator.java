@@ -1,8 +1,8 @@
-package com.oregonMarkets.security;
+package com.oregonmarkets.security;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oregonMarkets.common.exception.KeycloakAuthException;
+import com.oregonmarkets.common.exception.KeycloakAuthException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;

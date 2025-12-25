@@ -1,4 +1,4 @@
-package com.oregonMarkets.integration.keycloak;
+package com.oregonmarkets.integration.keycloak;
 
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;

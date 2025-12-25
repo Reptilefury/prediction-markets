@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.payment.model;
+package com.oregonmarkets.domain.payment.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.user.dto.request;
+package com.oregonmarkets.domain.user.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

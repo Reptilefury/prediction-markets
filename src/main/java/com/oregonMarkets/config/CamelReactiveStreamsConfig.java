@@ -1,4 +1,4 @@
-package com.oregonMarkets.config;
+package com.oregonmarkets.config;
 
 /**
  * Note: We intentionally do not expose CamelReactiveStreamsService as a Spring bean. Creating it as

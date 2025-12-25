@@ -1,9 +1,9 @@
-package com.oregonMarkets.domain.market.dto.mapper;
+package com.oregonmarkets.domain.market.dto.mapper;
 
-import com.oregonMarkets.domain.market.dto.request.CreateCategoryRequest;
-import com.oregonMarkets.domain.market.dto.request.UpdateCategoryRequest;
-import com.oregonMarkets.domain.market.dto.response.CategoryResponse;
-import com.oregonMarkets.domain.market.model.Category;
+import com.oregonmarkets.domain.market.dto.request.CreateCategoryRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateCategoryRequest;
+import com.oregonmarkets.domain.market.dto.response.CategoryResponse;
+import com.oregonmarkets.domain.market.model.Category;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.stereotype.Component;

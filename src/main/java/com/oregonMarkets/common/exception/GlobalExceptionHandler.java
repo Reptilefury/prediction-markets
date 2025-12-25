@@ -1,7 +1,7 @@
-package com.oregonMarkets.common.exception;
+package com.oregonmarkets.common.exception;
 
-import com.oregonMarkets.common.response.ApiResponse;
-import com.oregonMarkets.common.response.ResponseCode;
+import com.oregonmarkets.common.response.ApiResponse;
+import com.oregonmarkets.common.response.ResponseCode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

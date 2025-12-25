@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.user.dto.response;
+package com.oregonmarkets.domain.user.dto.response;
 
 import java.util.ArrayList;
 import java.util.List;

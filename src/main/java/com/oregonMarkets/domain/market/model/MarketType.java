@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.market.model;
+package com.oregonmarkets.domain.market.model;
 
 /**
  * Market type enumeration

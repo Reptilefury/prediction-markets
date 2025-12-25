@@ -1,4 +1,4 @@
-package com.oregonMarkets.messaging;
+package com.oregonmarkets.messaging;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.reactive.streams.api.CamelReactiveStreams;

@@ -1,4 +1,4 @@
-package com.oregonMarkets.common.response;
+package com.oregonmarkets.common.response;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,7 +1,7 @@
-package com.oregonMarkets.scheduler;
+package com.oregonmarkets.scheduler;
 
-import com.oregonMarkets.domain.blockchain.repository.BlockchainChainRepository;
-import com.oregonMarkets.domain.blockchain.service.DepositScannerService;
+import com.oregonmarkets.domain.blockchain.repository.BlockchainChainRepository;
+import com.oregonmarkets.domain.blockchain.service.DepositScannerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;

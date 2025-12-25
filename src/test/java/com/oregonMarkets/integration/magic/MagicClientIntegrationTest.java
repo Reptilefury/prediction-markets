@@ -1,6 +1,6 @@
-package com.oregonMarkets.integration.magic;
+package com.oregonmarkets.integration.magic;
 
-import com.oregonMarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.common.exception.MagicAuthException;
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;

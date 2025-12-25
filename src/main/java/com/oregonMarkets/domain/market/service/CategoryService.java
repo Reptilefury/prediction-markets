@@ -1,11 +1,11 @@
-package com.oregonMarkets.domain.market.service;
+package com.oregonmarkets.domain.market.service;
 
-import com.oregonMarkets.domain.market.dto.request.CreateCategoryRequest;
-import com.oregonMarkets.domain.market.dto.request.CreateSubcategoryRequest;
-import com.oregonMarkets.domain.market.dto.request.UpdateCategoryRequest;
-import com.oregonMarkets.domain.market.dto.request.UpdateSubcategoryRequest;
-import com.oregonMarkets.domain.market.model.Category;
-import com.oregonMarkets.domain.market.model.Subcategory;
+import com.oregonmarkets.domain.market.dto.request.CreateCategoryRequest;
+import com.oregonmarkets.domain.market.dto.request.CreateSubcategoryRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateCategoryRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateSubcategoryRequest;
+import com.oregonmarkets.domain.market.model.Category;
+import com.oregonmarkets.domain.market.model.Subcategory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

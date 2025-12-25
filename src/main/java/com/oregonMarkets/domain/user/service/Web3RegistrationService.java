@@ -1,17 +1,17 @@
-package com.oregonMarkets.domain.user.service;
+package com.oregonmarkets.domain.user.service;
 
-import com.oregonMarkets.common.exception.UserAlreadyExistsException;
-import com.oregonMarkets.common.exception.Web3AuthException;
-import com.oregonMarkets.domain.user.dto.request.Web3RegistrationRequest;
-import com.oregonMarkets.domain.user.dto.response.UserRegistrationResponse;
-import com.oregonMarkets.domain.user.model.User;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.UserRegisteredEvent;
-import com.oregonMarkets.event.ProxyWalletCreatedEvent;
-import com.oregonMarkets.integration.enclave.EnclaveClient;
-import com.oregonMarkets.integration.web3.Web3AuthService;
-import com.oregonMarkets.integration.polymarket.ProxyWalletOnboardingService;
-import com.oregonMarkets.service.CacheService;
+import com.oregonmarkets.common.exception.UserAlreadyExistsException;
+import com.oregonmarkets.common.exception.Web3AuthException;
+import com.oregonmarkets.domain.user.dto.request.Web3RegistrationRequest;
+import com.oregonmarkets.domain.user.dto.response.UserRegistrationResponse;
+import com.oregonmarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.UserRegisteredEvent;
+import com.oregonmarkets.event.ProxyWalletCreatedEvent;
+import com.oregonmarkets.integration.enclave.EnclaveClient;
+import com.oregonmarkets.integration.web3.Web3AuthService;
+import com.oregonmarkets.integration.polymarket.ProxyWalletOnboardingService;
+import com.oregonmarkets.service.CacheService;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class Web3RegistrationService {
   private final Web3AuthService web3AuthService;
   private final EnclaveClient enclaveClient;
   private final CacheService cacheService;
-  private final com.oregonMarkets.service.UsernameGenerationService usernameGenerationService;
+  private final com.oregonmarkets.service.UsernameGenerationService usernameGenerationService;
   private final ProxyWalletOnboardingService proxyWalletService;
   private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 

@@ -1,4 +1,4 @@
-package com.oregonMarkets.common.util;
+package com.oregonmarkets.common.util;
 
 /**
  * Utility class for masking sensitive data in logs Ensures PII and sensitive information is not

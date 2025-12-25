@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.market.dto.request;
+package com.oregonmarkets.domain.market.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

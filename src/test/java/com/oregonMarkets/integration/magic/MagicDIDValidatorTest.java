@@ -1,8 +1,8 @@
-package com.oregonMarkets.integration.magic;
+package com.oregonmarkets.integration.magic;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.oregonMarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.common.exception.MagicAuthException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;

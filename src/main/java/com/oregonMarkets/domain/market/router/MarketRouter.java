@@ -1,6 +1,6 @@
-package com.oregonMarkets.domain.market.router;
+package com.oregonmarkets.domain.market.router;
 
-import com.oregonMarkets.domain.market.handler.MarketHandler;
+import com.oregonmarkets.domain.market.handler.MarketHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;

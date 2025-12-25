@@ -1,10 +1,10 @@
-package com.oregonMarkets.domain.market.service;
+package com.oregonmarkets.domain.market.service;
 
-import com.oregonMarkets.domain.market.dto.request.CreateMarketRequest;
-import com.oregonMarkets.domain.market.dto.request.ResolveMarketRequest;
-import com.oregonMarkets.domain.market.dto.request.UpdateMarketRequest;
-import com.oregonMarkets.domain.market.dto.response.MarketResponse;
-import com.oregonMarkets.domain.market.dto.response.OutcomeResponse;
+import com.oregonmarkets.domain.market.dto.request.CreateMarketRequest;
+import com.oregonmarkets.domain.market.dto.request.ResolveMarketRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateMarketRequest;
+import com.oregonmarkets.domain.market.dto.response.MarketResponse;
+import com.oregonmarkets.domain.market.dto.response.OutcomeResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

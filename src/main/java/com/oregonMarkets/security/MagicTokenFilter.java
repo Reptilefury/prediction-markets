@@ -1,10 +1,10 @@
-package com.oregonMarkets.security;
+package com.oregonmarkets.security;
 
-import com.oregonMarkets.common.exception.MagicAuthException;
-import com.oregonMarkets.common.exception.ResponseSerializationException;
-import com.oregonMarkets.common.response.ResponseCode;
-import com.oregonMarkets.dto.ErrorType;
-import com.oregonMarkets.integration.magic.MagicDIDValidator;
+import com.oregonmarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.common.exception.ResponseSerializationException;
+import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.dto.ErrorType;
+import com.oregonmarkets.integration.magic.MagicDIDValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;

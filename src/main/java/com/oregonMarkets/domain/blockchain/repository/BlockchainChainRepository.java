@@ -1,6 +1,6 @@
-package com.oregonMarkets.domain.blockchain.repository;
+package com.oregonmarkets.domain.blockchain.repository;
 
-import com.oregonMarkets.domain.blockchain.model.BlockchainChain;
+import com.oregonmarkets.domain.blockchain.model.BlockchainChain;
 import java.util.UUID;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;

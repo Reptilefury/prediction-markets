@@ -1,4 +1,4 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +104,7 @@ public class UsernameGenerationService {
    *
    * @param user User entity to update
    */
-  public void applyUsernameAndDisplayName(com.oregonMarkets.domain.user.model.User user) {
+  public void applyUsernameAndDisplayName(com.oregonmarkets.domain.user.model.User user) {
     String username = generateMarketThemedUsername(user.getId());
     String displayName = generateDisplayName(username);
     user.setUsername(username);

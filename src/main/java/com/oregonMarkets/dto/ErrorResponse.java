@@ -1,4 +1,4 @@
-package com.oregonMarkets.dto;
+package com.oregonmarkets.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;

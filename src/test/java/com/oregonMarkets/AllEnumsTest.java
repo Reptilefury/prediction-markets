@@ -1,14 +1,14 @@
-package com.oregonMarkets;
+package com.oregonmarkets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.oregonMarkets.domain.enclave.model.EnclaveChainAddress;
-import com.oregonMarkets.domain.market.model.MarketType;
-import com.oregonMarkets.domain.market.model.OrderSide;
-import com.oregonMarkets.domain.market.model.OrderStatus;
-import com.oregonMarkets.domain.market.model.ResolutionSource;
-import com.oregonMarkets.domain.payment.model.Deposit;
-import com.oregonMarkets.domain.user.model.User;
+import com.oregonmarkets.domain.enclave.model.EnclaveChainAddress;
+import com.oregonmarkets.domain.market.model.MarketType;
+import com.oregonmarkets.domain.market.model.OrderSide;
+import com.oregonmarkets.domain.market.model.OrderStatus;
+import com.oregonmarkets.domain.market.model.ResolutionSource;
+import com.oregonmarkets.domain.payment.model.Deposit;
+import com.oregonmarkets.domain.user.model.User;
 import org.junit.jupiter.api.Test;
 
 class AllEnumsTest {

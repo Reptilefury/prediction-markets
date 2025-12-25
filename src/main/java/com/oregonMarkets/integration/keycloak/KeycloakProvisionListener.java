@@ -1,7 +1,7 @@
-package com.oregonMarkets.integration.keycloak;
+package com.oregonmarkets.integration.keycloak;
 
-import com.oregonMarkets.event.AssetsGenerationEvent;
-import com.oregonMarkets.event.BlnkBalanceCreatedEvent;
+import com.oregonmarkets.event.AssetsGenerationEvent;
+import com.oregonmarkets.event.BlnkBalanceCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

@@ -1,13 +1,13 @@
-package com.oregonMarkets.config;
+package com.oregonmarkets.config;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.oregonMarkets.domain.blockchain.repository.BlockchainChainRepository;
-import com.oregonMarkets.domain.blockchain.service.DepositScannerService;
-import com.oregonMarkets.domain.enclave.repository.EnclaveChainAddressRepository;
-import com.oregonMarkets.domain.market.repository.*;
-import com.oregonMarkets.domain.payment.repository.DepositRepository;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.scheduler.DepositMonitoringScheduler;
+import com.oregonmarkets.domain.blockchain.repository.BlockchainChainRepository;
+import com.oregonmarkets.domain.blockchain.service.DepositScannerService;
+import com.oregonmarkets.domain.enclave.repository.EnclaveChainAddressRepository;
+import com.oregonmarkets.domain.market.repository.*;
+import com.oregonmarkets.domain.payment.repository.DepositRepository;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.scheduler.DepositMonitoringScheduler;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryMetadata;
 import org.mockito.Mockito;

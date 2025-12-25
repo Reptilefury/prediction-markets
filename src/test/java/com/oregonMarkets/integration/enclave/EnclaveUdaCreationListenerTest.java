@@ -1,12 +1,12 @@
-package com.oregonMarkets.integration.enclave;
+package com.oregonmarkets.integration.enclave;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oregonMarkets.domain.user.model.User;
-import com.oregonMarkets.domain.user.repository.UserRepository;
-import com.oregonMarkets.event.ProxyWalletCreatedEvent;
+import com.oregonmarkets.domain.user.model.User;
+import com.oregonmarkets.domain.user.repository.UserRepository;
+import com.oregonmarkets.event.ProxyWalletCreatedEvent;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;

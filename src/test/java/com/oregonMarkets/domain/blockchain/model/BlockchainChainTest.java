@@ -1,4 +1,4 @@
-package com.oregonMarkets.domain.blockchain.model;
+package com.oregonmarkets.domain.blockchain.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 

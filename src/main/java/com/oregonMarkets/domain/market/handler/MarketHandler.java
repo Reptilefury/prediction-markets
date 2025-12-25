@@ -1,12 +1,12 @@
-package com.oregonMarkets.domain.market.handler;
+package com.oregonmarkets.domain.market.handler;
 
-import com.oregonMarkets.common.response.ApiResponse;
-import com.oregonMarkets.common.response.ResponseCode;
-import com.oregonMarkets.domain.market.dto.request.CreateMarketRequest;
-import com.oregonMarkets.domain.market.dto.request.ResolveMarketRequest;
-import com.oregonMarkets.domain.market.dto.request.UpdateMarketRequest;
-import com.oregonMarkets.domain.market.dto.response.MarketResponse;
-import com.oregonMarkets.domain.market.service.MarketService;
+import com.oregonmarkets.common.response.ApiResponse;
+import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.domain.market.dto.request.CreateMarketRequest;
+import com.oregonmarkets.domain.market.dto.request.ResolveMarketRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateMarketRequest;
+import com.oregonmarkets.domain.market.dto.response.MarketResponse;
+import com.oregonmarkets.domain.market.service.MarketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -305,7 +305,7 @@ public class MarketHandler {
             return marketService.getMarketOutcomes(marketId)
                     .collectList()
                     .flatMap(outcomes -> {
-                        ApiResponse<java.util.List<com.oregonMarkets.domain.market.dto.response.OutcomeResponse>> response =
+                        ApiResponse<java.util.List<com.oregonmarkets.domain.market.dto.response.OutcomeResponse>> response =
                                 ApiResponse.success(outcomes);
                         return ServerResponse.ok().bodyValue(response);
                     })
@@ -343,9 +343,9 @@ public class MarketHandler {
     private Mono<ServerResponse> handleError(Throwable error) {
         log.error("Error handling request", error);
 
-        if (error instanceof com.oregonMarkets.common.exception.BusinessException) {
-            com.oregonMarkets.common.exception.BusinessException be =
-                    (com.oregonMarkets.common.exception.BusinessException) error;
+        if (error instanceof com.oregonmarkets.common.exception.BusinessException) {
+            com.oregonmarkets.common.exception.BusinessException be =
+                    (com.oregonmarkets.common.exception.BusinessException) error;
             ApiResponse<Void> response = ApiResponse.error(be.getResponseCode(), be.getMessage());
             return ServerResponse
                     .status(be.getResponseCode().getHttpStatus())

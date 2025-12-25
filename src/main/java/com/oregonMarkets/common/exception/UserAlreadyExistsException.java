@@ -1,6 +1,6 @@
-package com.oregonMarkets.common.exception;
+package com.oregonmarkets.common.exception;
 
-import com.oregonMarkets.common.response.ResponseCode;
+import com.oregonmarkets.common.response.ResponseCode;
 
 public class UserAlreadyExistsException extends BusinessException {
 

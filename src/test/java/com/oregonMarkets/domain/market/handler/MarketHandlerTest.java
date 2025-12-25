@@ -1,11 +1,11 @@
-package com.oregonMarkets.domain.market.handler;
+package com.oregonmarkets.domain.market.handler;
 
-import com.oregonMarkets.common.exception.BusinessException;
-import com.oregonMarkets.common.response.ResponseCode;
-import com.oregonMarkets.domain.market.dto.request.CreateMarketRequest;
-import com.oregonMarkets.domain.market.dto.request.UpdateMarketRequest;
-import com.oregonMarkets.domain.market.dto.response.MarketResponse;
-import com.oregonMarkets.domain.market.service.MarketService;
+import com.oregonmarkets.common.exception.BusinessException;
+import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.domain.market.dto.request.CreateMarketRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateMarketRequest;
+import com.oregonmarkets.domain.market.dto.response.MarketResponse;
+import com.oregonmarkets.domain.market.service.MarketService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

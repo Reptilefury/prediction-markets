@@ -1,4 +1,4 @@
-package com.oregonMarkets.service;
+package com.oregonmarkets.service;
 
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
