@@ -56,7 +56,7 @@ public class CassandraMigrationConfig {
     @Value("${cassandra.migration.scripts-location:cassandra/migrations}")
     private String scriptsLocation;
 
-    @Value("${cassandra.migration.enabled:false}")
+    @Value("${cassandra.migration.enabled:true}")
     private boolean migrationEnabled;
 
     /**
