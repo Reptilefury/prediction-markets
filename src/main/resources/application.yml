@@ -18,7 +18,7 @@ spring:
     url: ${JDBC_DATABASE_URL}
     user: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
-    locations: classpath:db/migration 
+    locations: classpath:db/migration
   
   r2dbc:
     url: ${DATABASE_URL}
