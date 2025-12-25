@@ -37,6 +37,8 @@ import org.springframework.context.event.EventListener;
 @RequiredArgsConstructor
 public class CassandraMigrationConfig {
 
+    private static final String SEPARATOR_LINE = "==================================================";
+
     // Note: CqlSession is NOT injected here to avoid sharing the main application session.
     // We create a dedicated, short-lived session for migrations to ensure isolation and
     // prevent the migration tool from potentially closing the main session.
@@ -70,12 +72,12 @@ public class CassandraMigrationConfig {
             return;
         }
 
-        log.info("==================================================");
+        log.info(SEPARATOR_LINE);
         log.info("Starting Cassandra Migrations");
         log.info("Keyspace: {}", keyspaceName);
         log.info("Scripts Location: {}", scriptsLocation);
         log.info("Using separate session for migration to ensure isolation");
-        log.info("==================================================");
+        log.info(SEPARATOR_LINE);
 
         Path bundlePath = Paths.get(secureConnectBundlePath);
         if (!bundlePath.toFile().exists()) {
@@ -111,12 +113,6 @@ public class CassandraMigrationConfig {
 
             // Create migration repository (reads migration scripts from classpath)
             MigrationRepository repository = new MigrationRepository(scriptsLocation);
-            
-            try {
-                // This method is not public in all versions, but if available, useful for debugging
-                // int scriptCount = repository.getMigrations(database).size(); 
-                // log.info("Found migration scripts in {}: (count check skipped)", scriptsLocation);
-            } catch (Exception ignored) {}
 
             // Create and execute migration task
             MigrationTask migration = new MigrationTask(database, repository);
@@ -124,28 +120,18 @@ public class CassandraMigrationConfig {
             // Execute migrations
             migration.migrate();
 
-            log.info("==================================================");
+            log.info(SEPARATOR_LINE);
             log.info("Cassandra Migrations Completed Successfully");
-            
+
             // List tables to verify creation
-            try {
-                log.info("Verifying tables in keyspace '{}':", keyspaceName);
-                migrationSession.getMetadata()
-                    .getKeyspace(keyspaceName)
-                    .ifPresentOrElse(
-                        ks -> ks.getTables().forEach((id, table) -> log.info(" - Table found: {}", table.getName())),
-                        () -> log.warn("Keyspace '{}' not found in metadata!", keyspaceName)
-                    );
-            } catch (Exception e) {
-                log.warn("Could not verify tables: {}", e.getMessage());
-            }
-            
-            log.info("==================================================");
+            verifyTablesCreated(migrationSession);
+
+            log.info(SEPARATOR_LINE);
 
         } catch (Exception e) {
-            log.error("==================================================");
+            log.error(SEPARATOR_LINE);
             log.error("FAILED to execute Cassandra migrations", e);
-            log.error("==================================================");
+            log.error(SEPARATOR_LINE);
             
             // Check if this is a permission error (keyspace already exists)
             if (e.getCause() != null && e.getCause().getMessage() != null &&
@@ -162,7 +148,33 @@ public class CassandraMigrationConfig {
             }
 
             // For other errors, fail fast to prevent application from starting with an invalid database state
-            throw new RuntimeException("Cassandra migration failed: " + e.getMessage(), e);
+            throw new CassandraMigrationException("Cassandra migration failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Verify that tables were created successfully in the keyspace
+     */
+    private void verifyTablesCreated(CqlSession session) {
+        try {
+            log.info("Verifying tables in keyspace '{}':", keyspaceName);
+            session.getMetadata()
+                .getKeyspace(keyspaceName)
+                .ifPresentOrElse(
+                    ks -> ks.getTables().forEach((id, table) -> log.info(" - Table found: {}", table.getName())),
+                    () -> log.warn("Keyspace '{}' not found in metadata!", keyspaceName)
+                );
+        } catch (Exception e) {
+            log.warn("Could not verify tables: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Custom exception for Cassandra migration failures
+     */
+    public static class CassandraMigrationException extends RuntimeException {
+        public CassandraMigrationException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 }
