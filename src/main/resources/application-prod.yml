@@ -1,0 +1,129 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: prediction-markets
+
+  # Production database configuration
+  r2dbc:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    pool:
+      initial-size: 10
+      max-size: 50
+      max-idle-time: 30m
+      validation-query: SELECT 1
+
+  datasource:
+    url: ${JDBC_DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: "0"
+    url: ${JDBC_DATABASE_URL}
+    user: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# Cassandra migration configuration for production
+cassandra:
+  migration:
+    enabled: true
+    scripts-location: cassandra/migrations
+
+app:
+  name: Oregon Markets
+  base-url: ${BASE_URL}
+
+  # Astra DB configuration
+  cassandra:
+    keyspace-name: oregon_markets
+    username: token
+    password: ${ASTRA_DB_TOKEN}
+    secure-connect-bundle: ${ASTRA_SECURE_CONNECT_BUNDLE}
+    schema-action: none
+
+  # QuestDB configuration
+  questdb:
+    host: ${QUESTDB_HOST}
+    port: ${QUESTDB_PORT}
+    database: ${QUESTDB_DATABASE}
+    username: ${QUESTDB_USERNAME}
+    password: ${QUESTDB_PASSWORD}
+    migration:
+      enabled: true
+      scripts-location: questdb/migrations
+
+  # External service configurations
+  magic:
+    api-key: ${MAGIC_API_KEY}
+    api-url: ${MAGIC_API_URL}
+
+  enclave:
+    api-key: ${ENCLAVE_API_KEY}
+    api-url: ${ENCLAVE_API_URL}
+    destination-token-address: ${APP_ENCLAVE_DESTINATION_TOKEN_ADDRESS}
+
+  blnk:
+    api-url: ${BLNK_API_URL}
+    ledger-id: ${BLNK_LEDGER_ID}
+
+  crypto-service:
+    base-url: ${CRYPTO_SERVICE_URL}
+
+  walletconnect:
+    project-id: ${WALLETCONNECT_PROJECT_ID}
+
+  dynamic:
+    environment-id: ${DYNAMIC_ENVIRONMENT_ID}
+
+  logodev:
+    publishable-key: ${LOGODEV_PUBLISHABLE_KEY}
+
+# Production logging configuration
+logging:
+  level:
+    root: INFO
+    com.oregonmarkets: INFO
+    com.oregonmarkets.integration.magic: INFO
+    org.springframework.web: WARN
+    org.springframework.r2dbc: WARN
+
+# GCP configuration
+gcp:
+  project-id: ${GCP_PROJECT_ID}
+  pubsub:
+    topics:
+      universal-deposit-wallet: ${PUBSUB_TOPIC_WALLET}
+    subscriptions:
+      universal-deposit-wallet: ${PUBSUB_SUBSCRIPTION_WALLET}
+
+camel:
+  component:
+    google-pubsub:
+      project-id: ${GCP_PROJECT_ID}
+
+# Keycloak configuration
+keycloak:
+  admin:
+    base-url: ${KEYCLOAK_BASE_URL}
+    realm: ${KEYCLOAK_REALM:opm-client}
+    client-id: ${KEYCLOAK_CLIENT_ID:admin-cli}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:}
