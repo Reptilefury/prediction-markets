@@ -117,8 +117,8 @@ app:
 
 logging:
   level:
-    com.oregonMarkets: DEBUG
-    com.oregonMarkets.integration.magic: DEBUG
+    com.oregonmarkets: DEBUG
+    com.oregonmarkets.integration.magic: DEBUG
 
 gcp:
   project-id: ${GCP_PROJECT_ID}

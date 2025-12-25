@@ -105,6 +105,6 @@ QUESTDB_PASSWORD: quest
 
 logging:
   level:
-    com.oregonMarkets: DEBUG
+    com.oregonmarkets: DEBUG
     org.springframework.r2dbc: DEBUG
     org.testcontainers: INFO
