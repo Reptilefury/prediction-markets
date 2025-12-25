@@ -21,19 +21,19 @@ import org.springframework.r2dbc.core.DatabaseClient;
 @Configuration
 public class QuestDbConfig {
 
-    @Value("${app.questdb.host:34.63.22.56}")
+    @Value("${app.questdb.host}")
     private String questdbHost;
 
-    @Value("${app.questdb.port:8812}")
+    @Value("${app.questdb.port}")
     private int questdbPort;
 
-    @Value("${app.questdb.database:qdb}")
+    @Value("${app.questdb.database}")
     private String questdbDatabase;
 
-    @Value("${app.questdb.username:admin}")
+    @Value("${app.questdb.username}")
     private String questdbUsername;
 
-    @Value("${app.questdb.password:quest}")
+    @Value("${app.questdb.password}")
     private String questdbPassword;
 
     @Bean("questdbConnectionFactory")
