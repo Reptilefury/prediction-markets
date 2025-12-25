@@ -123,3 +123,4 @@ application-dev.properties
 # Cache directories
 .cache/
 node_modules/
+run-local.sh
