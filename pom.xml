@@ -157,7 +157,7 @@
 		<dependency>
 			<groupId>com.google.zxing</groupId>
 			<artifactId>javase</artifactId>
-			<version>3.5.3</version>
+			<version>3.5.4</version>
 		</dependency>
 
 		<!-- GCP Cloud Storage -->
@@ -253,8 +253,8 @@
 							<version>1.17.0</version>
 							<style>GOOGLE</style>
 						</googleJavaFormat>
-						<importOrder />
-						<removeUnusedImports />
+						<importOrder/>
+						<removeUnusedImports/>
 					</java>
 				</configuration>
 			</plugin>
