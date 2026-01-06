@@ -85,4 +85,17 @@ class MagicTokenFilterTest {
         verify(magicValidator).validateDIDToken("valid-token");
         verify(chain).filter(exchange);
     }
+
+    @Test
+    void shouldSkipAdminPaths() {
+        when(request.getPath()).thenReturn(mock(org.springframework.http.server.RequestPath.class));
+        when(request.getPath().value()).thenReturn("/api/admin/permissions");
+        when(chain.filter(exchange)).thenReturn(Mono.empty());
+
+        StepVerifier.create(filter.filter(exchange, chain))
+                .verifyComplete();
+
+        verify(chain).filter(exchange);
+        verifyNoInteractions(magicValidator);
+    }
 }

@@ -38,13 +38,23 @@ public enum ResponseCode {
   MARKET_UPDATED(2301, "Market updated successfully", HttpStatus.OK),
   MARKET_RESOLVED(2302, "Market resolved successfully", HttpStatus.OK),
 
-  // Authentication/User Operations (2400-2499)
+  // Authentication/User Operations (2400-2449)
   USER_REGISTERED(2400, "User registered successfully", HttpStatus.CREATED),
   USER_AUTHENTICATED(2401, "User authenticated successfully", HttpStatus.OK),
   USER_PROFILE_UPDATED(2402, "User profile updated successfully", HttpStatus.OK),
   USER_PROFILE_RETRIEVED(2403, "User profile retrieved successfully", HttpStatus.OK),
   TOKEN_REFRESHED(2404, "Authentication token refreshed", HttpStatus.OK),
   PASSWORD_RESET(2405, "Password reset successfully", HttpStatus.OK),
+
+  // Admin Operations (2450-2499)
+  ADMIN_USER_CREATED(2450, "Admin user created successfully", HttpStatus.CREATED),
+  ADMIN_USER_UPDATED(2451, "Admin user updated successfully", HttpStatus.OK),
+  ADMIN_USER_DELETED(2452, "Admin user deleted successfully", HttpStatus.OK),
+  ADMIN_USER_RETRIEVED(2453, "Admin user retrieved successfully", HttpStatus.OK),
+  ADMIN_USERS_LISTED(2454, "Admin users listed successfully", HttpStatus.OK),
+  ADMIN_LOGIN_UPDATED(2455, "Admin last login updated successfully", HttpStatus.OK),
+  ADMIN_ROLE_ASSIGNED(2456, "Admin role assigned successfully", HttpStatus.OK),
+  ADMIN_PERMISSIONS_UPDATED(2457, "Admin permissions updated successfully", HttpStatus.OK),
 
   // ============================================
   // CLIENT ERRORS (3000-3999) - HTTP 4xx
@@ -97,6 +107,14 @@ public enum ResponseCode {
   DEPOSIT_NOT_FOUND(3206, "Deposit not found", HttpStatus.NOT_FOUND),
   WITHDRAWAL_NOT_FOUND(3207, "Withdrawal not found", HttpStatus.NOT_FOUND),
 
+  // Admin Resource Not Found (3250-3299)
+  ADMIN_USER_NOT_FOUND(3250, "Admin user not found", HttpStatus.NOT_FOUND),
+  ADMIN_ROLE_NOT_FOUND(3251, "Admin role not found", HttpStatus.NOT_FOUND),
+  ADMIN_PERMISSION_NOT_FOUND(3252, "Admin permission not found", HttpStatus.NOT_FOUND),
+  ADMIN_USER_EMAIL_EXISTS(3253, "Admin user with this email already exists", HttpStatus.CONFLICT),
+  ADMIN_ROLE_IN_USE(3254, "Admin role is currently in use and cannot be deleted", HttpStatus.CONFLICT),
+  ADMIN_INVALID_ROLE_ASSIGNMENT(3255, "Invalid role assignment for admin user", HttpStatus.BAD_REQUEST),
+
   // Business Logic Errors (3300-3399)
   INSUFFICIENT_BALANCE(3300, "Insufficient balance", HttpStatus.BAD_REQUEST),
   INSUFFICIENT_LIQUIDITY(3301, "Insufficient market liquidity", HttpStatus.BAD_REQUEST),
@@ -118,6 +136,9 @@ public enum ResponseCode {
   PENDING_WITHDRAWAL_EXISTS(3317, "Pending withdrawal already exists", HttpStatus.CONFLICT),
   USER_ALREADY_EXISTS(3320, "User already exists", HttpStatus.CONFLICT),
   DUPLICATE_USER(3320, "User already exists", HttpStatus.CONFLICT),
+  ROLE_REQUIRES_PERMISSIONS(3321, "Role must have at least one permission", HttpStatus.BAD_REQUEST),
+  DUPLICATE_ROLE(3322, "Role already exists", HttpStatus.CONFLICT),
+  DUPLICATE_PERMISSION(3323, "Permission already exists", HttpStatus.CONFLICT),
 
   // Rate Limiting/Quota Errors (3400-3499)
   RATE_LIMIT_EXCEEDED(3400, "Rate limit exceeded", HttpStatus.TOO_MANY_REQUESTS),

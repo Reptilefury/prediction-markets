@@ -30,11 +30,15 @@ public class MagicTokenFilter implements WebFilter {
     String method = exchange.getRequest().getMethod().name();
     log.info("MagicTokenFilter: Processing {} request for path: {}", method, path);
 
+    if (isAdminPath(path)) {
+      log.info("MagicTokenFilter: Admin path detected, skipping Magic token validation: {}", path);
+      return chain.filter(exchange);
+    }
+
     if (path.startsWith("/api/") || path.startsWith("/prediction-markets/api/")) {
       log.info("MagicTokenFilter: API path detected, validating Magic token for path: {}", path);
       return validateAndProceed(exchange, chain);
     }
-
     log.info("MagicTokenFilter: Non-API path, skipping Magic token validation for path: {}", path);
     return chain.filter(exchange);
   }
@@ -116,5 +120,12 @@ public class MagicTokenFilter implements WebFilter {
     return exchange
         .getResponse()
         .writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(body)));
+  }
+
+  private boolean isAdminPath(String path) {
+    return path.startsWith("/api/admin")
+        || path.startsWith("/api/v1/admin")
+        || path.startsWith("/prediction-markets/api/admin")
+        || path.startsWith("/prediction-markets/api/v1/admin");
   }
 }

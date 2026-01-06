@@ -134,9 +134,16 @@ camel:
       project-id: ${GCP_PROJECT_ID}
 
 keycloak:
+  # Client realm configuration - for regular users (omp-client)
+  client:
+    base-url: ${KEYCLOAK_BASE_URL}
+    realm: ${KEYCLOAK_CLIENT_REALM}
+    client-id: ${KEYCLOAK_CLIENT_ID}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET}
+
+  # Admin realm configuration - for backoffice admin roles/permissions (opm-admin)
   admin:
     base-url: ${KEYCLOAK_BASE_URL}
-    realm: ${KEYCLOAK_REALM:opm-client}
-    # Client credentials for admin API (not used in password grant, but kept for reference)
-    client-id: ${KEYCLOAK_CLIENT_ID:admin-cli}
-    client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+    realm: ${KEYCLOAK_ADMIN_REALM}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}

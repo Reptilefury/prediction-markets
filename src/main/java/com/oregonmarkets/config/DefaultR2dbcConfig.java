@@ -28,7 +28,8 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
         "com.oregonmarkets.domain.blockchain.repository",
         "com.oregonmarkets.domain.user.repository",
         "com.oregonmarkets.domain.enclave.repository",
-        "com.oregonmarkets.domain.payment.repository"
+        "com.oregonmarkets.domain.payment.repository",
+        "com.oregonmarkets.domain.admin.repository"
     }
 )
 public class DefaultR2dbcConfig {
