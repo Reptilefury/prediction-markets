@@ -9,7 +9,7 @@ on:
 env:
   JAVA_VERSION: '21'
   REGISTRY: gcr.io
-  PROJECT_ID: heroic-equinox-474616-i5
+  PROJECT_ID: upheld-dragon-472517-b6
   SERVICE_NAME: prediction-markets
   JDBC_DATABASE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
   DATABASE_URL: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
