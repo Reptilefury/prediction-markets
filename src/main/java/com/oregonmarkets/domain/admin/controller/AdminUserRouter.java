@@ -21,8 +21,10 @@ public class AdminUserRouter {
             .path("/api/admin/users", builder -> builder
                 .POST("", adminUserHandler::createAdminUser)
                 .GET("", adminUserHandler::getAllAdminUsers)
+                .GET("/stats", adminUserHandler::getAdminUserStatistics)
                 .GET("/{id}", adminUserHandler::getAdminUser)
                 .PUT("/{id}", adminUserHandler::updateAdminUser)
+                .PATCH("/{id}/status/{status}", adminUserHandler::updateUserStatus)
                 .DELETE("/{id}", adminUserHandler::deleteAdminUser)
                 .POST("/{id}/login", adminUserHandler::updateLastLogin)
             )

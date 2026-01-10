@@ -14,6 +14,8 @@ public interface AdminUserRepository extends ReactiveCrudRepository<AdminUser, U
 
     Mono<AdminUser> findByEmail(String email);
 
+    Mono<AdminUser> findByUsername(String username);
+
     Mono<AdminUser> findByKeycloakUserId(String keycloakUserId);
 
     Flux<AdminUser> findByStatus(AdminUser.AdminUserStatus status);
@@ -24,6 +26,8 @@ public interface AdminUserRepository extends ReactiveCrudRepository<AdminUser, U
     Flux<AdminUser> findByNameOrEmailContainingIgnoreCase(String searchTerm);
 
     Mono<Boolean> existsByEmail(String email);
+
+    Mono<Boolean> existsByUsername(String username);
 
     Mono<Boolean> existsByKeycloakUserId(String keycloakUserId);
 }

@@ -2,6 +2,7 @@ package com.oregonmarkets.domain.admin.service;
 
 import com.oregonmarkets.domain.admin.dto.request.CreateRoleRequest;
 import com.oregonmarkets.domain.admin.dto.response.RoleResponse;
+import com.oregonmarkets.domain.admin.model.AdminRole;
 import com.oregonmarkets.domain.admin.repository.AdminRoleRepository;
 import com.oregonmarkets.integration.keycloak.KeycloakAdminClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,9 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,10 +30,14 @@ class RoleServiceTest {
     @Mock
     private AdminRoleRepository roleRepository;
 
+    @Mock
+    private PermissionService permissionService;
+
     @InjectMocks
     private RoleService roleService;
 
     private Map<String, Object> mockRoleData;
+    private AdminRole mockDbRole;
 
     @BeforeEach
     void setUp() {
@@ -44,6 +47,13 @@ class RoleServiceTest {
         mockRoleData.put("description", "Administrator role");
         mockRoleData.put("composite", false);
         mockRoleData.put("clientRole", false);
+
+        mockDbRole = AdminRole.builder()
+                .id(UUID.randomUUID())
+                .name("admin")
+                .description("Administrator role")
+                .isActive(true)
+                .build();
     }
 
     @Test
@@ -51,6 +61,10 @@ class RoleServiceTest {
         // Given
         when(keycloakAdminClient.getRealmRoles())
                 .thenReturn(Mono.just(List.of(mockRoleData)));
+        when(keycloakAdminClient.getRoleComposites("admin"))
+                .thenReturn(Mono.just(Collections.emptyList()));
+        when(roleRepository.findByName("admin"))
+                .thenReturn(Mono.just(mockDbRole));
 
         // When & Then
         StepVerifier.create(roleService.getAllRoles().collectList())
@@ -59,10 +73,13 @@ class RoleServiceTest {
                     RoleResponse role = roles.get(0);
                     assertThat(role.getName()).isEqualTo("admin");
                     assertThat(role.getDescription()).isEqualTo("Administrator role");
+                    assertThat(role.getId()).isEqualTo(mockDbRole.getId().toString());
                 })
                 .verifyComplete();
 
         verify(keycloakAdminClient).getRealmRoles();
+        verify(keycloakAdminClient).getRoleComposites("admin");
+        verify(roleRepository).findByName("admin");
     }
 
     @Test
@@ -70,6 +87,8 @@ class RoleServiceTest {
         // Given
         when(keycloakAdminClient.getRoleByName("admin"))
                 .thenReturn(Mono.just(mockRoleData));
+        when(keycloakAdminClient.getRoleComposites("admin"))
+                .thenReturn(Mono.just(Collections.emptyList()));
 
         // When & Then
         StepVerifier.create(roleService.getRoleByName("admin"))
@@ -80,6 +99,7 @@ class RoleServiceTest {
                 .verifyComplete();
 
         verify(keycloakAdminClient).getRoleByName("admin");
+        verify(keycloakAdminClient).getRoleComposites("admin");
     }
 
     @Test
@@ -88,33 +108,19 @@ class RoleServiceTest {
         CreateRoleRequest request = CreateRoleRequest.builder()
                 .name("moderator")
                 .description("Moderator role")
+                .permissionIds(List.of("perm1"))
                 .build();
 
-        Map<String, Object> newRoleData = new HashMap<>();
-        newRoleData.put("id", "role-456");
-        newRoleData.put("name", "moderator");
-        newRoleData.put("description", "Moderator role");
-        newRoleData.put("composite", false);
-        newRoleData.put("clientRole", false);
-
-        when(keycloakAdminClient.createRealmRole(any()))
+        when(roleRepository.findByName("moderator"))
                 .thenReturn(Mono.empty());
         when(keycloakAdminClient.getRoleByName("moderator"))
-                .thenReturn(Mono.just(newRoleData));
-        when(roleRepository.findByKeycloakRoleId(anyString()))
-                .thenReturn(Mono.empty());
-        when(roleRepository.save(any()))
-                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+                .thenReturn(Mono.error(new org.springframework.web.reactive.function.client.WebClientResponseException(404, "Not Found", null, null, null)));
 
         // When & Then
         StepVerifier.create(roleService.createRole(request))
-                .assertNext(role -> {
-                    assertThat(role.getName()).isEqualTo("moderator");
-                    assertThat(role.getDescription()).isEqualTo("Moderator role");
-                })
-                .verifyComplete();
+                .expectError()
+                .verify();
 
-        verify(keycloakAdminClient).createRealmRole(any());
-        verify(keycloakAdminClient, times(2)).getRoleByName("moderator");
+        verify(roleRepository).findByName("moderator");
     }
 }

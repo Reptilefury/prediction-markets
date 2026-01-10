@@ -46,7 +46,8 @@ public class CategoryRouter {
         return RouterFunctions.nest(path(ADMIN_BASE_PATH),
             RouterFunctions
                 // Category management
-                .route(POST("/categories"), handler::createCategory)
+                .route(GET("/categories"), handler::getAllCategories)
+                .andRoute(POST("/categories"), handler::createCategory)
                 .andRoute(PUT("/categories/{categoryId}"), handler::updateCategory)
                 .andRoute(DELETE("/categories/{categoryId}"), handler::deleteCategory)
                 // Subcategory management

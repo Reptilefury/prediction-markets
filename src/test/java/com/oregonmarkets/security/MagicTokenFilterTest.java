@@ -1,6 +1,7 @@
 package com.oregonmarkets.security;
 
 import com.oregonmarkets.common.exception.MagicAuthException;
+import com.oregonmarkets.config.SecurityProperties;
 import com.oregonmarkets.dto.ErrorType;
 import com.oregonmarkets.integration.magic.MagicDIDValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,8 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -29,6 +32,9 @@ class MagicTokenFilterTest {
     
     @Mock
     private ErrorResponseBuilder errorResponseBuilder;
+    
+    @Mock
+    private SecurityProperties securityProperties;
     
     @Mock
     private ServerWebExchange exchange;
@@ -49,7 +55,8 @@ class MagicTokenFilterTest {
 
     @BeforeEach
     void setUp() {
-        filter = new MagicTokenFilter(magicValidator, errorResponseBuilder);
+        when(securityProperties.getPublicPaths()).thenReturn(List.of("/api/icons/**"));
+        filter = new MagicTokenFilter(magicValidator, errorResponseBuilder, securityProperties);
         when(exchange.getRequest()).thenReturn(request);
         when(request.getMethod()).thenReturn(HttpMethod.GET);
     }

@@ -1,9 +1,12 @@
 package com.oregonmarkets.domain.market.service;
 
 import com.oregonmarkets.domain.market.dto.request.CreateMarketRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateFeaturedMarketConfigRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateMarketViewConfigRequest;
 import com.oregonmarkets.domain.market.dto.request.ResolveMarketRequest;
 import com.oregonmarkets.domain.market.dto.request.UpdateMarketRequest;
 import com.oregonmarkets.domain.market.dto.response.MarketResponse;
+import com.oregonmarkets.domain.market.dto.response.MarketViewPreviewResponse;
 import com.oregonmarkets.domain.market.dto.response.OutcomeResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -99,4 +102,19 @@ public interface MarketService {
      * Search markets by title or description
      */
     Flux<MarketResponse> searchMarkets(String query);
+
+    /**
+     * Update market view configuration
+     */
+    Mono<MarketResponse> updateMarketViewConfig(UUID marketId, UpdateMarketViewConfigRequest request, UUID updatedBy);
+
+    /**
+     * Update featured market configuration
+     */
+    Mono<MarketResponse> updateFeaturedMarketConfig(UUID marketId, UpdateFeaturedMarketConfigRequest request, UUID updatedBy);
+
+    /**
+     * Preview market view configuration
+     */
+    Mono<MarketViewPreviewResponse> getMarketViewPreview(UUID marketId);
 }

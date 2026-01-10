@@ -39,9 +39,11 @@ public class CreateMarketRequest {
     private UUID subcategoryId;
 
     @NotNull(message = "Market type is required")
-    @Pattern(regexp = "BINARY|MULTIPLE_CHOICE|SCALAR|CATEGORICAL|COMBINATORIAL|POOL",
+    @Pattern(regexp = "BINARY|MULTIPLE_CHOICE|SCALAR|RANGE|CATEGORICAL|CUSTOM|COMBINATORIAL|POOL",
              message = "Invalid market type")
     private String marketType;
+
+    private String marketSubtype; // Optional: OVER_UNDER, PRICE_PREDICTION, etc.
 
     @NotNull(message = "Market close time is required")
     @Future(message = "Market close time must be in the future")
@@ -103,6 +105,7 @@ public class CreateMarketRequest {
 
     // Display and localization
     private UUID viewTemplateId;
+    private String viewConfig;
 
     private List<String> tags;
 
@@ -125,6 +128,14 @@ public class CreateMarketRequest {
     private Map<String, Object> cryptoData;
 
     private Map<String, String> customMetadata;
+
+    // External market integration
+    @Pattern(regexp = "native|polymarket|kalshi|predictit|manifold", message = "Invalid source")
+    private String source; // Default: native
+
+    private String sourceMarketId; // External market ID
+
+    private BigDecimal markup; // Price markup percentage
 
     /**
      * Nested DTO for outcome creation

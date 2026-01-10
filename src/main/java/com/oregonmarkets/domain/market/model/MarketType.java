@@ -13,8 +13,14 @@ public enum MarketType {
   /** Scalar/range market (e.g., "What will be the price?") */
   SCALAR,
 
+  /** Range market with bucketed outcomes */
+  RANGE,
+
   /** Categorical market with multiple categories */
   CATEGORICAL,
+
+  /** Custom market type (UI-defined) */
+  CUSTOM,
 
   /** Combinatorial market (multiple related outcomes) */
   COMBINATORIAL,

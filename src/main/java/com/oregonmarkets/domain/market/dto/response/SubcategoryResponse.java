@@ -3,6 +3,7 @@ package com.oregonmarkets.domain.market.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,4 +36,7 @@ public class SubcategoryResponse {
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
   private Instant updatedAt;
+
+  // For tree structure
+  private List<SubcategoryResponse> children;
 }

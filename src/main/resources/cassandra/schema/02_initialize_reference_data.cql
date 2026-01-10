@@ -104,6 +104,9 @@ INSERT INTO market_types (type, description, created_at)
 VALUES ('RANGE', 'Outcome falls within one of several ranges', toTimestamp(now())) IF NOT EXISTS;
 
 INSERT INTO market_types (type, description, created_at)
+VALUES ('CUSTOM', 'Custom market type', toTimestamp(now())) IF NOT EXISTS;
+
+INSERT INTO market_types (type, description, created_at)
 VALUES ('QUADRATIC', 'Quadratic voting mechanism', toTimestamp(now())) IF NOT EXISTS;
 
 INSERT INTO market_types (type, description, created_at)

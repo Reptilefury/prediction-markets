@@ -77,7 +77,10 @@ CREATE TABLE IF NOT EXISTS view_templates (
     template_id UUID PRIMARY KEY,
     name TEXT,
     json_config TEXT,
-    created_at TIMESTAMP
+    description TEXT,
+    enabled BOOLEAN,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS view_templates_name_idx ON view_templates (name);
@@ -146,7 +149,10 @@ CREATE TABLE IF NOT EXISTS markets_by_id (
 
     -- View config
     view_template_id UUID,
-    view_config TEXT
+    view_config TEXT,
+    featured_view_template_id UUID,
+    featured_view_config TEXT,
+    featured_rank INT
 );
 
 -- Markets by Category and Status

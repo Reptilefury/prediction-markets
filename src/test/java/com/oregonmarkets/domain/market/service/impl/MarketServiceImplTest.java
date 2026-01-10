@@ -11,7 +11,9 @@ import com.oregonmarkets.domain.market.dto.response.OutcomeResponse;
 import com.oregonmarkets.domain.market.model.*;
 import com.oregonmarkets.domain.market.repository.CategoryRepository;
 import com.oregonmarkets.domain.market.repository.MarketRepository;
+import com.oregonmarkets.domain.market.repository.MarketTypeRepository;
 import com.oregonmarkets.domain.market.repository.OutcomeRepository;
+import com.oregonmarkets.domain.market.repository.ViewTemplateRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +48,12 @@ class MarketServiceImplTest {
     private CategoryRepository categoryRepository;
 
     @Mock
+    private MarketTypeRepository marketTypeRepository;
+
+    @Mock
+    private ViewTemplateRepository viewTemplateRepository;
+
+    @Mock
     private MarketMapper marketMapper;
 
     @InjectMocks
@@ -58,6 +66,7 @@ class MarketServiceImplTest {
     private UUID outcomeId2;
     private Market testMarket;
     private Category testCategory;
+    private MarketTypeEntity testMarketType;
     private Outcome testOutcome1;
     private Outcome testOutcome2;
     private MarketResponse testMarketResponse;
@@ -76,6 +85,11 @@ class MarketServiceImplTest {
         testCategory.setCategoryId(categoryId);
         testCategory.setName("Politics");
         testCategory.setSlug("politics");
+
+        testMarketType = new MarketTypeEntity();
+        testMarketType.setType("BINARY");
+        testMarketType.setMinOutcomes(2);
+        testMarketType.setMaxOutcomes(2);
 
         testMarket = new Market();
         testMarket.setMarketId(marketId);
@@ -133,6 +147,7 @@ class MarketServiceImplTest {
         request.setOutcomes(Arrays.asList(outcome1, outcome2));
 
         when(categoryRepository.findById(categoryId)).thenReturn(Mono.just(testCategory));
+        when(marketTypeRepository.findById("BINARY")).thenReturn(Mono.just(testMarketType));
         when(marketMapper.toEntity(request, testCategory, userId)).thenReturn(testMarket);
         when(marketRepository.save(testMarket)).thenReturn(Mono.just(testMarket));
         when(marketMapper.toOutcomeEntity(eq(marketId), any())).thenReturn(testOutcome1).thenReturn(testOutcome2);
@@ -205,6 +220,7 @@ class MarketServiceImplTest {
         request.setOutcomes(Arrays.asList(outcome1)); // Only 1 outcome
 
         when(categoryRepository.findById(categoryId)).thenReturn(Mono.just(testCategory));
+        when(marketTypeRepository.findById("BINARY")).thenReturn(Mono.just(testMarketType));
 
         // When & Then
         StepVerifier.create(marketService.createMarket(request, userId))

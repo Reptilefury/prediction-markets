@@ -32,11 +32,21 @@ public class CategoryHandler {
     private final SubcategoryMapper subcategoryMapper;
 
     /**
-     * GET /api/v1/categories - Get all categories
+     * GET /api/v1/categories - Get all categories with subcategories
      */
     public Mono<ServerResponse> getAllCategories(ServerRequest request) {
         return categoryService.getAllCategories()
-                .map(categoryMapper::toResponse)
+                .flatMap(category -> 
+                    categoryService.getSubcategories(category.getCategoryId())
+                        .map(subcategoryMapper::toResponse)
+                        .collectList()
+                        .map(subcategories -> {
+                            CategoryResponse response = categoryMapper.toResponse(category);
+                            response.setSubcategories(subcategories);
+                            response.setSubcategoryCount(subcategories.size());
+                            return response;
+                        })
+                )
                 .collectList()
                 .flatMap(categories -> {
                     ApiResponse<java.util.List<CategoryResponse>> response = ApiResponse.success(categories);

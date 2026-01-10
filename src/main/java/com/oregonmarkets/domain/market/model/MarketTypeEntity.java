@@ -32,6 +32,12 @@ public class MarketTypeEntity {
     @Column("description")
     private String description;
 
+    @Column("icon")
+    private String icon;
+
+    @Column("color")
+    private String color;
+
     @Column("min_outcomes")
     private Integer minOutcomes;
 

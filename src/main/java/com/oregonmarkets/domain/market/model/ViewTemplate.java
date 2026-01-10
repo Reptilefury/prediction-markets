@@ -9,8 +9,6 @@ import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -35,17 +33,8 @@ public class ViewTemplate {
     @Column("description")
     private String description;
 
-    @Column("layout_config")
-    private String layoutConfig; // JSON configuration
-
-    @Column("enabled_components")
-    private List<String> enabledComponents; // List of component IDs
-
-    @Column("custom_styles")
-    private Map<String, String> customStyles;
-
-    @Column("default_for_categories")
-    private List<UUID> defaultForCategories;
+    @Column("json_config")
+    private String jsonConfig; // JSON configuration blob
 
     @Column("enabled")
     private Boolean enabled;

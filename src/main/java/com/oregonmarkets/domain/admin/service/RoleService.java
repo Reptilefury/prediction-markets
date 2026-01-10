@@ -43,15 +43,22 @@ public class RoleService {
                     // Get permissions (composites) for this role
                     return keycloakAdminClient.getRoleComposites(roleName)
                             .defaultIfEmpty(Collections.emptyList())
-                            .map(composites -> {
-                                RoleResponse roleResponse = mapToRoleResponse(roleMap);
-                                // Map composites to permissions
-                                List<PermissionResponse> permissions = composites.stream()
-                                        .filter(composite -> Boolean.TRUE.equals(composite.get("clientRole")))
-                                        .map(this::mapToPermissionResponse)
-                                        .toList();
-                                roleResponse.setPermissions(permissions);
-                                return roleResponse;
+                            .flatMap(composites -> {
+                                // Get database role to use its ID
+                                return roleRepository.findByName(roleName)
+                                        .filter(AdminRole::getIsActive)
+                                        .map(dbRole -> {
+                                            RoleResponse roleResponse = mapToRoleResponse(roleMap);
+                                            // Use database ID instead of Keycloak ID
+                                            roleResponse.setId(dbRole.getId().toString());
+                                            // Map composites to permissions
+                                            List<PermissionResponse> permissions = composites.stream()
+                                                    .filter(composite -> Boolean.TRUE.equals(composite.get("clientRole")))
+                                                    .map(this::mapToPermissionResponse)
+                                                    .toList();
+                                            roleResponse.setPermissions(permissions);
+                                            return roleResponse;
+                                        });
                             });
                 });
     }

@@ -4,6 +4,10 @@ import com.oregonmarkets.common.response.ApiResponse;
 import com.oregonmarkets.common.response.ResponseCode;
 import com.oregonmarkets.domain.admin.dto.request.CreateAdminUserRequest;
 import com.oregonmarkets.domain.admin.dto.request.UpdateAdminUserRequest;
+import com.oregonmarkets.domain.admin.exception.AdminRoleNotFoundException;
+import com.oregonmarkets.domain.admin.exception.AdminUserAlreadyExistsException;
+import com.oregonmarkets.domain.admin.exception.AdminUserNotFoundException;
+import com.oregonmarkets.domain.admin.model.AdminUser;
 import com.oregonmarkets.domain.admin.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +59,22 @@ public class AdminUserHandler {
         return request.bodyToMono(UpdateAdminUserRequest.class)
             .flatMap(updateRequest -> adminUserService.updateAdminUser(id, updateRequest))
             .flatMap(user -> ServerResponse.ok().bodyValue(ApiResponse.success(ResponseCode.ADMIN_USER_UPDATED,ResponseCode.ADMIN_USER_UPDATED.getMessage(), user)))
+            .onErrorResume(AdminUserNotFoundException.class, e -> {
+                log.error("Admin user not found: {}", e.getMessage());
+                return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.ADMIN_USER_NOT_FOUND, e.getMessage(), null));
+            })
+            .onErrorResume(AdminUserAlreadyExistsException.class, e -> {
+                log.error("Admin user email already exists: {}", e.getMessage());
+                return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.ADMIN_USER_EMAIL_EXISTS, e.getMessage(), null));
+            })
+            .onErrorResume(AdminRoleNotFoundException.class, e -> {
+                log.error("Admin role not found: {}", e.getMessage());
+                return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.ADMIN_ROLE_NOT_FOUND, e.getMessage(), null));
+            })
+            .onErrorResume(IllegalArgumentException.class, e -> {
+                log.error("Validation error: {}", e.getMessage());
+                return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.VALIDATION_ERROR, e.getMessage(), null));
+            })
             .onErrorResume(e -> {
                 log.error("Error updating admin user", e);
                 return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.VALIDATION_ERROR, e.getMessage(),null));
@@ -79,5 +99,36 @@ public class AdminUserHandler {
                 log.error("Error updating last login", e);
                 return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.ADMIN_USER_NOT_FOUND, e.getMessage(),null));
             });
+    }
+
+    public Mono<ServerResponse> getAdminUserStatistics(ServerRequest request) {
+        return adminUserService.getAdminUserStatistics()
+            .flatMap(stats -> ServerResponse.ok().bodyValue(ApiResponse.success(ResponseCode.ADMIN_USER_STATS_RETRIEVED, ResponseCode.ADMIN_USER_STATS_RETRIEVED.getMessage(), stats)))
+            .onErrorResume(e -> {
+                log.error("Error retrieving admin user statistics", e);
+                return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.VALIDATION_ERROR, e.getMessage(), null));
+            });
+    }
+
+    public Mono<ServerResponse> updateUserStatus(ServerRequest request) {
+        UUID id = UUID.fromString(request.pathVariable("id"));
+        String statusParam = request.pathVariable("status");
+        
+        try {
+            AdminUser.AdminUserStatus newStatus = AdminUser.AdminUserStatus.valueOf(statusParam.toUpperCase());
+            
+            return adminUserService.updateUserStatus(id, newStatus)
+                .flatMap(user -> ServerResponse.ok().bodyValue(ApiResponse.success(ResponseCode.ADMIN_USER_UPDATED, "User status updated successfully", user)))
+                .onErrorResume(AdminUserNotFoundException.class, e -> {
+                    log.error("Admin user not found: {}", e.getMessage());
+                    return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.ADMIN_USER_NOT_FOUND, e.getMessage(), null));
+                })
+                .onErrorResume(e -> {
+                    log.error("Error updating user status", e);
+                    return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.VALIDATION_ERROR, e.getMessage(), null));
+                });
+        } catch (IllegalArgumentException e) {
+            return ServerResponse.badRequest().bodyValue(ApiResponse.error(ResponseCode.VALIDATION_ERROR, "Invalid status: " + statusParam, null));
+        }
     }
 }

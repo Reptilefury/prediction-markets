@@ -31,6 +31,8 @@ public class UpdateMarketRequest {
 
     private String longDescription;
 
+    private String marketSubtype;
+
     @Pattern(regexp = "OPEN|SUSPENDED|CLOSED|RESOLVED|CANCELLED", message = "Invalid market status")
     private String status;
 
@@ -64,6 +66,17 @@ public class UpdateMarketRequest {
     private Integer minAge;
 
     private UUID viewTemplateId;
+    private String viewConfig;
 
     private Map<String, String> customMetadata;
+
+    @Pattern(regexp = "native|polymarket|kalshi|predictit|manifold", message = "Invalid source")
+    private String source;
+
+    private String sourceMarketId;
+
+    private java.math.BigDecimal markup;
+
+    @Pattern(regexp = "synced|syncing|error|paused", message = "Invalid sync status")
+    private String syncStatus;
 }

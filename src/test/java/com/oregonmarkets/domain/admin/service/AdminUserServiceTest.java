@@ -76,14 +76,18 @@ class AdminUserServiceTest {
     @Test
     void createAdminUser_ShouldCreateSuccessfully() {
         // Given
+        com.oregonmarkets.domain.admin.model.AdminRole mockRole = com.oregonmarkets.domain.admin.model.AdminRole.builder()
+                .id(testRoleId)
+                .name("admin")
+                .build();
+        
         when(adminUserRepository.existsByEmail(anyString())).thenReturn(Mono.just(false));
-        when(adminRoleRepository.findById(testRoleId)).thenReturn(Mono.just(new com.oregonmarkets.domain.admin.model.AdminRole()));
+        when(adminRoleRepository.findById(testRoleId)).thenReturn(Mono.just(mockRole));
         when(keycloakAdminClient.createAdminUser(any())).thenReturn(Mono.just("keycloak-user-id"));
-        when(keycloakAdminClient.getRoleByName(anyString())).thenReturn(Mono.just(java.util.Map.of("id", "role-id")));
+        when(keycloakAdminClient.getRoleByName("admin")).thenReturn(Mono.just(java.util.Map.of("id", "role-id")));
         when(keycloakAdminClient.assignRealmRolesToUser(anyString(), anyList())).thenReturn(Mono.empty());
         when(adminUserRepository.save(any(AdminUser.class))).thenReturn(Mono.just(testAdminUser));
-        when(adminRoleRepository.findById(testRoleId)).thenReturn(Mono.just(new com.oregonmarkets.domain.admin.model.AdminRole()));
-        when(adminPermissionRepository.findByRoleId(testRoleId)).thenReturn(Flux.empty());
+        when(keycloakAdminClient.getRoleComposites("admin")).thenReturn(Mono.just(java.util.Collections.emptyList()));
 
         // When & Then
         StepVerifier.create(adminUserService.createAdminUser(createRequest))
@@ -109,9 +113,14 @@ class AdminUserServiceTest {
     @Test
     void getAdminUser_ShouldReturnUser() {
         // Given
+        com.oregonmarkets.domain.admin.model.AdminRole mockRole = com.oregonmarkets.domain.admin.model.AdminRole.builder()
+                .id(testRoleId)
+                .name("admin")
+                .build();
+        
         when(adminUserRepository.findById(testUserId)).thenReturn(Mono.just(testAdminUser));
-        when(adminRoleRepository.findById(testRoleId)).thenReturn(Mono.just(new com.oregonmarkets.domain.admin.model.AdminRole()));
-        when(adminPermissionRepository.findByRoleId(testRoleId)).thenReturn(Flux.empty());
+        when(adminRoleRepository.findById(testRoleId)).thenReturn(Mono.just(mockRole));
+        when(keycloakAdminClient.getRoleComposites("admin")).thenReturn(Mono.just(java.util.Collections.emptyList()));
 
         // When & Then
         StepVerifier.create(adminUserService.getAdminUser(testUserId))

@@ -68,6 +68,9 @@ public class Market {
     @Column("market_type")
     private String marketType; // BINARY, MULTIPLE_CHOICE, SCALAR, etc.
 
+    @Column("market_subtype")
+    private String marketSubtype; // Optional: OVER_UNDER, PRICE_PREDICTION, etc.
+
     // Status and Lifecycle
     @Column("status")
     private String status; // OPEN, SUSPENDED, CLOSED, RESOLVED, CANCELLED
@@ -175,6 +178,18 @@ public class Market {
     @Column("view_template_id")
     private UUID viewTemplateId;
 
+    @Column("view_config")
+    private String viewConfig;
+
+    @Column("featured_view_template_id")
+    private UUID featuredViewTemplateId;
+
+    @Column("featured_view_config")
+    private String featuredViewConfig;
+
+    @Column("featured_rank")
+    private Integer featuredRank;
+
     @Column("featured")
     private Boolean featured;
 
@@ -220,6 +235,22 @@ public class Market {
 
     @Column("creator_fee_e4")
     private Long creatorFeeE4; // Creator's fee share
+
+    // External Market Integration
+    @Column("source")
+    private String source; // native, polymarket, kalshi, predictit, manifold
+
+    @Column("source_market_id")
+    private String sourceMarketId; // External market ID
+
+    @Column("markup")
+    private BigDecimal markup; // Price markup percentage
+
+    @Column("sync_status")
+    private String syncStatus; // synced, syncing, error, paused
+
+    @Column("last_synced_at")
+    private Instant lastSyncedAt;
 
     // Market Extension Data (for specialized markets)
     @Column("sports_data")

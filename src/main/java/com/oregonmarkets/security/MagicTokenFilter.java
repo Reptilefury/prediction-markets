@@ -3,6 +3,7 @@ package com.oregonmarkets.security;
 import com.oregonmarkets.common.exception.MagicAuthException;
 import com.oregonmarkets.common.exception.ResponseSerializationException;
 import com.oregonmarkets.common.response.ResponseCode;
+import com.oregonmarkets.config.SecurityProperties;
 import com.oregonmarkets.dto.ErrorType;
 import com.oregonmarkets.integration.magic.MagicDIDValidator;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -23,6 +25,8 @@ public class MagicTokenFilter implements WebFilter {
 
   private final MagicDIDValidator magicValidator;
   private final ErrorResponseBuilder errorResponseBuilder;
+  private final SecurityProperties securityProperties;
+  private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -30,8 +34,8 @@ public class MagicTokenFilter implements WebFilter {
     String method = exchange.getRequest().getMethod().name();
     log.info("MagicTokenFilter: Processing {} request for path: {}", method, path);
 
-    if (isAdminPath(path)) {
-      log.info("MagicTokenFilter: Admin path detected, skipping Magic token validation: {}", path);
+    if (isAdminPath(path) || isPublicPath(path)) {
+      log.info("MagicTokenFilter: Public/Admin path detected, skipping Magic token validation: {}", path);
       return chain.filter(exchange);
     }
 
@@ -127,5 +131,10 @@ public class MagicTokenFilter implements WebFilter {
         || path.startsWith("/api/v1/admin")
         || path.startsWith("/prediction-markets/api/admin")
         || path.startsWith("/prediction-markets/api/v1/admin");
+  }
+
+  private boolean isPublicPath(String path) {
+    return securityProperties.getPublicPaths().stream()
+        .anyMatch(pattern -> pathMatcher.match(pattern, path));
   }
 }

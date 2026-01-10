@@ -5,13 +5,18 @@ import com.oregonmarkets.common.response.ResponseCode;
 import com.oregonmarkets.domain.market.dto.mapper.MarketMapper;
 import com.oregonmarkets.domain.market.dto.request.CreateMarketRequest;
 import com.oregonmarkets.domain.market.dto.request.ResolveMarketRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateFeaturedMarketConfigRequest;
+import com.oregonmarkets.domain.market.dto.request.UpdateMarketViewConfigRequest;
 import com.oregonmarkets.domain.market.dto.request.UpdateMarketRequest;
 import com.oregonmarkets.domain.market.dto.response.MarketResponse;
+import com.oregonmarkets.domain.market.dto.response.MarketViewPreviewResponse;
 import com.oregonmarkets.domain.market.dto.response.OutcomeResponse;
 import com.oregonmarkets.domain.market.model.*;
 import com.oregonmarkets.domain.market.repository.CategoryRepository;
+import com.oregonmarkets.domain.market.repository.MarketTypeRepository;
 import com.oregonmarkets.domain.market.repository.MarketRepository;
 import com.oregonmarkets.domain.market.repository.OutcomeRepository;
+import com.oregonmarkets.domain.market.repository.ViewTemplateRepository;
 import com.oregonmarkets.domain.market.service.MarketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +24,12 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -34,6 +44,8 @@ public class MarketServiceImpl implements MarketService {
     private final MarketRepository marketRepository;
     private final OutcomeRepository outcomeRepository;
     private final CategoryRepository categoryRepository;
+    private final MarketTypeRepository marketTypeRepository;
+    private final ViewTemplateRepository viewTemplateRepository;
     private final MarketMapper marketMapper;
 
     @Override
@@ -366,6 +378,109 @@ public class MarketServiceImpl implements MarketService {
                 );
     }
 
+    @Override
+    public Mono<MarketResponse> updateMarketViewConfig(UUID marketId, UpdateMarketViewConfigRequest request, UUID updatedBy) {
+        log.info("Updating market view config: {}", marketId);
+
+        return marketRepository.findById(marketId)
+                .switchIfEmpty(Mono.error(new BusinessException(
+                        ResponseCode.MARKET_NOT_FOUND,
+                        "Market not found with ID: " + marketId
+                )))
+                .flatMap(market -> {
+                    if (request.getViewTemplateId() != null) {
+                        market.setViewTemplateId(request.getViewTemplateId());
+                    }
+                    if (request.getViewConfigOverride() != null) {
+                        market.setViewConfig(request.getViewConfigOverride());
+                    }
+                    market.setUpdatedAt(Instant.now());
+                    market.setUpdatedBy(updatedBy);
+                    market.setVersion(market.getVersion() + 1);
+                    return marketRepository.save(market);
+                })
+                .flatMap(this::enrichMarketWithOutcomes);
+    }
+
+    @Override
+    public Mono<MarketResponse> updateFeaturedMarketConfig(UUID marketId, UpdateFeaturedMarketConfigRequest request, UUID updatedBy) {
+        log.info("Updating featured market config: {}", marketId);
+
+        return marketRepository.findById(marketId)
+                .switchIfEmpty(Mono.error(new BusinessException(
+                        ResponseCode.MARKET_NOT_FOUND,
+                        "Market not found with ID: " + marketId
+                )))
+                .flatMap(market -> {
+                    if (request.getFeatured() != null) {
+                        market.setFeatured(request.getFeatured());
+                    }
+                    if (request.getFeaturedViewTemplateId() != null) {
+                        market.setFeaturedViewTemplateId(request.getFeaturedViewTemplateId());
+                    }
+                    if (request.getFeaturedViewConfigOverride() != null) {
+                        market.setFeaturedViewConfig(request.getFeaturedViewConfigOverride());
+                    }
+                    if (request.getFeaturedRank() != null) {
+                        market.setFeaturedRank(request.getFeaturedRank());
+                    }
+                    market.setUpdatedAt(Instant.now());
+                    market.setUpdatedBy(updatedBy);
+                    market.setVersion(market.getVersion() + 1);
+                    return marketRepository.save(market);
+                })
+                .flatMap(this::enrichMarketWithOutcomes);
+    }
+
+    @Override
+    public Mono<MarketViewPreviewResponse> getMarketViewPreview(UUID marketId) {
+        log.debug("Fetching view preview for market: {}", marketId);
+
+        return marketRepository.findById(marketId)
+                .switchIfEmpty(Mono.error(new BusinessException(
+                        ResponseCode.MARKET_NOT_FOUND,
+                        "Market not found with ID: " + marketId
+                )))
+                .flatMap(market -> {
+                    Mono<MarketResponse> marketResponseMono = enrichMarketWithOutcomes(market);
+                    Mono<java.util.Optional<ViewTemplate>> viewTemplateMono = market.getViewTemplateId() == null
+                            ? Mono.just(java.util.Optional.empty())
+                            : viewTemplateRepository.findById(market.getViewTemplateId())
+                                    .map(java.util.Optional::of)
+                                    .defaultIfEmpty(java.util.Optional.empty());
+                    Mono<java.util.Optional<ViewTemplate>> featuredTemplateMono = market.getFeaturedViewTemplateId() == null
+                            ? Mono.just(java.util.Optional.empty())
+                            : viewTemplateRepository.findById(market.getFeaturedViewTemplateId())
+                                    .map(java.util.Optional::of)
+                                    .defaultIfEmpty(java.util.Optional.empty());
+
+                    return Mono.zip(marketResponseMono, viewTemplateMono, featuredTemplateMono)
+                            .map(tuple -> {
+                                MarketResponse response = tuple.getT1();
+                                ViewTemplate viewTemplate = tuple.getT2().orElse(null);
+                                ViewTemplate featuredTemplate = tuple.getT3().orElse(null);
+
+                                String resolvedViewConfig = mergeJsonConfig(
+                                        viewTemplate == null ? null : viewTemplate.getJsonConfig(),
+                                        market.getViewConfig()
+                                );
+
+                                String resolvedFeaturedConfig = mergeJsonConfig(
+                                        featuredTemplate == null ? null : featuredTemplate.getJsonConfig(),
+                                        market.getFeaturedViewConfig()
+                                );
+
+                                return MarketViewPreviewResponse.builder()
+                                        .market(response)
+                                        .viewTemplate(viewTemplate)
+                                        .resolvedViewConfig(resolvedViewConfig)
+                                        .featuredViewTemplate(featuredTemplate)
+                                        .resolvedFeaturedViewConfig(resolvedFeaturedConfig)
+                                        .build();
+                            });
+                });
+    }
+
     // ==================== Private Helper Methods ====================
 
     /**
@@ -385,6 +500,28 @@ public class MarketServiceImpl implements MarketService {
                             .collect(Collectors.toList()));
                     return response;
                 });
+    }
+
+    private String mergeJsonConfig(String baseConfig, String overrideConfig) {
+        if (overrideConfig == null || overrideConfig.isBlank()) {
+            return baseConfig;
+        }
+        if (baseConfig == null || baseConfig.isBlank()) {
+            return overrideConfig;
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode baseNode = mapper.readTree(baseConfig);
+            JsonNode overrideNode = mapper.readTree(overrideConfig);
+            if (baseNode instanceof ObjectNode && overrideNode instanceof ObjectNode) {
+                ((ObjectNode) baseNode).setAll((ObjectNode) overrideNode);
+                return mapper.writeValueAsString(baseNode);
+            }
+            return overrideConfig;
+        } catch (Exception error) {
+            log.warn("Failed to merge view config JSON, using override only", error);
+            return Objects.requireNonNullElse(overrideConfig, baseConfig);
+        }
     }
 
     /**
@@ -413,15 +550,48 @@ public class MarketServiceImpl implements MarketService {
                         ));
                     }
 
-                    // Validate market type has correct number of outcomes
-                    if ("BINARY".equals(request.getMarketType()) && request.getOutcomes().size() != 2) {
+                    if (request.getMarketType() == null) {
                         return Mono.error(new BusinessException(
-                                ResponseCode.VALIDATION_ERROR,
-                                "Binary markets must have exactly 2 outcomes"
+                                ResponseCode.MISSING_REQUIRED_FIELD,
+                                "Market type is required"
                         ));
                     }
 
-                    return Mono.just(category);
+                    return marketTypeRepository.findById(request.getMarketType())
+                            .switchIfEmpty(Mono.error(new BusinessException(
+                                    ResponseCode.INVALID_INPUT,
+                                    "Market type not found: " + request.getMarketType()
+                            )))
+                            .flatMap(marketType -> {
+                                int outcomeCount = request.getOutcomes() == null ? 0 : request.getOutcomes().size();
+
+                                // Preserve binary validation message expected by tests
+                                if ("BINARY".equals(request.getMarketType()) && outcomeCount != 2) {
+                                    return Mono.error(new BusinessException(
+                                            ResponseCode.VALIDATION_ERROR,
+                                            "Binary markets must have exactly 2 outcomes"
+                                    ));
+                                }
+
+                                Integer minOutcomes = marketType.getMinOutcomes();
+                                Integer maxOutcomes = marketType.getMaxOutcomes();
+
+                                if (minOutcomes != null && minOutcomes > 0 && outcomeCount < minOutcomes) {
+                                    return Mono.error(new BusinessException(
+                                            ResponseCode.VALIDATION_ERROR,
+                                            "Market type " + request.getMarketType() + " requires at least " + minOutcomes + " outcomes"
+                                    ));
+                                }
+
+                                if (maxOutcomes != null && maxOutcomes > 0 && outcomeCount > maxOutcomes) {
+                                    return Mono.error(new BusinessException(
+                                            ResponseCode.VALIDATION_ERROR,
+                                            "Market type " + request.getMarketType() + " allows at most " + maxOutcomes + " outcomes"
+                                    ));
+                                }
+
+                                return Mono.just(category);
+                            });
                 });
     }
 
@@ -449,6 +619,7 @@ public class MarketServiceImpl implements MarketService {
         if (request.getKycRequired() != null) market.setKycRequired(request.getKycRequired());
         if (request.getMinAge() != null) market.setMinAge(request.getMinAge());
         if (request.getViewTemplateId() != null) market.setViewTemplateId(request.getViewTemplateId());
+        if (request.getViewConfig() != null) market.setViewConfig(request.getViewConfig());
 
         market.setUpdatedAt(now);
         market.setUpdatedBy(updatedBy);

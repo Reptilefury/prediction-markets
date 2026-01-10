@@ -116,13 +116,45 @@ public class CategoryServiceImpl implements CategoryService {
                         "Category with slug '" + request.getSlug() + "' already exists"
                 )))
                 .switchIfEmpty(Mono.defer(() -> {
-                    Category category = categoryMapper.toEntity(request);
-
-                    return categoryRepository.save(category)
-                            .doOnSuccess(saved ->
-                                    log.info("Category created successfully: {}", saved.getCategoryId()))
-                            .retryWhen(transientSessionRetry());
+                    // If displayOrder is null or 0, auto-assign next available order
+                    if (request.getDisplayOrder() == null || request.getDisplayOrder() <= 0) {
+                        return categoryRepository.findAll()
+                                .map(Category::getDisplayOrder)
+                                .reduce(0, Integer::max)
+                                .map(maxOrder -> maxOrder + 1)
+                                .flatMap(nextOrder -> {
+                                    request.setDisplayOrder(nextOrder);
+                                    return saveCategory(request);
+                                });
+                    }
+                    
+                    // If displayOrder is specified, check for conflicts and shift if needed
+                    return categoryRepository.findAll()
+                            .filter(cat -> cat.getDisplayOrder() >= request.getDisplayOrder())
+                            .collectList()
+                            .flatMap(conflictingCategories -> {
+                                if (conflictingCategories.isEmpty()) {
+                                    return saveCategory(request);
+                                }
+                                
+                                // Shift conflicting categories up by 1
+                                return Flux.fromIterable(conflictingCategories)
+                                        .flatMap(cat -> {
+                                            cat.setDisplayOrder(cat.getDisplayOrder() + 1);
+                                            cat.setUpdatedAt(Instant.now());
+                                            return categoryRepository.save(cat);
+                                        })
+                                        .then(saveCategory(request));
+                            });
                 }));
+    }
+
+    private Mono<Category> saveCategory(CreateCategoryRequest request) {
+        Category category = categoryMapper.toEntity(request);
+        return categoryRepository.save(category)
+                .doOnSuccess(saved ->
+                        log.info("Category created successfully: {}", saved.getCategoryId()))
+                .retryWhen(transientSessionRetry());
     }
 
     @Override

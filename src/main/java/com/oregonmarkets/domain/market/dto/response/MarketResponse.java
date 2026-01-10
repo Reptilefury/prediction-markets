@@ -83,6 +83,11 @@ public class MarketResponse {
     private Long creatorFeeE4;
 
     // Display
+    private UUID viewTemplateId;
+    private String viewConfig;
+    private UUID featuredViewTemplateId;
+    private String featuredViewConfig;
+    private Integer featuredRank;
     private Boolean featured;
     private Boolean trending;
     private Integer displayPriority;

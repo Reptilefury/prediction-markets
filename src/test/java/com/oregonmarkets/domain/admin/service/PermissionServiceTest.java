@@ -118,11 +118,12 @@ class PermissionServiceTest {
 
         when(keycloakAdminClient.getClientByClientId("oregon-admin-app"))
                 .thenReturn(Mono.just(mockClientData));
-        when(keycloakAdminClient.createClientRole(eq("client-123"), any()))
+        when(permissionRepository.findByName("markets:create"))
                 .thenReturn(Mono.empty());
         when(keycloakAdminClient.getClientRoles("client-123"))
-                .thenReturn(Mono.just(List.of(mockPermissionData)));
-        when(permissionRepository.findByKeycloakRoleId(anyString()))
+                .thenReturn(Mono.just(java.util.Collections.emptyList())) // No existing permissions
+                .thenReturn(Mono.just(List.of(mockPermissionData))); // After creation
+        when(keycloakAdminClient.createClientRole(eq("client-123"), any()))
                 .thenReturn(Mono.empty());
         when(permissionRepository.save(any()))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
@@ -136,5 +137,6 @@ class PermissionServiceTest {
                 .verifyComplete();
 
         verify(keycloakAdminClient).createClientRole(eq("client-123"), any());
+        verify(permissionRepository).findByName("markets:create");
     }
 }

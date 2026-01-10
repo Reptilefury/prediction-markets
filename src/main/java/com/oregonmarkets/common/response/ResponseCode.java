@@ -55,6 +55,7 @@ public enum ResponseCode {
   ADMIN_LOGIN_UPDATED(2455, "Admin last login updated successfully", HttpStatus.OK),
   ADMIN_ROLE_ASSIGNED(2456, "Admin role assigned successfully", HttpStatus.OK),
   ADMIN_PERMISSIONS_UPDATED(2457, "Admin permissions updated successfully", HttpStatus.OK),
+  ADMIN_USER_STATS_RETRIEVED(2458, "Admin user statistics retrieved successfully", HttpStatus.OK),
 
   // ============================================
   // CLIENT ERRORS (3000-3999) - HTTP 4xx
